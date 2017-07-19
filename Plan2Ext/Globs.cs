@@ -48,6 +48,7 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Globs))));
         static Globs()
         {
+
             if (log4net.LogManager.GetRepository(System.Reflection.Assembly.GetExecutingAssembly()).Configured == false)
             {
                 log4net.Config.XmlConfigurator.ConfigureAndWatch(new System.IO.FileInfo(System.IO.Path.Combine(new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).DirectoryName, "_log4net.config")));
