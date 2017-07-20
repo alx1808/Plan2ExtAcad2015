@@ -17,10 +17,10 @@ using Bricscad.EditorInput;
 using Teigha.Geometry;
 using _AcIntCom = BricscadDb;
 #elif ARX_APP
-  using _AcAp = Autodesk.AutoCAD.ApplicationServices;
-  using Autodesk.AutoCAD.DatabaseServices;
-  using Autodesk.AutoCAD.EditorInput;
-  using Autodesk.AutoCAD.Geometry;
+using _AcAp = Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using _AcIntCom = Autodesk.AutoCAD.Interop.Common;
 #endif
 
@@ -37,15 +37,31 @@ namespace Plan2Ext.Raumnummern
         private const string _NoRaumblockMessage = "\nDas gewählte Element ist kein Raumblock '{0}'.";
         private const string DIST_RB_TO_FB_KONFIG = "alx_V:ino_rb_rb2fbDist";
         //private const string HK_BLOCKNAME_KONFIG = "alx_V:ino_rb_HkBlockName";
+
+        private readonly Dictionary<int, int> _ColorIndexDict = new Dictionary<int, int>() { 
+            { 1, 141},
+            { 2, 21},
+            { 3, 72},
+            { 4, 50},
+            { 5, 24},
+            { 6, 111},
+            { 7, 11},
+            { 8, 53},
+            { 9, 101},
+            { 0, 31},
+        };
+
         #endregion
 
         #region Members
         private TransactionManager _TransMan = null;
         private ObjectId _CurrentBlock = ObjectId.Null;
+        private Editor _Editor = null;
         private RnOptions _RnOptions = null;
         private Dictionary<string, List<ObjectId>> _OidsPerTop = new Dictionary<string, List<ObjectId>>();
         private List<ObjectId> _AllRaumBlocks = new List<ObjectId>();
         private double _MaxDist = 0.25;
+        Dictionary<ObjectId, Plan2Ext.AreaEngine.FgRbStructure> _FgRbStructs = new Dictionary<ObjectId, AreaEngine.FgRbStructure>();
 
         public string Blockname { get; set; }
         public string NrAttribname { get; set; }
@@ -54,7 +70,7 @@ namespace Plan2Ext.Raumnummern
         #endregion
 
         #region Lifecycle
-        
+
         public Engine(RnOptions rnOptions)
         {
 
@@ -68,6 +84,10 @@ namespace Plan2Ext.Raumnummern
 
             Database db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
             _TransMan = db.TransactionManager;
+            _Editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+
+            _FgRbStructs = AreaEngine.GetFgRbStructs(this._RnOptions.Blockname, this._RnOptions.FlaechenGrenzeLayerName, this._RnOptions.AbzFlaechenGrenzeLayerName, db);
+
 
             _AllRaumBlocks = SelectAllRaumblocks();
 
@@ -152,8 +172,9 @@ namespace Plan2Ext.Raumnummern
 
             using (Transaction myT = _TransMan.StartTransaction())
             {
-                if (!SelectBlock()) return false;
+                //if (!SelectBlock()) return false; // old variante
 
+                if (!SelectBlockViaPoint(myT)) return false;
 
                 if (_RnOptions.AutoCorr)
                 {
@@ -196,7 +217,89 @@ namespace Plan2Ext.Raumnummern
             }
 
             return true;
+        }
 
+        private bool SelectBlockViaPoint(Transaction myT)
+        {
+            Point3d raumPunkt = Point3d.Origin;
+            if (!GetRaumPunkt(ref raumPunkt)) return false;
+            var foundFgs = _FgRbStructs.Values.Where(x => x.IsPointInFg(raumPunkt, myT)).ToList();
+            var nrFound = foundFgs.Count;
+            if (nrFound == 0)
+            {
+                _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nEs wurde kein Raum gefunden!"));
+                return true;
+            }
+            else if (nrFound > 1)
+            {
+                _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nEs wurden {0} Räume gefunden!", nrFound.ToString()));
+                return true;
+            }
+            else
+            {
+                var fg = foundFgs[0];
+                var nrBlocks = fg.Raumbloecke.Count;
+                if (nrBlocks == 0)
+                {
+                    _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nEs wurde kein Raumblock gefunden!"));
+                    return true;
+                }
+                else if (nrBlocks > 1)
+                {
+                    _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nEs wurden {0} Raumblöcke gefunden!", nrBlocks.ToString()));
+                    return true;
+                }
+                else
+                {
+                    _CurrentBlock = fg.Raumbloecke[0];
+                    _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nEs wurde ein Raum gefunden.", nrBlocks.ToString()));
+                    var inner = fg.Inseln.ToList();
+                    inner.AddRange(fg.Abzugsflaechen.ToList());
+                    int color = GetTopColor();
+                    string layer = GetTopLayer();
+                    fg.HatchPoly(fg.FlaechenGrenze, inner, layer, color, _TransMan);
+                }
+            }
+            return true;
+        }
+
+        private string GetTopLayer()
+        {
+            var nrStr = _RnOptions.Top;
+            if (!string.IsNullOrEmpty(nrStr))
+            {
+                var arr = nrStr.ToCharArray();
+                string s = "";
+                int i = nrStr.Length - 1;
+                while (i >= 0 && Char.IsDigit(arr[i]))
+                {
+                    s = arr[i] + s;
+                    i--;
+                }
+                return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", s);
+            }
+
+            log.WarnFormat(CultureInfo.CurrentCulture, "Keinen Layer gefunden für Top '{0}'!", nrStr);
+            return "A_RA_TOP__F";
+
+        }
+
+        private int GetTopColor()
+        {
+            var nrStr = _RnOptions.Top;
+            if (!string.IsNullOrEmpty(nrStr))
+            {
+                var lastZiffer = nrStr.Substring(nrStr.Length - 1, 1);
+                int i;
+                if (int.TryParse(lastZiffer, out i))
+                {
+                    return _ColorIndexDict[i];
+                }
+            }
+
+            log.WarnFormat(CultureInfo.CurrentCulture, "Keine Farbe gefunden für Top '{0}'!", nrStr);
+
+            return 7;
         }
 
         #endregion
@@ -355,6 +458,16 @@ namespace Plan2Ext.Raumnummern
         #endregion
 
         #region Private
+        private bool GetRaumPunkt(ref Point3d point)
+        {
+            PromptPointOptions ppo = new PromptPointOptions("\nRaum wählen:");
+            ppo.AllowNone = true;
+            PromptPointResult ppr = _Editor.GetPoint(ppo);
+            if (ppr.Status != PromptStatus.OK) return false;
+            point = ppr.Value;
+            return true;
+        }
+
         private bool SelectBlock()
         {
 
@@ -619,7 +732,7 @@ namespace Plan2Ext.Raumnummern
             return s.PadLeft(len, '0');
         }
 
-        
+
         #endregion
 
 

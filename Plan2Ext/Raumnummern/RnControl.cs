@@ -159,8 +159,6 @@ namespace Plan2Ext.Raumnummern
 
                 using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
                 {
-
-
 #if NEWSETFOCUS
                     _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
 #else
