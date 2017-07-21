@@ -527,6 +527,41 @@ namespace Plan2Ext
                 }
             }
         }
+
+        public static bool LayerOnAndThaw(string layerName)
+        {
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            bool needsRegen = false;
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                    if (!layTb.Has(layerName)) return false;
+                    var layId = layTb[layerName];
+                    _AcDb.LayerTableRecord ltr = trans.GetObject(layId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTableRecord;
+                    log.InfoFormat("Taue und schalte Layer {0} ein.", ltr.Name);
+                    ltr.UpgradeOpen();
+                    ltr.IsOff = false;
+                    if (string.Compare(_AcAp.Application.GetSystemVariable("CLAYER").ToString(), ltr.Name, StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        if (ltr.IsFrozen) needsRegen = true;
+                        ltr.IsFrozen = false;
+                    }
+                    return true;
+                }
+                finally
+                {
+                    trans.Commit();
+                    if (needsRegen)
+                    {
+                        doc.Editor.Regen();
+                    }
+                }
+            }
+        }
+
         public static void LayerOnAndThawRegex(List<string> layerNames)
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;

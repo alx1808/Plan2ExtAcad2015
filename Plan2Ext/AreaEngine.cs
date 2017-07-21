@@ -260,20 +260,20 @@ namespace Plan2Ext
             private const int AcPatternType = 0;
             #endregion
 
-            public void HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int colorIndex, _AcDb.TransactionManager tm)
+            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int colorIndex, _AcDb.TransactionManager tm)
             {
                 _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
                 col.ColorIndex = (_AcIntCom.AcColor)colorIndex;
-                HatchPoly(oid, inner, layer, col, tm);
+                return HatchPoly(oid, inner, layer, col, tm);
             }
-            public void HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int red, int green, int blue, _AcDb.TransactionManager tm)
+            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int red, int green, int blue, _AcDb.TransactionManager tm)
             {
                 _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
                 col.SetRGB(red, green, blue);
-                HatchPoly(oid, inner, layer, col, tm);
+                return HatchPoly(oid, inner, layer, col, tm);
             }
 
-            private void HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
+            private _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
             {
                 string patternName = "_SOLID";
                 bool bAssociativity = false;
@@ -313,6 +313,8 @@ namespace Plan2Ext
                 {
                     poly.Delete();
                 }
+                
+                return new _AcDb.ObjectId((IntPtr)hatchObj.ObjectID);
             }
 
             private _AcIntCom.AcadEntity CopyPoly(_AcDb.ObjectId oid, _AcDb.TransactionManager tm)

@@ -51,6 +51,8 @@ namespace Plan2Ext.Raumnummern
             { 0, 31},
         };
 
+        private static Dictionary<ObjectId, ObjectId> _HatchPerFg = new Dictionary<ObjectId, ObjectId>();
+
         #endregion
 
         #region Members
@@ -257,10 +259,30 @@ namespace Plan2Ext.Raumnummern
                     inner.AddRange(fg.Abzugsflaechen.ToList());
                     int color = GetTopColor();
                     string layer = GetTopLayer();
-                    fg.HatchPoly(fg.FlaechenGrenze, inner, layer, color, _TransMan);
+                    Plan2Ext.Globs.LayerOnAndThaw(layer);
+                    DeleteOldHatch(fg.FlaechenGrenze);
+                    var oid = fg.HatchPoly(fg.FlaechenGrenze, inner, layer, color, _TransMan);
+                    _HatchPerFg[fg.FlaechenGrenze] = oid;
                 }
             }
             return true;
+        }
+
+        private void DeleteOldHatch(ObjectId fg)
+        {
+            ObjectId oid;
+            if (_HatchPerFg.TryGetValue(fg,out oid))
+            {
+                using (var trans = _TransMan.StartTransaction())
+                {
+                    var o = trans.GetObject(oid, OpenMode.ForWrite, true);
+                    if (!o.IsErased)
+                    {
+                        o.Erase();
+                    }
+                    trans.Commit();
+                }
+            }
         }
 
         private string GetTopLayer()
@@ -276,12 +298,15 @@ namespace Plan2Ext.Raumnummern
                     s = arr[i] + s;
                     i--;
                 }
+                if (s.Length < 2)
+                {
+                    s = s.PadLeft(2, '0');
+                }
                 return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", s);
             }
 
             log.WarnFormat(CultureInfo.CurrentCulture, "Keinen Layer gefunden für Top '{0}'!", nrStr);
             return "A_RA_TOP__F";
-
         }
 
         private int GetTopColor()
@@ -296,9 +321,7 @@ namespace Plan2Ext.Raumnummern
                     return _ColorIndexDict[i];
                 }
             }
-
             log.WarnFormat(CultureInfo.CurrentCulture, "Keine Farbe gefunden für Top '{0}'!", nrStr);
-
             return 7;
         }
 
