@@ -126,6 +126,77 @@ namespace Plan2Ext.Kleinbefehle
             }
         }
 
+        [_AcTrx.CommandMethod("Plan2LayerAufteilFarbe")]
+        public static void Plan2LayerAufteilFarbe()
+        {
+            var acadApp = (Autodesk.AutoCAD.Interop.AcadApplication)_AcAp.Application.AcadApplication;
+
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _Db = doc.Database;
+            _AcEd.Editor ed = doc.Editor;
+            try
+            {
+                _Tr = _Db.TransactionManager.StartTransaction();
+                using (_Tr)
+                {
+                    _AcDb.BlockTable bt = (_AcDb.BlockTable)_Tr.GetObject(_Db.BlockTableId, _AcDb.OpenMode.ForRead);
+                    foreach (var btrOid in bt)
+                    {
+                        _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)_Tr.GetObject(btrOid, _AcDb.OpenMode.ForRead);
+                        log.InfoFormat("Blocktable: {0}", btr.Name);
+                        foreach (_AcDb.ObjectId objId in btr)
+                        {
+                            _AcDb.Entity ent = (_AcDb.Entity)_Tr.GetObject(objId, _AcDb.OpenMode.ForRead);
+                            var col = ent.Color;
+                            string newLayerName = ent.Layer;
+                            _AcCm.Color layerColor = null;
+                            switch (col.ColorMethod)
+                            {
+                                case Autodesk.AutoCAD.Colors.ColorMethod.ByAci:
+                                    newLayerName += "_" + col.ColorIndex.ToString();
+                                    layerColor = col;
+                                    break;
+                                case Autodesk.AutoCAD.Colors.ColorMethod.ByBlock:
+                                    newLayerName += "_" + col.ColorNameForDisplay;
+                                    break;
+                                case Autodesk.AutoCAD.Colors.ColorMethod.ByColor:
+                                    newLayerName += "_" + col.ColorNameForDisplay.Replace(',', '-').Replace(" ",""); // 255,255,255 -> 255-255-255; DIC 4 -> DIC4
+                                    layerColor = col;
+                                    break;
+                                case Autodesk.AutoCAD.Colors.ColorMethod.ByLayer:
+                                    newLayerName += "_" + col.ColorNameForDisplay;
+                                    layerColor = Plan2Ext.Globs.GetLayerColor(ent.Layer);
+                                    break;
+                                case Autodesk.AutoCAD.Colors.ColorMethod.ByPen:
+                                case Autodesk.AutoCAD.Colors.ColorMethod.Foreground:
+                                case Autodesk.AutoCAD.Colors.ColorMethod.LayerFrozen:
+                                case Autodesk.AutoCAD.Colors.ColorMethod.LayerOff:
+                                case Autodesk.AutoCAD.Colors.ColorMethod.None:
+                                    newLayerName += "_" + col.ColorNameForDisplay;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            Plan2Ext.Globs.CreateLayer(newLayerName, layerColor);
+
+                            ent.UpgradeOpen();
+                            ent.Layer = newLayerName;
+                            ent.Color = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByLayer, 256);
+                            ent.DowngradeOpen();
+                        }
+                    }
+
+                    _Tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (Plan2LayerAufteilFarbe): {0}", ex.Message);
+                ed.WriteMessage("\n" + msg);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Plan2LayerAufteilFarbe");
+            }
+        }
 
         private static bool CorrectionRest(_AcDb.Entity ent)
         {

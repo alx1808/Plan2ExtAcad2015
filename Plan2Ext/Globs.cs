@@ -1861,31 +1861,48 @@ namespace Plan2Ext
             _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Document.SendStringToExecute(cmd, true, true, true);
         }
 
-        internal static void CreateLayer(string layerName)
+        internal static void CreateLayer(string layerName, _AcCm.Color color = null)
         {
 
             _AcDb.Database db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
             _AcDb.TransactionManager tm = db.TransactionManager;
-            _AcDb.Transaction ta = tm.StartTransaction();
-            try
+            using (var ta = tm.StartTransaction())
             {
-                _AcDb.LayerTable lt = (_AcDb.LayerTable)tm.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead, false);
+                _AcDb.LayerTable lt = (_AcDb.LayerTable)ta.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead, false);
                 if (!lt.Has(layerName))
                 {
                     _AcDb.LayerTableRecord ltRec = new _AcDb.LayerTableRecord();
                     ltRec.Name = layerName;
+                    if (color != null)
+                    {
+                        ltRec.Color = color;
+                    }
                     lt.UpgradeOpen();
                     lt.Add(ltRec);
                     tm.AddNewlyCreatedDBObject(ltRec, true);
-                    ta.Commit();
                 }
-
-            }
-            finally
-            {
-                ta.Dispose();
+                ta.Commit();
             }
         }
+
+        internal static _AcCm.Color GetLayerColor(string layerName)
+        {
+            _AcCm.Color color = null;
+            _AcDb.Database db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            _AcDb.TransactionManager tm = db.TransactionManager;
+            using (var ta = tm.StartTransaction())
+            {
+                _AcDb.LayerTable lt = (_AcDb.LayerTable)ta.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead, false);
+                if (lt.Has(layerName))
+                {
+                    var layerId = lt[layerName];
+                    var layer = (_AcDb.LayerTableRecord)ta.GetObject(layerId, _AcDb.OpenMode.ForRead);
+                    color = layer.Color;
+                }
+                ta.Commit();
+            }
+            return color;
+      }
 
         internal static _AcIntCom.AcadEntity ObjectIdToAcadEntity(_AcDb.ObjectId objectId, _AcDb.TransactionManager tm)
         {
