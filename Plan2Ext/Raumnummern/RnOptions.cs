@@ -68,7 +68,7 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        private string _Top = "TOP01";
+        private string _Top = "01";
         public string Top { get { return _Top; } set { _Top = value; } }
         public void SetTop(string topName)
         {

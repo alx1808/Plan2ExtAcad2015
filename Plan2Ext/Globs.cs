@@ -58,6 +58,51 @@ namespace Plan2Ext
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
 
+        public static bool InsertFromPrototype(string blockName, string protoDwgName)
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            string protoDwgFullPath = string.Empty;
+            try
+            {
+                protoDwgFullPath = _AcDb.HostApplicationServices.Current.FindFile(protoDwgName, doc.Database, _AcDb.FindFileHint.Default);
+            }
+            catch (Exception ex)
+            {
+                doc.Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nKonnte Prototypzeichnung '{0}' nicht finden!", protoDwgName));
+                return false;
+            }
+            bool ret = false;
+            using (var OpenDb = new _AcDb.Database(false, true))
+            {
+                OpenDb.ReadDwgFile(protoDwgFullPath, System.IO.FileShare.ReadWrite, true, "");
+                var ids = new _AcDb.ObjectIdCollection();
+
+                using (var tr = OpenDb.TransactionManager.StartTransaction())
+                {
+                    var bt = (_AcDb.BlockTable)tr.GetObject(OpenDb.BlockTableId, _AcDb.OpenMode.ForRead);
+                    if (bt.Has(blockName))
+                    {
+                        ids.Add(bt[blockName]);
+                    }
+                    else
+                    {
+                        doc.Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nDie Prototypzeichnung '{0}' hat keinen Block namens '{1}'!", protoDwgFullPath, blockName));
+                    }
+                    tr.Commit();
+                }
+
+                if (ids.Count > 0)
+                {
+                    //get the current drawing database
+                    var destdb = doc.Database;
+                    var iMap = new _AcDb.IdMapping();
+                    destdb.WblockCloneObjects(ids, destdb.BlockTableId, iMap, _AcDb.DuplicateRecordCloning.Ignore, deferTranslation: false);
+                    ret = true;
+                }
+            }
+            return ret;
+        }
+
         public static _AcDb.ObjectId HandleStringToObjectId(_AcDb.ObjectId oid, string handleString)
         {
             long ln = Convert.ToInt64(handleString, 16);
@@ -617,6 +662,67 @@ namespace Plan2Ext
                     }
                 }
             }
+        }
+
+        public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids)
+        {
+            if (ids.Count == 0) return;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (_AcDb.Transaction tr = doc.TransactionManager.StartTransaction())
+            {
+                _AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+
+                var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+                dot.MoveToBottom(ids);
+
+                tr.Commit();
+            }
+
+        }
+
+        public static void LayerOffRegex(List<string> layerNames)
+        {
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            bool needsRegen = false;
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                    List<_AcDb.LayerTableRecord> ltrs = new List<_AcDb.LayerTableRecord>();
+                    foreach (var ltrOid in layTb)
+                    {
+                        _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                        string ok = layerNames.FirstOrDefault(x => Regex.IsMatch(ltr.Name, x, RegexOptions.IgnoreCase));
+                        if (!string.IsNullOrEmpty(ok))
+                        {
+                            ltrs.Add(ltr);
+                        }
+                    }
+
+                    foreach (var ltr in ltrs)
+                    {
+                        if (string.Compare(_AcAp.Application.GetSystemVariable("CLAYER").ToString(), ltr.Name, StringComparison.OrdinalIgnoreCase) != 0)
+                        {
+                            log.InfoFormat("Schalte Layer {0} aus.", ltr.Name);
+                            ltr.UpgradeOpen();
+                            ltr.IsOff = true;
+                        }
+                    }
+                }
+                finally
+                {
+                    trans.Commit();
+                    if (needsRegen)
+                    {
+                        doc.Editor.Regen();
+                    }
+                }
+            }
+
         }
 
         public static void LayerOnAndThawRegex(List<string> layerNames)
@@ -1959,7 +2065,7 @@ namespace Plan2Ext
                 ta.Commit();
             }
             return color;
-      }
+        }
 
         internal static _AcIntCom.AcadEntity ObjectIdToAcadEntity(_AcDb.ObjectId objectId, _AcDb.TransactionManager tm)
         {

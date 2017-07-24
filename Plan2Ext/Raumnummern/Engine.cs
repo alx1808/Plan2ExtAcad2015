@@ -233,53 +233,56 @@ namespace Plan2Ext.Raumnummern
             Plan2Ext.Globs.LayerOnAndThaw(layer);
             DeleteOldHatch(fg.FlaechenGrenze);
             var oid = fg.HatchPoly(fg.FlaechenGrenze, inner, layer, color, _TransMan);
-            var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle,oid.Handle));
+            var ids = new ObjectIdCollection();
+            ids.Add(oid);
+            Plan2Ext.Globs.DrawOrderBottom(ids);
+            var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle, oid.Handle));
             Plan2Ext.Globs.SetXrecord(fg.FlaechenGrenze, HATCH_OF_RAUM, rb);
 
         }
 
-//        private void DeleteHatchesForTop(AreaEngine.FgRbStructure fg)
-//        {
-//            var completeNr = GetBlockAttrib(_CurrentBlock, _RnOptions.Attribname);  
-//            if (string.IsNullOrEmpty(completeNr))                return;
-//            string nrPart = GetTopNrFromCompleteNr(completeNr);
-//            if (string.IsNullOrEmpty(nrPart)) return;
-//            var layer = string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", nrPart);
-            
+        //        private void DeleteHatchesForTop(AreaEngine.FgRbStructure fg)
+        //        {
+        //            var completeNr = GetBlockAttrib(_CurrentBlock, _RnOptions.Attribname);  
+        //            if (string.IsNullOrEmpty(completeNr))                return;
+        //            string nrPart = GetTopNrFromCompleteNr(completeNr);
+        //            if (string.IsNullOrEmpty(nrPart)) return;
+        //            var layer = string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", nrPart);
 
-//            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-//            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
-//                new TypedValue((int)DxfCode.Start,"HATCH" ),
-//                new TypedValue((int)DxfCode.LayerName,layer)
-//            });
 
-//            PromptSelectionResult res = ed.SelectAll(filter);
-//            if (res.Status != PromptStatus.OK) return;
+        //            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+        //            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
+        //                new TypedValue((int)DxfCode.Start,"HATCH" ),
+        //                new TypedValue((int)DxfCode.LayerName,layer)
+        //            });
 
-//#if BRX_APP
-//            SelectionSet ss = res.Value;
-//#else
-//            using (SelectionSet ss = res.Value)
-//#endif
-//            {
-//                var oids = ss.GetObjectIds().ToList();
-//                using (var trans = _TransMan.StartTransaction())
-//                {
-//                    foreach (var oid in oids)
-//                    {
-//                        var hatch = trans.GetObject(oid, OpenMode.ForWrite);
-//                        hatch.Erase();
-//                    }
-//                    trans.Commit();
-//                }
-//            }
-//        }
+        //            PromptSelectionResult res = ed.SelectAll(filter);
+        //            if (res.Status != PromptStatus.OK) return;
+
+        //#if BRX_APP
+        //            SelectionSet ss = res.Value;
+        //#else
+        //            using (SelectionSet ss = res.Value)
+        //#endif
+        //            {
+        //                var oids = ss.GetObjectIds().ToList();
+        //                using (var trans = _TransMan.StartTransaction())
+        //                {
+        //                    foreach (var oid in oids)
+        //                    {
+        //                        var hatch = trans.GetObject(oid, OpenMode.ForWrite);
+        //                        hatch.Erase();
+        //                    }
+        //                    trans.Commit();
+        //                }
+        //            }
+        //        }
 
         private string GetTopNrFromCompleteNr(string completeNr)
         {
             string topPart = GetPartTilSeparator(completeNr);
             if (string.IsNullOrEmpty(topPart)) return string.Empty;
-            return GetDigitsFromTopPart(topPart);   
+            return GetDigitsFromTopPart(topPart);
         }
 
         private string GetPartTilSeparator(string completeNr)
@@ -299,7 +302,7 @@ namespace Plan2Ext.Raumnummern
                 if (fg == null) return true;
                 if (_CurrentBlock == ObjectId.Null) return true;
 
-                DeleteOldHatch(fg.FlaechenGrenze); 
+                DeleteOldHatch(fg.FlaechenGrenze);
                 SetBlockAttrib(_CurrentBlock, NrAttribname, "");
 
                 BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
@@ -381,15 +384,16 @@ namespace Plan2Ext.Raumnummern
 
         private string GetHatchLayer()
         {
-            var nrStr = _RnOptions.Top;
-            if (!string.IsNullOrEmpty(nrStr))
-            {
-                string s = GetDigitsFromTopPart(nrStr);
-                return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", s);
-            }
+            return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", _RnOptions.Top.Trim());
+            //var nrStr = _RnOptions.Top;
+            //if (!string.IsNullOrEmpty(nrStr))
+            //{
+            //    string s = GetDigitsFromTopPart(nrStr);
+            //    return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", s);
+            //}
 
-            log.WarnFormat(CultureInfo.CurrentCulture, "Keinen Layer gefunden für Top '{0}'!", nrStr);
-            return "A_RA_TOP__F";
+            //log.WarnFormat(CultureInfo.CurrentCulture, "Keinen Layer gefunden für Top '{0}'!", nrStr);
+            //return "A_RA_TOP__F";
         }
 
         private static string GetDigitsFromTopPart(string nrStr)
@@ -412,15 +416,24 @@ namespace Plan2Ext.Raumnummern
         private int GetHatchColor()
         {
             var nrStr = _RnOptions.Top;
-            if (!string.IsNullOrEmpty(nrStr))
+            var cArr = nrStr.ToCharArray();
+            for (int i = cArr.Length - 1; i >= 0; i--)
             {
-                var lastZiffer = nrStr.Substring(nrStr.Length - 1, 1);
-                int i;
-                if (int.TryParse(lastZiffer, out i))
+                var c = cArr[i];
+                if (Char.IsDigit(c))
                 {
-                    return _ColorIndexDict[i];
+                    return _ColorIndexDict[int.Parse(c.ToString())];
                 }
             }
+            //if (!string.IsNullOrEmpty(nrStr))
+            //{
+            //    var lastZiffer = nrStr.Substring(nrStr.Length - 1, 1);
+            //    int i;
+            //    if (int.TryParse(lastZiffer, out i))
+            //    {
+            //        return _ColorIndexDict[i];
+            //    }
+            //}
             log.WarnFormat(CultureInfo.CurrentCulture, "Keine Farbe gefunden für Top '{0}'!", nrStr);
             return 7;
         }
@@ -781,7 +794,7 @@ namespace Plan2Ext.Raumnummern
 
         private string GetCompleteNumber(string curNumber)
         {
-            return _RnOptions.Top + _RnOptions.Separator + curNumber;
+            return "TOP" + _RnOptions.Top + _RnOptions.Separator + curNumber;
         }
 
         private void AutoCorrection(int numlen)

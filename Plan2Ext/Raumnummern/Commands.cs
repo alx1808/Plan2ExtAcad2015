@@ -42,6 +42,11 @@ namespace Plan2Ext.Raumnummern
         }
         #endregion
 
+        internal const string PFEILBLOCKNAME = "AL_TOP";
+        internal const string TOPBLOCKNAME = "AL_TOP_NFL";
+        internal const string PROPOTYP_DWG_NAME = "PROTO_50.dwg";
+
+
         [LispFunction("alx_F:ino_RaumnummernGetTopNr")]
         public static string LispRaumnummernGetTopNr(ResultBuffer rb)
         {
@@ -63,22 +68,26 @@ namespace Plan2Ext.Raumnummern
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 var ed = doc.Editor;
 
-                var pfeilBlockName = "AL_TOP";
-                var topBlockName = "AL_TOP_NFL";
                 var blockLayer = "A_RA_NUMMER";
 
                 Plan2Ext.Globs.VerifyLayerExists(blockLayer,null);
                 Plan2Ext.Globs.SetLayerCurrent(blockLayer);
 
-                if (!Plan2Ext.Globs.BlockExists(pfeilBlockName))
+                if (!Plan2Ext.Globs.BlockExists(PFEILBLOCKNAME))
                 {
-                    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlock '{0}' existiert nicht!", pfeilBlockName));
-                    return;
+                    if (!Plan2Ext.Globs.InsertFromPrototype(PFEILBLOCKNAME, PROPOTYP_DWG_NAME))
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlock '{0}' existiert nicht!", PFEILBLOCKNAME));
+                        return;
+                    }
                 }
-                if (!Plan2Ext.Globs.BlockExists(topBlockName))
+                if (!Plan2Ext.Globs.BlockExists(TOPBLOCKNAME))
                 {
-                    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlock '{0}' existiert nicht!", topBlockName));
-                    return;
+                    if (!Plan2Ext.Globs.InsertFromPrototype(TOPBLOCKNAME, PROPOTYP_DWG_NAME))
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlock '{0}' existiert nicht!", TOPBLOCKNAME));
+                        return;
+                    }
                 }
 
                 var oidL = Utils.EntLast();
@@ -88,7 +97,7 @@ namespace Plan2Ext.Raumnummern
                 //var acadapp = (Autodesk.AutoCAD.Interop.AcadApplication)Application.AcadApplication;
                 //acadapp.ActiveDocument.SendCommand("_.INSERT" + " " + pfeilBlockName + " " + "\\" + " 1 1 " + "\\");
                 //bool userBreak = false;
-                bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", pfeilBlockName, Editor.PauseToken, 1, 1, Editor.PauseToken);
+                bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
                 if (userBreak) return;
                 var oid = Utils.EntLast();
                 var topNr = opts.TopNr;
@@ -96,7 +105,7 @@ namespace Plan2Ext.Raumnummern
 
                 var vctr = Plan2Ext.Globs.GetViewCtrW();
                 var vctrU = Plan2Ext.Globs.TransWcsUcs(vctr);
-                ed.Command("_.INSERT", topBlockName, vctrU, 1, 1, 0.0);
+                ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
                 if (userBreak) return;
                 oid = Utils.EntLast();
                 SetTopBlockNr(doc.Database, oid, topNr, "TOP");
@@ -113,6 +122,8 @@ namespace Plan2Ext.Raumnummern
                 Plan2Ext.Globs.SetLayerCurrent(curLayer);
             }
         }
+
+        
 
         private static bool SetTopBlockNr(Database db, ObjectId blockOid, string topNr, string attName)
         {
@@ -537,6 +548,9 @@ namespace Plan2Ext.Raumnummern
                 {
 
                     Engine _Engine = new Engine(opts);
+
+                    Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_","^A_BE_TXT","^A_BE_HÖHE$" });
+                    Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
 
                     while (_Engine.AddNumber()) { };
                 }
