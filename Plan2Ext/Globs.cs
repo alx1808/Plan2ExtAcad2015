@@ -58,6 +58,63 @@ namespace Plan2Ext
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
 
+        public static _AcDb.ObjectId HandleStringToObjectId(_AcDb.ObjectId oid, string handleString)
+        {
+            long ln = Convert.ToInt64(handleString, 16);
+            var handle = new _AcDb.Handle(ln);
+            oid = _AcAp.Application.DocumentManager.MdiActiveDocument.Database.GetObjectId(false, handle, 0);
+            return oid;
+        }
+
+        public static void SetXrecord(_AcDb.ObjectId id, string key, _AcDb.ResultBuffer resbuf)
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+                if (ent != null)
+                {
+                    ent.UpgradeOpen();
+                    if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) ent.CreateExtensionDictionary();
+                    _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
+                    _AcDb.Xrecord xRec = new _AcDb.Xrecord();
+                    xRec.Data = resbuf;
+                    xDict.SetAt(key, xRec);
+                    tr.AddNewlyCreatedDBObject(xRec, true);
+                }
+                tr.Commit();
+            }
+        }
+
+        public static _AcDb.ResultBuffer GetXrecord(_AcDb.ObjectId id, string key)
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            _AcDb.ResultBuffer result = new _AcDb.ResultBuffer();
+            using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.Xrecord xRec = new _AcDb.Xrecord();
+                _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead, false) as _AcDb.Entity;
+                if (ent != null)
+                {
+                    try
+                    {
+                        if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) return null;
+                        _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForRead, false);
+                        xRec = (_AcDb.Xrecord)tr.GetObject(xDict.GetAt(key), _AcDb.OpenMode.ForRead, false);
+                        return xRec.Data;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                else
+                    return null;
+            }
+        }
+
         public static double GetRadRotationTolerance()
         {
             string gradToleranceS;

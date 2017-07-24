@@ -157,6 +157,8 @@ namespace Plan2Ext.Raumnummern
             {
                 _StartShield = true;
 
+                Globs.CancelCommand();
+
                 using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
                 {
 #if NEWSETFOCUS
@@ -181,6 +183,47 @@ namespace Plan2Ext.Raumnummern
             }
 
         }
+
+        private bool _RemoveRaumShield = false;
+        private void btnRemoveRaum_Click(object sender, EventArgs e)
+        {
+            if (_RemoveRaumShield) return;
+            try
+            {
+                _RemoveRaumShield = true;
+
+                Globs.CancelCommand();
+
+                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
+                {
+#if NEWSETFOCUS
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
+                    //Autodesk.AutoCAD.Interop.AcadApplication app = (Autodesk.AutoCAD.Interop.AcadApplication)_AcAp.Application.AcadApplication;
+                    //app.ActiveDocument.SendCommand("Plan2Raumnummern\n");
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummernRemoveRaum ", true, false, false);
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernRemoveRaum aufgetreten! {0}", ex.Message));
+            }
+            finally
+            {
+                _RemoveRaumShield = false;
+            }
+
+        }
+
+        //private void btnRemoveRaum_Click(object sender, EventArgs e)
+        //{
+
+        //}
+
 
 
 

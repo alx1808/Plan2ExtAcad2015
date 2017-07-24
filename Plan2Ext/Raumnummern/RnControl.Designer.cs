@@ -62,6 +62,7 @@
             this.btnFlaBereinig = new System.Windows.Forms.Button();
             this.btnInsertTop = new System.Windows.Forms.Button();
             this.txtTopNr = new System.Windows.Forms.TextBox();
+            this.btnRemoveRaum = new System.Windows.Forms.Button();
             this.grNumber.SuspendLayout();
             this.grpFbHoehe.SuspendLayout();
             this.grpManually.SuspendLayout();
@@ -71,6 +72,7 @@
             // 
             this.grNumber.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grNumber.Controls.Add(this.btnRemoveRaum);
             this.grNumber.Controls.Add(this.btnSelectTop);
             this.grNumber.Controls.Add(this.chkAutoCorr);
             this.grNumber.Controls.Add(this.btnStart);
@@ -82,7 +84,7 @@
             this.grNumber.Controls.Add(this.lblTop);
             this.grNumber.Location = new System.Drawing.Point(0, 162);
             this.grNumber.Name = "grNumber";
-            this.grNumber.Size = new System.Drawing.Size(228, 155);
+            this.grNumber.Size = new System.Drawing.Size(228, 182);
             this.grNumber.TabIndex = 0;
             this.grNumber.TabStop = false;
             this.grNumber.Text = "Zuordnen";
@@ -446,6 +448,18 @@
             this.txtTopNr.TabIndex = 51;
             this.txtTopNr.TextChanged += new System.EventHandler(this.txtTopNr_TextChanged);
             // 
+            // btnRemoveRaum
+            // 
+            this.btnRemoveRaum.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRemoveRaum.Location = new System.Drawing.Point(6, 150);
+            this.btnRemoveRaum.Name = "btnRemoveRaum";
+            this.btnRemoveRaum.Size = new System.Drawing.Size(216, 23);
+            this.btnRemoveRaum.TabIndex = 32;
+            this.btnRemoveRaum.Text = "Raumfläche entfernen";
+            this.btnRemoveRaum.UseVisualStyleBackColor = true;
+            this.btnRemoveRaum.Click += new System.EventHandler(this.btnRemoveRaum_Click);
+            // 
             // RnControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -505,5 +519,6 @@
         private System.Windows.Forms.Button btnFlaBereinig;
         private System.Windows.Forms.Button btnInsertTop;
         internal System.Windows.Forms.TextBox txtTopNr;
+        private System.Windows.Forms.Button btnRemoveRaum;
     }
 }

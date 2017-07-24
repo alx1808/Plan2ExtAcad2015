@@ -36,7 +36,7 @@ namespace Plan2Ext.Raumnummern
         #region Const
         private const string _NoRaumblockMessage = "\nDas gewählte Element ist kein Raumblock '{0}'.";
         private const string DIST_RB_TO_FB_KONFIG = "alx_V:ino_rb_rb2fbDist";
-        //private const string HK_BLOCKNAME_KONFIG = "alx_V:ino_rb_HkBlockName";
+        private const string HATCH_OF_RAUM = "Plan2RoomHatch";
 
         private readonly Dictionary<int, int> _ColorIndexDict = new Dictionary<int, int>() { 
             { 1, 141},
@@ -50,8 +50,6 @@ namespace Plan2Ext.Raumnummern
             { 9, 101},
             { 0, 31},
         };
-
-        private static Dictionary<ObjectId, ObjectId> _HatchPerFg = new Dictionary<ObjectId, ObjectId>();
 
         #endregion
 
@@ -176,7 +174,12 @@ namespace Plan2Ext.Raumnummern
             {
                 //if (!SelectBlock()) return false; // old variante
 
-                if (!SelectBlockViaPoint(myT)) return false;
+                AreaEngine.FgRbStructure fg = null;
+                if (!SelectBlockViaPoint(myT, out fg)) return false;
+                if (fg == null) return true;
+                if (_CurrentBlock == ObjectId.Null) return true;
+
+                HatchIt(fg);
 
                 if (_RnOptions.AutoCorr)
                 {
@@ -221,8 +224,95 @@ namespace Plan2Ext.Raumnummern
             return true;
         }
 
-        private bool SelectBlockViaPoint(Transaction myT)
+        private void HatchIt(AreaEngine.FgRbStructure fg)
         {
+            var inner = fg.Inseln.ToList();
+            inner.AddRange(fg.Abzugsflaechen.ToList());
+            int color = GetHatchColor();
+            string layer = GetHatchLayer();
+            Plan2Ext.Globs.LayerOnAndThaw(layer);
+            DeleteOldHatch(fg.FlaechenGrenze);
+            var oid = fg.HatchPoly(fg.FlaechenGrenze, inner, layer, color, _TransMan);
+            var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle,oid.Handle));
+            Plan2Ext.Globs.SetXrecord(fg.FlaechenGrenze, HATCH_OF_RAUM, rb);
+
+        }
+
+//        private void DeleteHatchesForTop(AreaEngine.FgRbStructure fg)
+//        {
+//            var completeNr = GetBlockAttrib(_CurrentBlock, _RnOptions.Attribname);  
+//            if (string.IsNullOrEmpty(completeNr))                return;
+//            string nrPart = GetTopNrFromCompleteNr(completeNr);
+//            if (string.IsNullOrEmpty(nrPart)) return;
+//            var layer = string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", nrPart);
+            
+
+//            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+//            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
+//                new TypedValue((int)DxfCode.Start,"HATCH" ),
+//                new TypedValue((int)DxfCode.LayerName,layer)
+//            });
+
+//            PromptSelectionResult res = ed.SelectAll(filter);
+//            if (res.Status != PromptStatus.OK) return;
+
+//#if BRX_APP
+//            SelectionSet ss = res.Value;
+//#else
+//            using (SelectionSet ss = res.Value)
+//#endif
+//            {
+//                var oids = ss.GetObjectIds().ToList();
+//                using (var trans = _TransMan.StartTransaction())
+//                {
+//                    foreach (var oid in oids)
+//                    {
+//                        var hatch = trans.GetObject(oid, OpenMode.ForWrite);
+//                        hatch.Erase();
+//                    }
+//                    trans.Commit();
+//                }
+//            }
+//        }
+
+        private string GetTopNrFromCompleteNr(string completeNr)
+        {
+            string topPart = GetPartTilSeparator(completeNr);
+            if (string.IsNullOrEmpty(topPart)) return string.Empty;
+            return GetDigitsFromTopPart(topPart);   
+        }
+
+        private string GetPartTilSeparator(string completeNr)
+        {
+            var index = completeNr.IndexOf(_RnOptions.Separator);
+            if (index <= 0) return string.Empty;
+            return completeNr.Substring(0, index);
+        }
+
+        internal bool RemoveRaum()
+        {
+            MarkRbs();
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                AreaEngine.FgRbStructure fg = null;
+                if (!SelectBlockViaPoint(myT, out fg)) return false;
+                if (fg == null) return true;
+                if (_CurrentBlock == ObjectId.Null) return true;
+
+                DeleteOldHatch(fg.FlaechenGrenze); 
+                SetBlockAttrib(_CurrentBlock, NrAttribname, "");
+
+                BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
+                MarkRbIfNumber(br);
+                myT.Commit();
+            }
+            return true;
+        }
+
+        private bool SelectBlockViaPoint(Transaction myT, out AreaEngine.FgRbStructure fg)
+        {
+            fg = null;
+            _CurrentBlock = ObjectId.Null;
             Point3d raumPunkt = Point3d.Origin;
             if (!GetRaumPunkt(ref raumPunkt)) return false;
             var foundFgs = _FgRbStructs.Values.Where(x => x.IsPointInFg(raumPunkt, myT)).ToList();
@@ -239,7 +329,7 @@ namespace Plan2Ext.Raumnummern
             }
             else
             {
-                var fg = foundFgs[0];
+                fg = foundFgs[0];
                 var nrBlocks = fg.Raumbloecke.Count;
                 if (nrBlocks == 0)
                 {
@@ -255,14 +345,6 @@ namespace Plan2Ext.Raumnummern
                 {
                     _CurrentBlock = fg.Raumbloecke[0];
                     _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nEs wurde ein Raum gefunden.", nrBlocks.ToString()));
-                    var inner = fg.Inseln.ToList();
-                    inner.AddRange(fg.Abzugsflaechen.ToList());
-                    int color = GetTopColor();
-                    string layer = GetTopLayer();
-                    Plan2Ext.Globs.LayerOnAndThaw(layer);
-                    DeleteOldHatch(fg.FlaechenGrenze);
-                    var oid = fg.HatchPoly(fg.FlaechenGrenze, inner, layer, color, _TransMan);
-                    _HatchPerFg[fg.FlaechenGrenze] = oid;
                 }
             }
             return true;
@@ -270,38 +352,39 @@ namespace Plan2Ext.Raumnummern
 
         private void DeleteOldHatch(ObjectId fg)
         {
-            ObjectId oid;
-            if (_HatchPerFg.TryGetValue(fg,out oid))
+            ObjectId oid = ObjectId.Null;
+            var rb = Plan2Ext.Globs.GetXrecord(fg, HATCH_OF_RAUM);
+            if (rb != null)
             {
-                using (var trans = _TransMan.StartTransaction())
+                TypedValue[] values = rb.AsArray();
+                try
                 {
-                    var o = trans.GetObject(oid, OpenMode.ForWrite, true);
-                    if (!o.IsErased)
-                    {
-                        o.Erase();
-                    }
-                    trans.Commit();
+                    var handleString = values[0].Value.ToString();
+                    oid = Plan2Ext.Globs.HandleStringToObjectId(oid, handleString);
                 }
+                catch (Exception)
+                {
+                }
+            }
+            if (oid == ObjectId.Null) return;
+
+            using (var trans = _TransMan.StartTransaction())
+            {
+                var o = trans.GetObject(oid, OpenMode.ForWrite, true);
+                if (!o.IsErased)
+                {
+                    o.Erase();
+                }
+                trans.Commit();
             }
         }
 
-        private string GetTopLayer()
+        private string GetHatchLayer()
         {
             var nrStr = _RnOptions.Top;
             if (!string.IsNullOrEmpty(nrStr))
             {
-                var arr = nrStr.ToCharArray();
-                string s = "";
-                int i = nrStr.Length - 1;
-                while (i >= 0 && Char.IsDigit(arr[i]))
-                {
-                    s = arr[i] + s;
-                    i--;
-                }
-                if (s.Length < 2)
-                {
-                    s = s.PadLeft(2, '0');
-                }
+                string s = GetDigitsFromTopPart(nrStr);
                 return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", s);
             }
 
@@ -309,7 +392,24 @@ namespace Plan2Ext.Raumnummern
             return "A_RA_TOP__F";
         }
 
-        private int GetTopColor()
+        private static string GetDigitsFromTopPart(string nrStr)
+        {
+            var arr = nrStr.ToCharArray();
+            string s = "";
+            int i = nrStr.Length - 1;
+            while (i >= 0 && Char.IsDigit(arr[i]))
+            {
+                s = arr[i] + s;
+                i--;
+            }
+            if (s.Length < 2)
+            {
+                s = s.PadLeft(2, '0');
+            }
+            return s;
+        }
+
+        private int GetHatchColor()
         {
             var nrStr = _RnOptions.Top;
             if (!string.IsNullOrEmpty(nrStr))
@@ -362,9 +462,7 @@ namespace Plan2Ext.Raumnummern
                     Scale = blockRef.ScaleFactors.X
                 });
             }
-
             return ret;
-
         }
 
         #endregion
@@ -645,6 +743,26 @@ namespace Plan2Ext.Raumnummern
 
         }
 
+        private string GetBlockAttrib(ObjectId oid, string attName)
+        {
+            if (oid == ObjectId.Null) throw new ArgumentNullException();
+
+            string val = string.Empty;
+
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                BlockReference blockEnt = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
+                if (blockEnt != null)
+                {
+                    var attRef = GetBlockAttribute(attName, blockEnt);
+                    val = attRef.TextString;
+                }
+
+                myT.Commit();
+            }
+            return val;
+        }
+
         private AttributeReference GetBlockAttribute(string name, BlockReference blockEnt)
         {
             foreach (ObjectId attId in blockEnt.AttributeCollection)
@@ -754,10 +872,6 @@ namespace Plan2Ext.Raumnummern
             string s = i.ToString();
             return s.PadLeft(len, '0');
         }
-
-
         #endregion
-
-
     }
 }
