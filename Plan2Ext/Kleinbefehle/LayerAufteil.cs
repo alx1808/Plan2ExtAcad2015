@@ -55,60 +55,73 @@ namespace Plan2Ext.Kleinbefehle
             _AcEd.Editor ed = doc.Editor;
             try
             {
-                _Tr = _Db.TransactionManager.StartTransaction();
-                using (_Tr)
+                using (_Tr = _Db.TransactionManager.StartTransaction())
                 {
-                    // Open the blocktable, get the modelspace
-                    _AcDb.BlockTable bt = (_AcDb.BlockTable)_Tr.GetObject(_Db.BlockTableId, _AcDb.OpenMode.ForRead);
+                    var oids = new List<_AcDb.ObjectId>();
 
-                    foreach (var btrOid in bt)
+                    _AcEd.PromptSelectionOptions selOpts = new _AcEd.PromptSelectionOptions();
+                    selOpts.MessageForAdding = "Elemente wählen <Return für alle>: ";
+                    var res = ed.GetSelection(selOpts);
+                    if (res.Status == _AcEd.PromptStatus.Cancel) return;
+                    if (res.Status == _AcEd.PromptStatus.OK)
                     {
-                        _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)_Tr.GetObject(btrOid, _AcDb.OpenMode.ForRead);
-                        log.InfoFormat("Blocktable: {0}", btr.Name);
-                        foreach (_AcDb.ObjectId objId in btr)
+#if BRX_APP
+                        _AcEd.SelectionSet ss = res.Value;
+#else
+                        using (_AcEd.SelectionSet ss = res.Value)
+#endif
                         {
-                            _AcDb.Entity ent = (_AcDb.Entity)_Tr.GetObject(objId, _AcDb.OpenMode.ForRead);
-                            if (ent.GetType() == typeof(_AcDb.AttributeDefinition) ||
-                                ent.GetType() == typeof(_AcDb.DBText) ||
-                                ent.GetType() == typeof(_AcDb.MText) ||
-                                ent.GetType() == typeof(_AcDb.Leader) ||
-                                Regex.IsMatch(ent.GetType().Name, "Dimension", RegexOptions.IgnoreCase)
-                                )
+                            oids.AddRange(ss.GetObjectIds());
+                        }
+                    }
+                    else
+                    {
+                        GetAllObjectIds(oids);
+                    }
+
+                    foreach (_AcDb.ObjectId objId in oids)
+                    {
+                        _AcDb.Entity ent = (_AcDb.Entity)_Tr.GetObject(objId, _AcDb.OpenMode.ForRead);
+                        if (ent.GetType() == typeof(_AcDb.AttributeDefinition) ||
+                            ent.GetType() == typeof(_AcDb.DBText) ||
+                            ent.GetType() == typeof(_AcDb.MText) ||
+                            ent.GetType() == typeof(_AcDb.Leader) ||
+                            Regex.IsMatch(ent.GetType().Name, "Dimension", RegexOptions.IgnoreCase)
+                            )
+                        {
+                            Correction(ent, suffix: "_T", isContinuous: true);
+                        }
+                        else
+                        {
+                            var blockRef = ent as _AcDb.BlockReference;
+                            if (blockRef != null)
                             {
-                                Correction(ent, suffix: "_T", isContinuous: true);
+                                Correction(ent, suffix: "_B", isContinuous: true);
                             }
                             else
                             {
-                                var blockRef = ent as _AcDb.BlockReference;
-                                if (blockRef != null)
+                                var hatch = ent as _AcDb.Hatch;
+                                if (hatch != null)
                                 {
-                                    Correction(ent, suffix: "_B", isContinuous: true);
-                                }
-                                else
-                                {
-                                    var hatch = ent as _AcDb.Hatch;
-                                    if (hatch != null)
+                                    if (Regex.IsMatch(hatch.PatternName, "SOLID", RegexOptions.IgnoreCase))
                                     {
-                                        if (Regex.IsMatch(hatch.PatternName, "SOLID", RegexOptions.IgnoreCase))
-                                        {
-                                            Correction(ent, suffix: "_F", isContinuous: true);
-                                        }
-                                        else
-                                        {
-                                            Correction(ent, suffix: "_S", isContinuous: true);
-                                        }
+                                        Correction(ent, suffix: "_F", isContinuous: true);
                                     }
                                     else
                                     {
-                                        var solid = ent as _AcDb.Solid;
-                                        if (solid != null)
-                                        {
-                                            Correction(ent, suffix: "_F", isContinuous: true);
-                                        }
-                                        else
-                                        {
-                                            CorrectionRest(ent);
-                                        }
+                                        Correction(ent, suffix: "_S", isContinuous: true);
+                                    }
+                                }
+                                else
+                                {
+                                    var solid = ent as _AcDb.Solid;
+                                    if (solid != null)
+                                    {
+                                        Correction(ent, suffix: "_F", isContinuous: true);
+                                    }
+                                    else
+                                    {
+                                        CorrectionRest(ent);
                                     }
                                 }
                             }
@@ -126,6 +139,20 @@ namespace Plan2Ext.Kleinbefehle
             }
         }
 
+        private static void GetAllObjectIds(List<_AcDb.ObjectId> oids)
+        {
+            _AcDb.BlockTable bt = (_AcDb.BlockTable)_Tr.GetObject(_Db.BlockTableId, _AcDb.OpenMode.ForRead);
+            foreach (var btrOid in bt)
+            {
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)_Tr.GetObject(btrOid, _AcDb.OpenMode.ForRead);
+                log.InfoFormat("Blocktable: {0}", btr.Name);
+                foreach (_AcDb.ObjectId objId in btr)
+                {
+                    oids.Add(objId);
+                }
+            }
+        }
+
         [_AcTrx.CommandMethod("Plan2LayerAufteilFarbe")]
         public static void Plan2LayerAufteilFarbe()
         {
@@ -136,57 +163,72 @@ namespace Plan2Ext.Kleinbefehle
             _AcEd.Editor ed = doc.Editor;
             try
             {
-                _Tr = _Db.TransactionManager.StartTransaction();
-                using (_Tr)
+                using (_Tr = _Db.TransactionManager.StartTransaction())
                 {
-                    _AcDb.BlockTable bt = (_AcDb.BlockTable)_Tr.GetObject(_Db.BlockTableId, _AcDb.OpenMode.ForRead);
-                    foreach (var btrOid in bt)
+                    var oids = new List<_AcDb.ObjectId>();
+
+                    _AcEd.PromptSelectionOptions selOpts = new _AcEd.PromptSelectionOptions();
+                    selOpts.MessageForAdding = "Elemente wählen <Return für alle>: ";
+                    var res = ed.GetSelection(selOpts);
+                    if (res.Status == _AcEd.PromptStatus.Cancel) return;
+                    if (res.Status == _AcEd.PromptStatus.OK)
                     {
-                        _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)_Tr.GetObject(btrOid, _AcDb.OpenMode.ForRead);
-                        log.InfoFormat("Blocktable: {0}", btr.Name);
-                        foreach (_AcDb.ObjectId objId in btr)
+#if BRX_APP
+                        _AcEd.SelectionSet ss = res.Value;
+#else
+                        using (_AcEd.SelectionSet ss = res.Value)
+#endif
                         {
-                            _AcDb.Entity ent = (_AcDb.Entity)_Tr.GetObject(objId, _AcDb.OpenMode.ForRead);
-                            var col = ent.Color;
-                            string newLayerName = ent.Layer;
-                            _AcCm.Color layerColor = null;
-                            switch (col.ColorMethod)
-                            {
-                                case Autodesk.AutoCAD.Colors.ColorMethod.ByAci:
-                                    newLayerName += "_" + col.ColorIndex.ToString();
-                                    layerColor = col;
-                                    break;
-                                case Autodesk.AutoCAD.Colors.ColorMethod.ByBlock:
-                                    newLayerName += "_" + col.ColorNameForDisplay;
-                                    break;
-                                case Autodesk.AutoCAD.Colors.ColorMethod.ByColor:
-                                    newLayerName += "_" + col.ColorNameForDisplay.Replace(',', '-').Replace(" ",""); // 255,255,255 -> 255-255-255; DIC 4 -> DIC4
-                                    layerColor = col;
-                                    break;
-                                case Autodesk.AutoCAD.Colors.ColorMethod.ByLayer:
-                                    newLayerName += "_" + col.ColorNameForDisplay;
-                                    layerColor = Plan2Ext.Globs.GetLayerColor(ent.Layer);
-                                    break;
-                                case Autodesk.AutoCAD.Colors.ColorMethod.ByPen:
-                                case Autodesk.AutoCAD.Colors.ColorMethod.Foreground:
-                                case Autodesk.AutoCAD.Colors.ColorMethod.LayerFrozen:
-                                case Autodesk.AutoCAD.Colors.ColorMethod.LayerOff:
-                                case Autodesk.AutoCAD.Colors.ColorMethod.None:
-                                    newLayerName += "_" + col.ColorNameForDisplay;
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                            Plan2Ext.Globs.CreateLayer(newLayerName, layerColor);
-
-                            ent.UpgradeOpen();
-                            ent.Layer = newLayerName;
-                            ent.Color = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByLayer, 256);
-                            ent.DowngradeOpen();
+                            oids.AddRange(ss.GetObjectIds());
                         }
                     }
+                    else
+                    {
+                        GetAllObjectIds(oids);
+                    }
 
+                    foreach (_AcDb.ObjectId objId in oids)
+                    {
+                        _AcDb.Entity ent = (_AcDb.Entity)_Tr.GetObject(objId, _AcDb.OpenMode.ForRead);
+                        var col = ent.Color;
+                        string newLayerName = ent.Layer;
+                        _AcCm.Color layerColor = null;
+                        switch (col.ColorMethod)
+                        {
+                            case Autodesk.AutoCAD.Colors.ColorMethod.ByAci:
+                                newLayerName += "_" + col.ColorIndex.ToString();
+                                layerColor = col;
+                                break;
+                            case Autodesk.AutoCAD.Colors.ColorMethod.ByBlock:
+                                newLayerName += "_" + col.ColorNameForDisplay;
+                                break;
+                            case Autodesk.AutoCAD.Colors.ColorMethod.ByColor:
+                                newLayerName += "_" + col.ColorNameForDisplay.Replace(',', '-').Replace(" ", ""); // 255,255,255 -> 255-255-255; DIC 4 -> DIC4
+                                layerColor = col;
+                                break;
+                            case Autodesk.AutoCAD.Colors.ColorMethod.ByLayer:
+                                //newLayerName += "_" + col.ColorNameForDisplay;
+                                //layerColor = Plan2Ext.Globs.GetLayerColor(ent.Layer);
+                                continue;
+                                break;
+                            case Autodesk.AutoCAD.Colors.ColorMethod.ByPen:
+                            case Autodesk.AutoCAD.Colors.ColorMethod.Foreground:
+                            case Autodesk.AutoCAD.Colors.ColorMethod.LayerFrozen:
+                            case Autodesk.AutoCAD.Colors.ColorMethod.LayerOff:
+                            case Autodesk.AutoCAD.Colors.ColorMethod.None:
+                                newLayerName += "_" + col.ColorNameForDisplay;
+                                break;
+                            default:
+                                break;
+                        }
+
+                        Plan2Ext.Globs.CreateLayer(newLayerName, layerColor);
+
+                        ent.UpgradeOpen();
+                        ent.Layer = newLayerName;
+                        ent.Color = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByLayer, 256);
+                        ent.DowngradeOpen();
+                    }
                     _Tr.Commit();
                 }
             }
@@ -223,7 +265,7 @@ namespace Plan2Ext.Kleinbefehle
             li.UnlockOldLayer();
             ent.UpgradeOpen();
             ent.Layer = li.NewLayer;
-            ent.LinetypeId = LayerInfo.GetLinetypeFromName("ByLayer",_Tr,_Db);
+            ent.LinetypeId = LayerInfo.GetLinetypeFromName("ByLayer", _Tr, _Db);
 
             return true;
         }
