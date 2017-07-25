@@ -131,30 +131,6 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        private static void IncrementTopNr()
-        {
-            var topNr = Globs.TheRnOptions.TopNr;
-            var newTopNr = IncrementNumberInString(topNr);
-            Globs.TheRnOptions.SetTopNr(newTopNr);
-        }
-
-        private static string IncrementNumberInString(string s)
-        {
-            string prefix, suffix;
-            int? i = Plan2Ext.Globs.GetFirstIntInString(s,out prefix, out suffix);
-            if (i.HasValue)
-            {
-                int origIntLen = s.Length - (prefix.Length + suffix.Length);
-                var incI = i.Value+1;
-                var iString = incI.ToString().PadLeft(origIntLen,'0');
-                return prefix + incI + suffix;
-            }
-            else
-            {
-                return prefix + suffix;
-            }
-        }
-
         private static bool SetTopBlockNr(Database db, ObjectId blockOid, string topNr, string attName)
         {
             bool ok = true;
@@ -235,6 +211,31 @@ namespace Plan2Ext.Raumnummern
         }
 
 #endif
+
+        private static void IncrementTopNr()
+        {
+            var topNr = Globs.TheRnOptions.TopNr;
+            var newTopNr = IncrementNumberInString(topNr);
+            Globs.TheRnOptions.SetTopNr(newTopNr);
+        }
+
+        private static string IncrementNumberInString(string s)
+        {
+            string prefix, suffix;
+            int? i = Plan2Ext.Globs.GetFirstIntInString(s, out prefix, out suffix);
+            if (i.HasValue)
+            {
+                int origIntLen = s.Length - (prefix.Length + suffix.Length);
+                var incI = i.Value + 1;
+                var iString = incI.ToString().PadLeft(origIntLen, '0');
+                return prefix + incI + suffix;
+            }
+            else
+            {
+                return prefix + suffix;
+            }
+        }
+
 
 
         [CommandMethod("Plan2RaumnummerSelTop")]
