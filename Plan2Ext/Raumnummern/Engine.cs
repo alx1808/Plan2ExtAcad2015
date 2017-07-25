@@ -318,6 +318,7 @@ namespace Plan2Ext.Raumnummern
             _CurrentBlock = ObjectId.Null;
             Point3d raumPunkt = Point3d.Origin;
             if (!GetRaumPunkt(ref raumPunkt)) return false;
+            raumPunkt = Plan2Ext.Globs.TransUcsWcs(raumPunkt);
             var foundFgs = _FgRbStructs.Values.Where(x => x.IsPointInFg(raumPunkt, myT)).ToList();
             var nrFound = foundFgs.Count;
             if (nrFound == 0)

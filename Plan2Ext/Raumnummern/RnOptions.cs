@@ -87,6 +87,11 @@ namespace Plan2Ext.Raumnummern
 
         private string _TopNr = "1";
         public string TopNr { get { return _TopNr; } set { _TopNr = value; } }
+        public void SetTopNr(string topNr)
+        {
+            Form.txtTopNr.Text = topNr;
+            _TopNr = topNr;
+        }
 
         private bool _AutoCorr = true;
         public bool AutoCorr { get { return _AutoCorr; } set { _AutoCorr = value; } }

@@ -92,6 +92,11 @@ namespace Plan2Ext
         private static string _LooseBlockLayer = "";
         private static string _M2Bez = "";
         private static bool _Modify = false;
+        public static bool Modify
+        {
+            get { return Flaeche._Modify; }
+            set { Flaeche._Modify = value; }
+        }
 
         private static List<_AcDb.ObjectId> _FlaechenGrenzen = new List<_AcDb.ObjectId>();
         private static List<_AcDb.ObjectId> _Raumbloecke = new List<_AcDb.ObjectId>();

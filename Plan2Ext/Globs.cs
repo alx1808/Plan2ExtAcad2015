@@ -58,6 +58,29 @@ namespace Plan2Ext
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
 
+        public static int? GetFirstIntInString(string s, out string prefix, out string suffix)
+        {
+            var cArr = s.ToCharArray();
+            var startIndex = s.IndexOfAny(new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' });
+            if (startIndex == -1)
+            {
+                prefix = s; suffix = "";
+                return null;
+            }
+            prefix = s.Substring(0, startIndex);
+            int endIndex = startIndex + 1;
+            while (endIndex < cArr.Length)
+            {
+                if (!Char.IsDigit(cArr[endIndex]))
+                {
+                    suffix = s.Substring(endIndex);
+                    return int.Parse(s.Substring(startIndex, endIndex - startIndex));
+                }
+                endIndex++;
+            }
+            suffix = "";
+            return int.Parse(s.Substring(startIndex));
+        }
         public static bool InsertFromPrototype(string blockName, string protoDwgName)
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
@@ -292,6 +315,15 @@ namespace Plan2Ext
 
 
             return point.TransformBy(newMatrix);
+        }
+
+        public static _AcGe.Point3d TransUcsWcs(_AcGe.Point3d point)
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            _AcEd.Editor ed = doc.Editor;
+
+            return point.TransformBy(ed.CurrentUserCoordinateSystem);
         }
 
         public static void HightLight(_AcDb.ObjectId oid, bool onOff)

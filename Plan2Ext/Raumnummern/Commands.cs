@@ -54,6 +54,13 @@ namespace Plan2Ext.Raumnummern
             else return Globs.TheRnOptions.TopNr;
         }
 
+        [LispFunction("alx_F:ino_RaumnummernIncrementTopNr")]
+        public static void LispRaumnummernIncrementTopNr(ResultBuffer rb)
+        {
+            if (!OpenRnPalette()) return;
+            IncrementTopNr();
+        }
+
 #if !OLDER_THAN_2015
         [CommandMethod("Plan2RaumnummernInsertTop")]
         async public void Plan2RaumnummernInsertTop()
@@ -103,13 +110,14 @@ namespace Plan2Ext.Raumnummern
                 var topNr = opts.TopNr;
                 SetTopNr(doc.Database, oid, topNr, "TOP");
 
-                var vctr = Plan2Ext.Globs.GetViewCtrW();
-                var vctrU = Plan2Ext.Globs.TransWcsUcs(vctr);
+                var vctrU = Plan2Ext.Globs.GetViewCtrW();
+                //var vctrU = Plan2Ext.Globs.TransWcsUcs(vctr);
                 ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
                 if (userBreak) return;
                 oid = Utils.EntLast();
                 SetTopBlockNr(doc.Database, oid, topNr, "TOP");
                 userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
+                IncrementTopNr();
 
             }
             catch (System.Exception ex)
@@ -123,7 +131,29 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        
+        private static void IncrementTopNr()
+        {
+            var topNr = Globs.TheRnOptions.TopNr;
+            var newTopNr = IncrementNumberInString(topNr);
+            Globs.TheRnOptions.SetTopNr(newTopNr);
+        }
+
+        private static string IncrementNumberInString(string s)
+        {
+            string prefix, suffix;
+            int? i = Plan2Ext.Globs.GetFirstIntInString(s,out prefix, out suffix);
+            if (i.HasValue)
+            {
+                int origIntLen = s.Length - (prefix.Length + suffix.Length);
+                var incI = i.Value+1;
+                var iString = incI.ToString().PadLeft(origIntLen,'0');
+                return prefix + incI + suffix;
+            }
+            else
+            {
+                return prefix + suffix;
+            }
+        }
 
         private static bool SetTopBlockNr(Database db, ObjectId blockOid, string topNr, string attName)
         {
@@ -227,17 +257,29 @@ namespace Plan2Ext.Raumnummern
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptEntityResult per = ed.GetEntity("\nTop-Text wählen: ");
+                    PromptEntityResult per = ed.GetNestedEntity("\nTop-Text wählen: ");
                     if (per.Status == PromptStatus.OK)
                     {
                         Transaction tr = doc.TransactionManager.StartTransaction();
                         using (tr)
                         {
                             DBObject obj = tr.GetObject(per.ObjectId, OpenMode.ForRead);
+                            var topString = string.Empty;
                             DBText txt = obj as DBText;
-                            if (txt == null) return;
+                            if (txt != null)
+                            {
+                                topString = txt.TextString;
+                            }
+                            else
+                            {
+                                var attRef = obj as AttributeReference;
+                                if (attRef != null)
+                                {
+                                    topString = attRef.TextString;
+                                }
+                            }
 
-                            opts.SetTop("TOP" + txt.TextString);
+                            opts.SetTop(txt.TextString);
 
                             tr.Commit();
                         }
@@ -599,6 +641,7 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
+                    Plan2Ext.Flaeche.Modify = true;
                     Plan2Ext.Flaeche.AktFlaeche(
                         Application.DocumentManager.MdiActiveDocument,
                         opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName
