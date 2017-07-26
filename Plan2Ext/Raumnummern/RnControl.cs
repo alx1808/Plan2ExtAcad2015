@@ -169,9 +169,7 @@ namespace Plan2Ext.Raumnummern
                     //Autodesk.AutoCAD.Interop.AcadApplication app = (Autodesk.AutoCAD.Interop.AcadApplication)_AcAp.Application.AcadApplication;
                     //app.ActiveDocument.SendCommand("Plan2Raumnummern\n");
                     _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2Raumnummern ", true, false, false);
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -181,7 +179,36 @@ namespace Plan2Ext.Raumnummern
             {
                 _StartShield = false;
             }
+        }
 
+        private bool _SumShield = false;
+        private void btnSum_Click(object sender, EventArgs e)
+        {
+            if (_SumShield) return;
+            try
+            {
+                _SumShield = true;
+
+                Globs.CancelCommand();
+
+                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
+                {
+#if NEWSETFOCUS
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummernSum ", true, false, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernSum aufgetreten! {0}", ex.Message));
+            }
+            finally
+            {
+                _SumShield = false;
+            }
         }
 
         private bool _RemoveRaumShield = false;

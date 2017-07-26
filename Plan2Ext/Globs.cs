@@ -81,6 +81,52 @@ namespace Plan2Ext
             suffix = "";
             return int.Parse(s.Substring(startIndex));
         }
+
+        public static double? GetFirstDoubleInString(string s, out string prefix, out string suffix)
+        {
+            var startIndex = s.IndexOfAny(new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' });
+
+            if (startIndex == -1)
+            {
+                prefix = s; suffix = "";
+                return null;
+            }
+            var cArr = s.ToCharArray();
+
+            if (startIndex > 0)
+            {
+                if (cArr[startIndex - 1] == '-')
+                {
+                    startIndex--;
+                }
+            }
+
+            prefix = s.Substring(0, startIndex);
+            int endIndex = startIndex + 1;
+            bool comma = false;
+            while (endIndex < cArr.Length)
+            {
+                var c = cArr[endIndex];
+                if (c == '.' || c == ',')
+                {
+                    if (comma)
+                    {
+                        // comma already happened
+                        suffix = s.Substring(endIndex);
+                        return double.Parse(s.Substring(startIndex, endIndex - startIndex).Replace(",", "."), CultureInfo.InvariantCulture);
+                    }
+                    else comma = true;
+                }
+                else if (!Char.IsDigit(cArr[endIndex]))
+                {
+                    suffix = s.Substring(endIndex);
+                    return double.Parse(s.Substring(startIndex, endIndex - startIndex).Replace(",", "."), CultureInfo.InvariantCulture);
+                }
+                endIndex++;
+            }
+            suffix = "";
+            return double.Parse(s.Substring(startIndex).Replace(",", "."), CultureInfo.InvariantCulture);
+        }
         public static bool InsertFromPrototype(string blockName, string protoDwgName)
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;

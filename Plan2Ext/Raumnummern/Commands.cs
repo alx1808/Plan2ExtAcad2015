@@ -45,7 +45,8 @@ namespace Plan2Ext.Raumnummern
         internal const string PFEILBLOCKNAME = "AL_TOP";
         internal const string TOPBLOCKNAME = "AL_TOP_NFL";
         internal const string PROPOTYP_DWG_NAME = "PROTO_50.dwg";
-
+        internal const string TOPBLOCK_TOPNR_ATTNAME = "TOP";
+        internal const string TOPBLOCK_M2_ATTNAME = "M2";
 
         [LispFunction("alx_F:ino_RaumnummernGetTopNr")]
         public static string LispRaumnummernGetTopNr(ResultBuffer rb)
@@ -60,6 +61,58 @@ namespace Plan2Ext.Raumnummern
             if (!OpenRnPalette()) return;
             IncrementTopNr();
         }
+
+        [CommandMethod("Plan2Raumnummern")]
+        static public void Plan2Raumnummern()
+        {
+            try
+            {
+                if (!OpenRnPalette()) return;
+
+                var opts = Globs.TheRnOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+
+                    Engine _Engine = new Engine(opts);
+
+                    Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$" });
+                    Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
+
+                    while (_Engine.AddNumber()) { };
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        [CommandMethod("Plan2RaumnummernSum")]
+        static public void Plan2RaumnummernSum()
+        {
+            try
+            {
+                if (!OpenRnPalette()) return;
+
+                var opts = Globs.TheRnOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+
+                    Engine _Engine = new Engine(opts);
+                    _Engine.SumTops();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernSum aufgetreten! {0}", ex.Message));
+            }
+        }
+
 
 #if !OLDER_THAN_2015
         [CommandMethod("Plan2RaumnummernInsertTop")]
@@ -115,7 +168,7 @@ namespace Plan2Ext.Raumnummern
                 ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
                 if (userBreak) return;
                 oid = Utils.EntLast();
-                SetTopBlockNr(doc.Database, oid, topNr, "TOP");
+                SetTopBlockNr(doc.Database, oid, topNr, TOPBLOCK_TOPNR_ATTNAME);
                 userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
                 IncrementTopNr();
 
@@ -228,7 +281,7 @@ namespace Plan2Ext.Raumnummern
                 int origIntLen = s.Length - (prefix.Length + suffix.Length);
                 var incI = i.Value + 1;
                 var iString = incI.ToString().PadLeft(origIntLen, '0');
-                return prefix + incI + suffix;
+                return prefix + iString + suffix;
             }
             else
             {
@@ -574,34 +627,6 @@ namespace Plan2Ext.Raumnummern
             catch (System.Exception ex)
             {
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2MoveFbhWithNumber aufgetreten! {0}", ex.Message));
-            }
-        }
-
-        [CommandMethod("Plan2Raumnummern")]
-        static public void Plan2Raumnummern()
-        {
-            try
-            {
-                if (!OpenRnPalette()) return;
-
-                var opts = Globs.TheRnOptions;
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                using (DocumentLock m_doclock = doc.LockDocument())
-                {
-
-                    Engine _Engine = new Engine(opts);
-
-                    Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_","^A_BE_TXT","^A_BE_HÖHE$" });
-                    Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
-
-                    while (_Engine.AddNumber()) { };
-                }
-
-            }
-            catch (System.Exception ex)
-            {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
             }
         }
 

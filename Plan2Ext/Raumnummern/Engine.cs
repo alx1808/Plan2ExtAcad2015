@@ -66,6 +66,8 @@ namespace Plan2Ext.Raumnummern
         public string Blockname { get; set; }
         public string NrAttribname { get; set; }
         public string HBlockname { get; set; }
+        public string TopBlockName { get; set; }
+        public string TopBlockTopNrAttName { get; set; }
 
         #endregion
 
@@ -78,6 +80,8 @@ namespace Plan2Ext.Raumnummern
             Blockname = rnOptions.Blockname;
             NrAttribname = rnOptions.Attribname;
             HBlockname = rnOptions.HBlockname;
+            TopBlockName = Commands.TOPBLOCKNAME;
+            TopBlockTopNrAttName = Commands.TOPBLOCK_TOPNR_ATTNAME;
 
             var sMaxDist = TheConfiguration.GetValueString(DIST_RB_TO_FB_KONFIG);
             _MaxDist = double.Parse(sMaxDist, CultureInfo.InvariantCulture);
@@ -87,10 +91,7 @@ namespace Plan2Ext.Raumnummern
             _Editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
 
             _FgRbStructs = AreaEngine.GetFgRbStructs(this._RnOptions.Blockname, this._RnOptions.FlaechenGrenzeLayerName, this._RnOptions.AbzFlaechenGrenzeLayerName, db);
-
-
             _AllRaumBlocks = SelectAllRaumblocks();
-
         }
 
         private void MarkRbs()
@@ -223,6 +224,146 @@ namespace Plan2Ext.Raumnummern
 
             return true;
         }
+
+        private class TopStructure
+        {
+            public string TopNummer { get; set; }
+            public ObjectId TopOid { get; set; }
+            private List<Plan2Ext.AreaEngine.FgRbStructure> _FgRbs = new List<AreaEngine.FgRbStructure>();
+            public List<Plan2Ext.AreaEngine.FgRbStructure> FgRbs
+            {
+                get { return _FgRbs; }
+                set { _FgRbs = value; }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// Es werden nur Raumblöcke verwendet, die innerhalb einer FgRb-Struktur vorkommen, damit nicht irgendwo einsam außerhalb liegende Raumblöcke verwendet werden.
+        /// </remarks>
+        internal bool SumTops()
+        {
+            CalcBlocksPerTop();
+            var topBlocks = SelectAllTopBlocks();
+            var rbsPerTopNr = _OidsPerTop; // keine raumblöcke ohne topname
+            var fgrbsPerRb = new Dictionary<ObjectId, Plan2Ext.AreaEngine.FgRbStructure>();
+            foreach (var fgrb in _FgRbStructs.Values)
+            {
+                if (fgrb.Raumbloecke.Count == 1)
+                {
+                    Plan2Ext.AreaEngine.FgRbStructure testFgRb = null;
+                    var rbOid = fgrb.Raumbloecke[0];
+                    if (fgrbsPerRb.TryGetValue(rbOid, out testFgRb))
+                    {
+                        // todo: fehlerline: rb in different fgs
+                        int i = 1;
+                    }
+                    else
+                    {
+                        fgrbsPerRb.Add(rbOid, fgrb);
+                    }
+                }
+                else
+                {
+                    // todo: fehlerline: ungültige anzahl raumblöcke
+                    int i = 1;
+                }
+            }
+
+            var topStructs = new List<TopStructure>();
+            var fgRbUsed = new List<Plan2Ext.AreaEngine.FgRbStructure>();
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                foreach (var topOid in topBlocks)
+                {
+                    // get topnr
+                    string topNr;
+                    if (!GetTopNr(topOid, myT, out topNr)) continue;
+                    topNr = topNr.Replace(" ", ""); // topnr in raumblock hat keine leerzeichen
+                    
+                    List<ObjectId> rbs = null;
+                    if (!rbsPerTopNr.TryGetValue(topNr, out rbs))
+                    {
+                        // todo: fehlerline: top hat keine raumblöcke
+                        continue;
+                    }
+
+                    var topStruct = new TopStructure() { TopOid = topOid, TopNummer = topNr };
+                    foreach (var rbOid in rbs)
+                    {
+                        Plan2Ext.AreaEngine.FgRbStructure fgrb = null;
+                        if (!fgrbsPerRb.TryGetValue(rbOid, out fgrb))
+                        {
+                            // todo: fehlerlinie: rb is not in a fgrb-structure
+                            int i = 0;
+                        }
+                        topStruct.FgRbs.Add(fgrb);
+                        fgRbUsed.Add(fgrb);
+                    }
+                    topStructs.Add(topStruct);
+                }
+
+                // todo: check fgrbs not in fgRbUsed. fehlerlinie
+
+                // summieren
+                foreach (var topStruct in topStructs)
+                {
+                    SumM2(topStruct, myT);
+                }
+
+                myT.Commit();
+            }
+
+
+            return true;
+        }
+
+        private void SumM2(TopStructure topStruct,  Transaction myT)
+        {
+            double sumArea = 0.0;
+            foreach (var fgrb in topStruct.FgRbs)
+            {
+                double rbArea;
+                if (GetArea(fgrb.Raumbloecke[0], myT, out rbArea))
+                {
+                    sumArea += rbArea;
+                }
+            }
+
+            var areaString = string.Format(CultureInfo.InvariantCulture, "{0}m2", sumArea.ToString("F2"));
+            SetBlockAttrib(topStruct.TopOid, Commands.TOPBLOCK_M2_ATTNAME , areaString);
+        }
+
+        private bool GetArea(ObjectId oid, Transaction myT, out double rbArea)
+        {
+            rbArea = -1.0;
+            var rb = myT.GetObject(oid, OpenMode.ForRead) as BlockReference;
+            var m2Text = GetBlockAttribute(_RnOptions.FlaechenAttributName, rb);
+            string prefix, suffix;
+            double? d = Plan2Ext.Globs.GetFirstDoubleInString(m2Text.TextString , out prefix, out suffix);
+            if (d == null)
+            {
+                // todo: fehlerline
+                return false;
+            }
+            rbArea = d.Value;
+            return true;
+        }
+
+        private bool GetTopNr(ObjectId oid, Transaction myT, out string topNr)
+        {
+            topNr = string.Empty;
+            var topBlockRef = myT.GetObject(oid, OpenMode.ForRead) as BlockReference;
+            if (topBlockRef == null) return false; // todo: fehlerline: element ist keine Blockreference
+            var topNrAtt = GetBlockAttribute(TopBlockTopNrAttName, topBlockRef);
+            if (topNrAtt == null) return false; // todo: fehlerline: block hat kein Attribut für Topnr
+            topNr = topNrAtt.TextString;
+            return true;
+        }
+
 
         private void HatchIt(AreaEngine.FgRbStructure fg)
         {
@@ -534,7 +675,6 @@ namespace Plan2Ext.Raumnummern
             int index = attVal.IndexOf(_RnOptions.Separator);
             if (index < 0) return string.Empty;
             return attVal.Remove(0, index + 1);
-
         }
 
         private string FromNumericChar(string attVal)
@@ -728,6 +868,26 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        private List<ObjectId> SelectAllTopBlocks()
+        {
+            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
+                new TypedValue((int)DxfCode.Start,"INSERT" ),
+                new TypedValue((int)DxfCode.BlockName,TopBlockName)
+            });
+            PromptSelectionResult res = ed.SelectAll(filter);
+            if (res.Status != PromptStatus.OK) return new List<ObjectId>();
+
+#if BRX_APP
+            SelectionSet ss = res.Value;
+#else
+            using (SelectionSet ss = res.Value)
+#endif
+            {
+                return ss.GetObjectIds().ToList();
+            }
+        }
+
         private void SetBlockAttrib(ObjectId oid, string attName, string val)
         {
             if (oid == ObjectId.Null) return;
@@ -754,8 +914,25 @@ namespace Plan2Ext.Raumnummern
 
                 myT.Commit();
             }
-
         }
+
+        ///// <summary>
+        ///// Gets Topnummer from Raumblock
+        ///// </summary>
+        ///// <returns>Topnummer from Raumblock</returns>
+        ///// <param name="myT">
+        ///// An open Transaction
+        ///// </param>
+        //private string GetTopNrFromRaumBlock(ObjectId oid, Transaction myT)
+        //{
+        //    BlockReference blockEnt = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
+        //    if (blockEnt != null)
+        //    {
+        //        var attRef = GetBlockAttribute(NrAttribname, blockEnt);
+        //        var fullNr = attRef.TextString;
+
+        //    }
+        //}
 
         private string GetBlockAttrib(ObjectId oid, string attName)
         {
@@ -887,5 +1064,6 @@ namespace Plan2Ext.Raumnummern
             return s.PadLeft(len, '0');
         }
         #endregion
+
     }
 }
