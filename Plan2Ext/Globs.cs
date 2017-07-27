@@ -1172,6 +1172,134 @@ namespace Plan2Ext
             }
         }
 
+        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId,List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
+        {
+            string patternName = "_SOLID";
+            bool bAssociativity = false;
+
+            _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
+            _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(0, patternName, bAssociativity, 0);
+            hatchObj.TrueColor = col;
+
+            //var outerInnerEnts = new Dictionary<_AcIntCom.AcadEntity, List<_AcIntCom.AcadEntity>>();
+            var polysToDelete = new List<_AcIntCom.AcadEntity>();
+            foreach (var kvp in outerInner)
+            {
+                var oid = kvp.Key;
+                var inner = kvp.Value;
+                _AcIntCom.AcadEntity oCopiedPoly = CopyPoly(oid, tm);
+                List<_AcIntCom.AcadEntity> innerPolys = inner.Select(x => CopyPoly(x, tm)).ToList();
+                polysToDelete.Add(oCopiedPoly);
+                polysToDelete.AddRange(innerPolys);
+
+                //' Create the non associative Hatch object in model space
+                _AcIntCom.AcadEntity[] outerLoop = new _AcIntCom.AcadEntity[] { oCopiedPoly };
+                hatchObj.AppendOuterLoop(outerLoop);
+                try
+                {
+                    if (innerPolys.Count > 0)
+                    {
+                        foreach (var innerPoly in innerPolys)
+                        {
+                            _AcIntCom.AcadEntity[] innerLoop = new _AcIntCom.AcadEntity[] { innerPoly };
+                            hatchObj.AppendInnerLoop(innerLoop);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Warn(ex.Message);
+                }
+            }
+
+            hatchObj.Evaluate();
+
+            SetLayer((_AcIntCom.AcadEntity)hatchObj, layer);
+
+            foreach (var poly in polysToDelete)
+            {
+                poly.Delete();
+            }
+
+            return new _AcDb.ObjectId((IntPtr)hatchObj.ObjectID);
+        }
+
+        internal static _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
+        {
+            string patternName = "_SOLID";
+            bool bAssociativity = false;
+
+            _AcIntCom.AcadEntity oCopiedPoly = CopyPoly(oid, tm);
+            List<_AcIntCom.AcadEntity> innerPolys = inner.Select(x => CopyPoly(x, tm)).ToList();
+
+            //' Create the non associative Hatch object in model space
+            _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
+            _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(0, patternName, bAssociativity, 0);
+            hatchObj.TrueColor = col;
+            _AcIntCom.AcadEntity[] outerLoop = new _AcIntCom.AcadEntity[] { oCopiedPoly };
+            hatchObj.AppendOuterLoop(outerLoop);
+            try
+            {
+                if (innerPolys.Count > 0)
+                {
+                    foreach (var innerPoly in innerPolys)
+                    {
+                        _AcIntCom.AcadEntity[] innerLoop = new _AcIntCom.AcadEntity[] { innerPoly };
+                        hatchObj.AppendInnerLoop(innerLoop);
+                    }
+                    //_AcIntCom.AcadEntity[] innerLoop = innerPolys.ToArray();
+                    //hatchObj.AppendInnerLoop(innerLoop);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Warn(ex.Message);
+            }
+            hatchObj.Evaluate();
+            SetLayer((_AcIntCom.AcadEntity)hatchObj, layer);
+            if (oCopiedPoly != null) oCopiedPoly.Delete();
+            foreach (var poly in innerPolys)
+            {
+                poly.Delete();
+            }
+
+            return new _AcDb.ObjectId((IntPtr)hatchObj.ObjectID);
+        }
+
+        private static _AcIntCom.AcadEntity CopyPoly(_AcDb.ObjectId oid, _AcDb.TransactionManager tm)
+        {
+            _AcIntCom.AcadEntity oPoly = Globs.ObjectIdToAcadEntity(oid, tm);
+            _AcIntCom.AcadEntity oCopiedPoly = null;
+            if (oPoly is _AcIntCom.AcadPolyline)
+            {
+                _AcIntCom.AcadPolyline poly1 = (_AcIntCom.AcadPolyline)oPoly;
+                oCopiedPoly = (_AcIntCom.AcadEntity)poly1.Copy();
+                ((_AcIntCom.AcadPolyline)oCopiedPoly).Closed = true;
+            }
+            else if (oPoly is _AcIntCom.AcadLWPolyline)
+            {
+                _AcIntCom.AcadLWPolyline poly2 = (_AcIntCom.AcadLWPolyline)oPoly;
+                oCopiedPoly = (_AcIntCom.AcadEntity)poly2.Copy();
+                ((_AcIntCom.AcadLWPolyline)oCopiedPoly).Closed = true;
+            }
+            else // 3dpoly
+            {
+                _AcIntCom.Acad3DPolyline poly2 = (_AcIntCom.Acad3DPolyline)oPoly;
+                oCopiedPoly = (_AcIntCom.AcadEntity)poly2.Copy();
+                ((_AcIntCom.Acad3DPolyline)oCopiedPoly).Closed = true;
+            }
+            return oCopiedPoly;
+        }
+
+        private static void SetLayer(_AcIntCom.AcadEntity oCopiedPoly, string layerName)
+        {
+            Globs.CreateLayer(layerName);
+            oCopiedPoly.Layer = layerName;
+
+        }
+
+
+
         internal static void AddFehlerBlock()
         {
             if (Globs.BlockExists(FEHLERBLOCKNAME)) return;

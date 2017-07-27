@@ -46,6 +46,7 @@ namespace Plan2Ext.Raumnummern
         internal const string TOPBLOCKNAME = "AL_TOP_NFL";
         internal const string PROPOTYP_DWG_NAME = "PROTO_50.dwg";
         internal const string TOPBLOCK_TOPNR_ATTNAME = "TOP";
+        internal const string PFEILBLOCK_TOPNR_ATTNAME = "TOP";
         internal const string TOPBLOCK_M2_ATTNAME = "M2";
 
         [LispFunction("alx_F:ino_RaumnummernGetTopNr")]
@@ -130,7 +131,7 @@ namespace Plan2Ext.Raumnummern
 
                 var blockLayer = "A_RA_NUMMER";
 
-                Plan2Ext.Globs.VerifyLayerExists(blockLayer,null);
+                Plan2Ext.Globs.VerifyLayerExists(blockLayer, null);
                 Plan2Ext.Globs.SetLayerCurrent(blockLayer);
 
                 if (!Plan2Ext.Globs.BlockExists(PFEILBLOCKNAME))
@@ -152,11 +153,6 @@ namespace Plan2Ext.Raumnummern
 
                 var oidL = Utils.EntLast();
                 Application.SetSystemVariable("ATTREQ", 0);
-
-
-                //var acadapp = (Autodesk.AutoCAD.Interop.AcadApplication)Application.AcadApplication;
-                //acadapp.ActiveDocument.SendCommand("_.INSERT" + " " + pfeilBlockName + " " + "\\" + " 1 1 " + "\\");
-                //bool userBreak = false;
                 bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
                 if (userBreak) return;
                 var oid = Utils.EntLast();
@@ -289,8 +285,6 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-
-
         [CommandMethod("Plan2RaumnummerSelTop")]
         static public void Plan2RaumnummerSelTop()
         {
@@ -311,35 +305,41 @@ namespace Plan2Ext.Raumnummern
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptEntityResult per = ed.GetNestedEntity("\nTop-Text wählen: ");
+                    PromptEntityResult per = ed.GetEntity("\nTopblock oder Pfeilblock wählen: ");
                     if (per.Status == PromptStatus.OK)
                     {
-                        Transaction tr = doc.TransactionManager.StartTransaction();
-                        using (tr)
+                        using (var tr = doc.TransactionManager.StartTransaction())
                         {
                             DBObject obj = tr.GetObject(per.ObjectId, OpenMode.ForRead);
-                            var topString = string.Empty;
-                            DBText txt = obj as DBText;
-                            if (txt != null)
+                            var bref = obj as BlockReference;
+                            if (bref != null)
                             {
-                                topString = txt.TextString;
-                            }
-                            else
-                            {
-                                var attRef = obj as AttributeReference;
-                                if (attRef != null)
+                                var attribs = Plan2Ext.Globs.GetAttributes(bref);
+                                if (bref.Name == PFEILBLOCKNAME)
                                 {
-                                    topString = attRef.TextString;
+                                    string tops;
+                                    if (attribs.TryGetValue(PFEILBLOCK_TOPNR_ATTNAME, out tops))
+                                    {
+                                        opts.SetTop(tops);
+                                    }
+                                }
+                                else if (bref.Name == TOPBLOCKNAME)
+                                {
+                                    string tops;
+                                    if (attribs.TryGetValue(TOPBLOCK_TOPNR_ATTNAME, out tops))
+                                    {
+                                        if (tops.StartsWith(Engine.TOP_PREFIX, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            tops = tops.Remove(0, Engine.TOP_PREFIX.Length).Trim();
+                                            opts.SetTop(tops);
+                                        }
+                                    }
                                 }
                             }
-
-                            opts.SetTop(txt.TextString);
-
                             tr.Commit();
                         }
                     }
                 }
-
             }
             catch (System.Exception ex)
             {
