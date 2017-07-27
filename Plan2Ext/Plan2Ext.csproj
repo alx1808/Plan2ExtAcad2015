@@ -150,6 +150,17 @@
     <Compile Include="Massenbefehle\SetAttValuesBulk.cs" />
     <Compile Include="Massenbefehle\SetCtbInLayouts.cs" />
     <Compile Include="Massenbefehle\SetPlotterInLayouts.cs" />
+    <Compile Include="Nummerierung\Commands.cs" />
+    <Compile Include="Nummerierung\Engine.cs" />
+    <Compile Include="Nummerierung\Globs.cs" />
+    <Compile Include="Nummerierung\NrControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Nummerierung\NrControl.Designer.cs">
+      <DependentUpon>NrControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Nummerierung\NrOptions.cs" />
+    <Compile Include="Nummerierung\NrPalette.cs" />
     <Compile Include="Plot\LayoutCreation.cs" />
     <Compile Include="Plot\PlotSettingsForLayout.cs" />
     <Compile Include="RaumHoePruefung\Commands.cs" />
@@ -283,6 +294,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Massenbefehle\GetPlotterName.resx">
       <DependentUpon>GetPlotterName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nummerierung\NrControl.resx">
+      <DependentUpon>NrControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="RaumHoePruefung\HoePrControl.resx">
       <DependentUpon>HoePrControl.cs</DependentUpon>
