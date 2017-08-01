@@ -419,9 +419,11 @@ namespace Plan2Ext
 
         private static bool RecAddRbToFg(_AcDb.Entity rb, FgRbStructureInTrans stru, Dictionary<_AcDb.ObjectId, FgRbStructureInTrans> fgRbStructs)
         {
+            
             var blockRef = rb as _AcDb.BlockReference;
             if (IsPosInFg(blockRef.Position, stru.FlaechenGrenze))
             {
+                log.DebugFormat("RecAddRbToFg: rb='{0}',fg='{1}'", rb.Handle.ToString(), stru.FlaechenGrenze.Handle.ToString());
                 foreach (var inner in stru.Inseln)
                 {
                     if (IsPosInFg(blockRef.Position, inner))
@@ -502,6 +504,14 @@ namespace Plan2Ext
         {
             if (inner == outer) return false;
             if (!OverlapExtents(inner, outer)) return false;
+
+            // check, ob restliche fläche zu klein um eine insel zu sein. damit werden kongruenze flächen verhindert
+            var innerCurve = (_AcDb.Curve)inner;
+            var outerCurve = (_AcDb.Curve)outer;
+            if ((outerCurve.Area - innerCurve.Area) < 0.001 )
+            {
+                return false;
+            }
 
             NrOfOverlaps++;
 
