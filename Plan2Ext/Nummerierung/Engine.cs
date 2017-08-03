@@ -34,8 +34,8 @@ namespace Plan2Ext.Nummerierung
         #endregion
 
         #region Const
-        private const string _NoRaumblockMessage = "\nDas gewählte Element ist kein Raumblock '{0}'.";
-        private const string DIST_RB_TO_FB_KONFIG = "alx_V:ino_rb_rb2fbDist";
+        private const string _NoRaumblockMessage = "\nDas gewählte Element ist nicht der angegebene Block '{0}'.";
+        //private const string DIST_RB_TO_FB_KONFIG = "alx_V:ino_rb_rb2fbDist";
         //private const string HK_BLOCKNAME_KONFIG = "alx_V:ino_rb_HkBlockName";
         #endregion
 
@@ -43,13 +43,9 @@ namespace Plan2Ext.Nummerierung
         private TransactionManager _TransMan = null;
         private ObjectId _CurrentBlock = ObjectId.Null;
         private NrOptions _RnOptions = null;
-        private Dictionary<string, List<ObjectId>> _OidsPerTop = new Dictionary<string, List<ObjectId>>();
-        private List<ObjectId> _AllRaumBlocks = new List<ObjectId>();
-        private double _MaxDist = 0.25;
-
-        public string Blockname { get; set; }
-        public string NrAttribname { get; set; }
-        public string HBlockname { get; set; }
+        //private Dictionary<string, List<ObjectId>> _OidsPerTop = new Dictionary<string, List<ObjectId>>();
+        //private List<ObjectId> _AllRaumBlocks = new List<ObjectId>();
+        //private double _MaxDist = 0.25;
 
         #endregion
 
@@ -59,136 +55,97 @@ namespace Plan2Ext.Nummerierung
         {
 
             this._RnOptions = rnOptions;
-            Blockname = rnOptions.Blockname;
-            NrAttribname = rnOptions.Attribname;
-            HBlockname = rnOptions.HBlockname;
 
-            var sMaxDist = TheConfiguration.GetValueString(DIST_RB_TO_FB_KONFIG);
-            _MaxDist = double.Parse(sMaxDist, CultureInfo.InvariantCulture);
+            //var sMaxDist = TheConfiguration.GetValueString(DIST_RB_TO_FB_KONFIG);
+            //_MaxDist = double.Parse(sMaxDist, CultureInfo.InvariantCulture);
 
             Database db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
             _TransMan = db.TransactionManager;
 
-            _AllRaumBlocks = SelectAllRaumblocks();
+            //_AllRaumBlocks = SelectAllRaumblocks();
 
         }
 
-        private void MarkRbs()
-        {
-            using (Transaction myT = _TransMan.StartTransaction())
-            {
-                foreach (var oid in _AllRaumBlocks)
-                {
-                    BlockReference ent = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
-                    MarkRbIfNumber(ent);
-                }
-                myT.Commit();
-            }
-        }
+        //private void MarkRbs()
+        //{
+        //    using (Transaction myT = _TransMan.StartTransaction())
+        //    {
+        //        foreach (var oid in _AllRaumBlocks)
+        //        {
+        //            BlockReference ent = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
+        //            MarkRbIfNumber(ent);
+        //        }
+        //        myT.Commit();
+        //    }
+        //}
 
-        private void MarkRbIfNumber(BlockReference ent)
-        {
-            if (ent == null) return;
-            var attRef = GetBlockAttribute(NrAttribname, ent);
-            if (attRef == null) return;
-            if (string.IsNullOrEmpty(attRef.TextString))
-            {
-                ent.Unhighlight();
-            }
-            else
-            {
-                ent.Highlight();
-            }
-        }
+        //private void MarkRbIfNumber(BlockReference ent)
+        //{
+        //    if (ent == null) return;
+        //    var attRef = GetBlockAttribute(NrAttribname, ent);
+        //    if (attRef == null) return;
+        //    if (string.IsNullOrEmpty(attRef.TextString))
+        //    {
+        //        ent.Unhighlight();
+        //    }
+        //    else
+        //    {
+        //        ent.Highlight();
+        //    }
+        //}
 
         #endregion
 
         #region Internal
-        internal void MoveFbh(double xDist, double yDist)
-        {
-            List<ObjectId> allHkBlocks = SelectAllHkBlocks();
-
-            if (allHkBlocks.Count == 0 || _AllRaumBlocks.Count == 0) return;
-
-            using (Transaction myT = _TransMan.StartTransaction())
-            {
-                List<RbInfo> RbInsPoints = GetRbInfos();
-
-                foreach (var oid in allHkBlocks)
-                {
-                    BlockReference blockRef = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
-                    if (blockRef == null) continue;
-
-                    RbInfo par = GetNearest(blockRef.Position, RbInsPoints);
-                    if (par == null) continue;
-
-                    Vector2d v = new Vector2d(xDist * par.Scale, yDist * par.Scale);
-                    v = v.RotateBy(par.Rot);
-                    Vector3d v3 = new Vector3d(v.X, v.Y, 0.0);
-                    Point3d newP = par.Pos.Add(v3);
-
-                    Vector3d vAtt = blockRef.Position.GetVectorTo(newP);
-                    blockRef.UpgradeOpen();
-                    blockRef.Position = newP;
-                    foreach (ObjectId attId in blockRef.AttributeCollection)
-                    {
-                        var anyAttRef = _TransMan.GetObject(attId, OpenMode.ForWrite) as AttributeReference;
-                        if (anyAttRef != null)
-                        {
-                            newP = anyAttRef.Position.Add(vAtt);
-                            anyAttRef.Position = newP;
-
-                        }
-                    }
-                }
-
-                myT.Commit();
-            }
-        }
-
         internal bool AddNumber()
         {
-            MarkRbs();
+            //MarkRbs();
 
             using (Transaction myT = _TransMan.StartTransaction())
             {
                 if (!SelectBlock()) return false;
 
 
-                if (_RnOptions.AutoCorr)
+                //if (_RnOptions.AutoCorr)
+                //{
+                //    CalcBlocksPerTop();
+                //    AutoIncrementHigherNumbers(_RnOptions.Number);
+                //}
+
+                if (_RnOptions.UseFirstAttrib)
                 {
-                    CalcBlocksPerTop();
-                    AutoIncrementHigherNumbers(_RnOptions.Number);
+                    SetFirstBlockAttrib(_CurrentBlock, GetCompleteNumber(_RnOptions.Number));
                 }
-
-                SetBlockAttrib(_CurrentBlock, NrAttribname, GetCompleteNumber(_RnOptions.Number));
-
+                else
+                {
+                    SetBlockAttrib(_CurrentBlock, _RnOptions.Attribname, GetCompleteNumber(_RnOptions.Number));
+                }
                 BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
-                MarkRbIfNumber(br);
+                //MarkRbIfNumber(br);
 
 
-                if (_RnOptions.AutoCorr)
-                {
-                    CalcBlocksPerTop();
-                    AutoCorrection(_RnOptions.Number.Length);
-                }
+                //if (_RnOptions.AutoCorr)
+                //{
+                //    CalcBlocksPerTop();
+                //    AutoCorrection(_RnOptions.Number.Length);
+                //}
 
                 string newNr = Increment(_RnOptions.Number);
 
-                if (_RnOptions.AutoCorr)
-                {
-                    int i;
-                    if (int.TryParse(_RnOptions.Number, out i))
-                    {
-                        i++;
-                        List<ObjectId> oids;
-                        if (_OidsPerTop.TryGetValue(_RnOptions.Top, out oids))
-                        {
-                            if (i > (oids.Count + 1)) i = oids.Count + 1;
-                            newNr = i.ToString().PadLeft(newNr.Length, '0');
-                        }
-                    }
-                }
+                //if (_RnOptions.AutoCorr)
+                //{
+                //    int i;
+                //    if (int.TryParse(_RnOptions.Number, out i))
+                //    {
+                //        i++;
+                //        List<ObjectId> oids;
+                //        if (_OidsPerTop.TryGetValue(_RnOptions.Top, out oids))
+                //        {
+                //            if (i > (oids.Count + 1)) i = oids.Count + 1;
+                //            newNr = i.ToString().PadLeft(newNr.Length, '0');
+                //        }
+                //    }
+                //}
 
                 _RnOptions.SetNumber(newNr);
 
@@ -202,156 +159,156 @@ namespace Plan2Ext.Nummerierung
         #endregion
 
         #region Move Fußbodenhöhenblock
-        private RbInfo GetNearest(Point3d point3d, List<RbInfo> RbInsPoints)
-        {
-            var sorted = RbInsPoints.OrderBy(x => x.Pos.Distance2dTo(point3d)).ToList();
-            RbInfo ret = sorted[0];
+        //private RbInfo GetNearest(Point3d point3d, List<RbInfo> RbInsPoints)
+        //{
+        //    var sorted = RbInsPoints.OrderBy(x => x.Pos.Distance2dTo(point3d)).ToList();
+        //    RbInfo ret = sorted[0];
 
-            double dist = point3d.Distance2dTo(ret.Pos);
-            if (dist > _MaxDist) return null;
+        //    double dist = point3d.Distance2dTo(ret.Pos);
+        //    if (dist > _MaxDist) return null;
 
-            return ret;
-        }
+        //    return ret;
+        //}
 
-        private class RbInfo
-        {
-            public Point3d Pos { get; set; }
-            public double Rot { get; set; }
-            public double Scale { get; set; }
-        }
+        //private class RbInfo
+        //{
+        //    public Point3d Pos { get; set; }
+        //    public double Rot { get; set; }
+        //    public double Scale { get; set; }
+        //}
 
 
-        private List<RbInfo> GetRbInfos()
-        {
-            List<RbInfo> ret = new List<RbInfo>();
-            foreach (var oid in _AllRaumBlocks)
-            {
-                BlockReference blockRef = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
-                if (blockRef == null) continue;
+        //private List<RbInfo> GetRbInfos()
+        //{
+        //    List<RbInfo> ret = new List<RbInfo>();
+        //    foreach (var oid in _AllRaumBlocks)
+        //    {
+        //        BlockReference blockRef = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
+        //        if (blockRef == null) continue;
 
-                ret.Add(new RbInfo()
-                {
-                    Pos = new Point3d(blockRef.Position.X, blockRef.Position.Y, blockRef.Position.Z),
-                    Rot = blockRef.Rotation,
-                    Scale = blockRef.ScaleFactors.X
-                });
-            }
+        //        ret.Add(new RbInfo()
+        //        {
+        //            Pos = new Point3d(blockRef.Position.X, blockRef.Position.Y, blockRef.Position.Z),
+        //            Rot = blockRef.Rotation,
+        //            Scale = blockRef.ScaleFactors.X
+        //        });
+        //    }
 
-            return ret;
+        //    return ret;
 
-        }
+        //}
 
         #endregion
 
         #region Topname Handling
 
-        private void CalcBlocksPerTop()
-        {
-            // dzt nur mit Separator
-            if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
+        //private void CalcBlocksPerTop()
+        //{
+        //    // dzt nur mit Separator
+        //    if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
 
-            _OidsPerTop.Clear();
+        //    _OidsPerTop.Clear();
 
-            var rblocks = _AllRaumBlocks;
+        //    var rblocks = _AllRaumBlocks;
 
-            using (Transaction myT = _TransMan.StartTransaction())
-            {
-                foreach (var oid in rblocks)
-                {
-                    string topName = GetTopName(oid);
-                    if (string.IsNullOrEmpty(topName)) continue;
-                    List<ObjectId> oids;
-                    if (!_OidsPerTop.TryGetValue(topName, out oids))
-                    {
-                        oids = new List<ObjectId>();
-                        _OidsPerTop.Add(topName, oids);
-                    }
-                    oids.Add(oid);
-                }
+        //    using (Transaction myT = _TransMan.StartTransaction())
+        //    {
+        //        foreach (var oid in rblocks)
+        //        {
+        //            string topName = GetTopName(oid);
+        //            if (string.IsNullOrEmpty(topName)) continue;
+        //            List<ObjectId> oids;
+        //            if (!_OidsPerTop.TryGetValue(topName, out oids))
+        //            {
+        //                oids = new List<ObjectId>();
+        //                _OidsPerTop.Add(topName, oids);
+        //            }
+        //            oids.Add(oid);
+        //        }
 
-                myT.Commit();
-            }
-        }
+        //        myT.Commit();
+        //    }
+        //}
 
-        private string GetNumber(ObjectId oid)
-        {
-            string attVal = GetBlockAttribute(NrAttribname, oid);
-            return GetNumber(attVal);
-        }
+        //private string GetNumber(ObjectId oid)
+        //{
+        //    string attVal = GetBlockAttribute(_RnOptions.Attribname, oid);
+        //    return GetNumber(attVal);
+        //}
 
-        private string GetNumber(string attVal)
-        {
-            if (string.IsNullOrEmpty(_RnOptions.Separator))
-            {
-                return FromNumericChar(attVal);
-            }
-            else
-            {
-                return FromSeparator(attVal);
-            }
-        }
+        //private string GetNumber(string attVal)
+        //{
+        //    if (string.IsNullOrEmpty(_RnOptions.Separator))
+        //    {
+        //        return FromNumericChar(attVal);
+        //    }
+        //    else
+        //    {
+        //        return FromSeparator(attVal);
+        //    }
+        //}
 
-        private string FromSeparator(string attVal)
-        {
-            int index = attVal.IndexOf(_RnOptions.Separator);
-            if (index < 0) return string.Empty;
-            return attVal.Remove(0, index + 1);
+        //private string FromSeparator(string attVal)
+        //{
+        //    int index = attVal.IndexOf(_RnOptions.Separator);
+        //    if (index < 0) return string.Empty;
+        //    return attVal.Remove(0, index + 1);
 
-        }
+        //}
 
-        private string FromNumericChar(string attVal)
-        {
-            var charr = attVal.ToCharArray();
-            int i = charr.Length - 1;
-            for (; i >= 0; i--)
-            {
-                if (!IsNumeric(charr[i])) break;
-            }
-            if (i < 0) return attVal;
-            return attVal.Remove(0, i + 1);
-        }
+        //private string FromNumericChar(string attVal)
+        //{
+        //    var charr = attVal.ToCharArray();
+        //    int i = charr.Length - 1;
+        //    for (; i >= 0; i--)
+        //    {
+        //        if (!IsNumeric(charr[i])) break;
+        //    }
+        //    if (i < 0) return attVal;
+        //    return attVal.Remove(0, i + 1);
+        //}
 
-        private string GetTopName(ObjectId oid)
-        {
-            string number = GetBlockAttribute(NrAttribname, oid);
-            return GetTopName(number);
-        }
+        //private string GetTopName(ObjectId oid)
+        //{
+        //    string number = GetBlockAttribute(_RnOptions.Attribname, oid);
+        //    return GetTopName(number);
+        //}
 
-        private string GetTopName(string number)
-        {
-            if (string.IsNullOrEmpty(_RnOptions.Separator))
-            {
-                return TillNumericChar(number);
-            }
-            else
-            {
-                return TillSeparator(number);
-            }
-        }
+        //private string GetTopName(string number)
+        //{
+        //    if (string.IsNullOrEmpty(_RnOptions.Separator))
+        //    {
+        //        return TillNumericChar(number);
+        //    }
+        //    else
+        //    {
+        //        return TillSeparator(number);
+        //    }
+        //}
 
-        private string TillNumericChar(string number)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (var c in number.ToCharArray())
-            {
-                if (IsNumeric(c)) break;
-                sb.Append(c);
-            }
-            return sb.ToString();
-        }
+        //private string TillNumericChar(string number)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    foreach (var c in number.ToCharArray())
+        //    {
+        //        if (IsNumeric(c)) break;
+        //        sb.Append(c);
+        //    }
+        //    return sb.ToString();
+        //}
 
-        private bool IsNumeric(char c)
-        {
-            return c >= '0' && c <= '9';
-        }
+        //private bool IsNumeric(char c)
+        //{
+        //    return c >= '0' && c <= '9';
+        //}
 
-        private string TillSeparator(string number)
-        {
-            int index = number.IndexOf(_RnOptions.Separator);
-            if (index <= 0) return string.Empty;
-            return number.Substring(0, index);
+        //private string TillSeparator(string number)
+        //{
+        //    int index = number.IndexOf(_RnOptions.Separator);
+        //    if (index <= 0) return string.Empty;
+        //    return number.Substring(0, index);
 
-        }
+        //}
         #endregion
 
         #region Private
@@ -360,8 +317,8 @@ namespace Plan2Ext.Nummerierung
 
             _CurrentBlock = ObjectId.Null;
             Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-            PromptEntityOptions entopts = new PromptEntityOptions("\nRaumblock wählen: ");
-            entopts.SetRejectMessage(string.Format(CultureInfo.CurrentCulture, _NoRaumblockMessage, Blockname));
+            PromptEntityOptions entopts = new PromptEntityOptions("\nBlock wählen: ");
+            entopts.SetRejectMessage(string.Format(CultureInfo.CurrentCulture, _NoRaumblockMessage, _RnOptions.Blockname));
             entopts.AddAllowedClass(typeof(BlockReference), true);
             //entopts.Message = "Pick an entity of your choice from the drawing";
             PromptEntityResult ent = null;
@@ -395,16 +352,24 @@ namespace Plan2Ext.Nummerierung
                     ok = true;
                     ret = false;
                 }
+                else if (_RnOptions.UseFirstAttrib)
+                {
+                    //
+                    _CurrentBlock = ent.ObjectId;
+                    ok = true;
+                    ret = true;
+                }
                 else
                 {
+
                     ObjectId entid = ent.ObjectId;
                     using (Transaction myT = _TransMan.StartTransaction())
                     {
                         Entity entity = (Entity)_TransMan.GetObject(entid, OpenMode.ForRead);
                         BlockReference blockRef = entity as BlockReference;
-                        if (string.Compare(blockRef.Name, Blockname, StringComparison.OrdinalIgnoreCase) != 0)
+                        if (string.Compare(blockRef.Name, _RnOptions.Blockname, StringComparison.OrdinalIgnoreCase) != 0)
                         {
-                            ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, _NoRaumblockMessage, Blockname));
+                            ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, _NoRaumblockMessage, _RnOptions.Blockname));
                         }
                         else
                         {
@@ -420,64 +385,68 @@ namespace Plan2Ext.Nummerierung
             return ret;
         }
 
-        private string GetBlockAttribute(string attName, ObjectId block)
+        //private string GetBlockAttribute(string attName, ObjectId block)
+        //{
+        //    BlockReference blockEnt = _TransMan.GetObject(block, OpenMode.ForRead) as BlockReference;
+        //    if (blockEnt != null)
+        //    {
+        //        AttributeReference attRef = null;
+
+        //        attRef = GetBlockAttribute(attName, blockEnt);
+
+        //        if (attRef != null)
+        //        {
+        //            return attRef.TextString;
+        //        }
+
+        //    }
+        //    return string.Empty;
+        //}
+
+        //        private List<ObjectId> SelectAllRaumblocks()
+        //        {
+        //            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+        //            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
+        //                new TypedValue((int)DxfCode.Start,"INSERT" ),
+        //                new TypedValue((int)DxfCode.BlockName,_RnOptions.Blockname)
+        //            });
+        //            PromptSelectionResult res = ed.SelectAll(filter);
+        //            if (res.Status != PromptStatus.OK) return new List<ObjectId>();
+
+        //#if BRX_APP
+        //            SelectionSet ss = res.Value;
+        //#else
+        //            using (SelectionSet ss = res.Value)
+        //#endif
+        //            {
+        //                return ss.GetObjectIds().ToList();
+        //            }
+        //        }
+
+        private void SetFirstBlockAttrib(ObjectId oid, string val)
         {
-            BlockReference blockEnt = _TransMan.GetObject(block, OpenMode.ForRead) as BlockReference;
-            if (blockEnt != null)
+            if (oid == ObjectId.Null) return;
+
+            using (Transaction myT = _TransMan.StartTransaction())
             {
-                AttributeReference attRef = null;
-
-                attRef = GetBlockAttribute(attName, blockEnt);
-
-                if (attRef != null)
+                BlockReference blockEnt = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
+                if (blockEnt != null)
                 {
-                    return attRef.TextString;
+                    AttributeReference attRef = GetFirstBlockAttribute(blockEnt);
+                    if (attRef != null)
+                    {
+                        attRef.UpgradeOpen();
+                        attRef.TextString = val;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Der Block '{0}' hat keine Attribute '{0}'!", blockEnt.Name));
+                    }
                 }
 
+                myT.Commit();
             }
-            return string.Empty;
-        }
 
-        private List<ObjectId> SelectAllHkBlocks()
-        {
-            string hkBlockName = HBlockname; // TheConfiguration.GetValueString(HK_BLOCKNAME_KONFIG);
-            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
-                new TypedValue((int)DxfCode.Start,"INSERT" ),
-                new TypedValue((int)DxfCode.BlockName,hkBlockName)
-            });
-
-            PromptSelectionResult res = ed.GetSelection(filter); // ed.SelectAll(filter);
-            if (res.Status != PromptStatus.OK) return new List<ObjectId>();
-
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
-            using (SelectionSet ss = res.Value)
-#endif
-            {
-                return ss.GetObjectIds().ToList();
-            }
-        }
-
-        private List<ObjectId> SelectAllRaumblocks()
-        {
-            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
-                new TypedValue((int)DxfCode.Start,"INSERT" ),
-                new TypedValue((int)DxfCode.BlockName,Blockname)
-            });
-            PromptSelectionResult res = ed.SelectAll(filter);
-            if (res.Status != PromptStatus.OK) return new List<ObjectId>();
-
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
-            using (SelectionSet ss = res.Value)
-#endif
-            {
-                return ss.GetObjectIds().ToList();
-            }
         }
 
         private void SetBlockAttrib(ObjectId oid, string attName, string val)
@@ -506,7 +475,6 @@ namespace Plan2Ext.Nummerierung
 
                 myT.Commit();
             }
-
         }
 
         private AttributeReference GetBlockAttribute(string name, BlockReference blockEnt)
@@ -525,90 +493,98 @@ namespace Plan2Ext.Nummerierung
             return null;
         }
 
+        private AttributeReference GetFirstBlockAttribute(BlockReference blockEnt)
+        {
+            if (blockEnt.AttributeCollection.Count == 0) return null;
+            var attId = blockEnt.AttributeCollection[0];
+            return _TransMan.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+        }
+
+
         private string GetCompleteNumber(string curNumber)
         {
             return _RnOptions.Top + _RnOptions.Separator + curNumber;
         }
 
-        private void AutoCorrection(int numlen)
-        {
-            // dzt nur mit Separator
-            if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
+        //private void AutoCorrection(int numlen)
+        //{
+        //    // dzt nur mit Separator
+        //    if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
 
-            foreach (var topName in _OidsPerTop.Keys)
-            {
+        //    foreach (var topName in _OidsPerTop.Keys)
+        //    {
 
-                List<ObjectId> oids = _OidsPerTop[topName];
-                //string topNameU = _RnOptions.Top.ToUpperInvariant();
-                //if (!_OidsPerTop.TryGetValue(topNameU, out oids)) return;
+        //        List<ObjectId> oids = _OidsPerTop[topName];
+        //        //string topNameU = _RnOptions.Top.ToUpperInvariant();
+        //        //if (!_OidsPerTop.TryGetValue(topNameU, out oids)) return;
 
-                oids.Sort(Compare);
+        //        oids.Sort(Compare);
 
-                for (int i = 0; i < oids.Count; i++)
-                {
-                    string num = (i + 1).ToString().PadLeft(numlen, '0');
-                    SetBlockAttrib(oids[i], NrAttribname, GetCompleteNumber(topName, num));
+        //        for (int i = 0; i < oids.Count; i++)
+        //        {
+        //            string num = (i + 1).ToString().PadLeft(numlen, '0');
+        //            SetBlockAttrib(oids[i], _RnOptions.Attribname, GetCompleteNumber(topName, num));
 
-                }
-            }
+        //        }
+        //    }
 
-        }
+        //}
 
-        private string GetCompleteNumber(string topName, string num)
-        {
-            return topName + _RnOptions.Separator + num;
-        }
+        //private string GetCompleteNumber(string topName, string num)
+        //{
+        //    return topName + _RnOptions.Separator + num;
+        //}
 
-        private int Compare(ObjectId x, ObjectId y)
-        {
-            var xnum = GetNumber(x);
-            int xi;
-            if (!int.TryParse(xnum, out xi))
-            {
-                xi = 0;
-            }
-            var ynum = GetNumber(y);
-            int yi;
-            if (!int.TryParse(ynum, out yi))
-            {
-                yi = 0;
-            }
+        //private int Compare(ObjectId x, ObjectId y)
+        //{
+        //    var xnum = GetNumber(x);
+        //    int xi;
+        //    if (!int.TryParse(xnum, out xi))
+        //    {
+        //        xi = 0;
+        //    }
+        //    var ynum = GetNumber(y);
+        //    int yi;
+        //    if (!int.TryParse(ynum, out yi))
+        //    {
+        //        yi = 0;
+        //    }
 
-            return xi.CompareTo(yi);
-        }
+        //    return xi.CompareTo(yi);
+        //}
 
-        private void AutoIncrementHigherNumbers(string number)
-        {
-            // dzt nur mit Separator
-            if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
+        //private void AutoIncrementHigherNumbers(string number)
+        //{
+        //    // dzt nur mit Separator
+        //    if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
 
-            int num;
-            if (!int.TryParse(number, out num)) return;
+        //    int num;
+        //    if (!int.TryParse(number, out num)) return;
 
-            List<ObjectId> oids;
-            string topName = _RnOptions.Top;
-            if (!_OidsPerTop.TryGetValue(topName, out oids)) return;
+        //    List<ObjectId> oids;
+        //    string topName = _RnOptions.Top;
+        //    if (!_OidsPerTop.TryGetValue(topName, out oids)) return;
 
-            foreach (var oid in oids)
-            {
-                IncHigherNum(oid, num);
-            }
-        }
+        //    foreach (var oid in oids)
+        //    {
+        //        IncHigherNum(oid, num);
+        //    }
+        //}
 
-        private void IncHigherNum(ObjectId oid, int num)
-        {
-            string number = GetNumber(oid);
-            if (string.IsNullOrEmpty(number)) return;
+        //private void IncHigherNum(ObjectId oid, int num)
+        //{
+        //    string number = GetNumber(oid);
+        //    if (string.IsNullOrEmpty(number)) return;
 
-            int oldNum;
-            if (!int.TryParse(number, out oldNum)) return;
+        //    int oldNum;
+        //    if (!int.TryParse(number, out oldNum)) return;
 
-            if (oldNum >= num)
-            {
-                number = Increment(number);
-                SetBlockAttrib(oid, NrAttribname, GetCompleteNumber(number));
-            }
-        }
+        //    if (oldNum >= num)
+        //    {
+        //        number = Increment(number);
+        //        SetBlockAttrib(oid, _RnOptions.Attribname, GetCompleteNumber(number));
+        //    }
+        //}
 
         private string Increment(string number)
         {

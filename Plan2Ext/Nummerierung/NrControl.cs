@@ -52,10 +52,9 @@ namespace Plan2Ext.Nummerierung
             txtTop.Text = _NrOptions.Top;
             txtSeparator.Text = _NrOptions.Separator;
             txtNumber.Text = _NrOptions.Number;
-            chkAutoCorr.Checked = _NrOptions.AutoCorr;
             txtBlockname.Text = _NrOptions.Blockname;
             txtAttName.Text = _NrOptions.Attribname;
-            txtHBlockname.Text = _NrOptions.HBlockname;
+            chkFirstAttribute.Checked = _NrOptions.UseFirstAttrib;
         }
         #endregion
 
@@ -113,94 +112,6 @@ namespace Plan2Ext.Nummerierung
             }
         }
 
-        private bool _SelectHBlockShield = false;
-        private void btnSelectHBlock_Click(object sender, EventArgs e)
-        {
-            if (_SelectHBlockShield) return;
-            try
-            {
-                _SelectHBlockShield = true;
-
-                Globs.CancelCommand();
-
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2NummerierungSelHBlock ", true, false, false);
-            }
-            catch (Exception ex)
-            {
-                _AcAp.Application.ShowAlertDialog(ex.Message);
-            }
-            finally
-            {
-                _SelectHBlockShield = false;
-            }
-        }
-
-        private bool _FbhWithNrShield = false;
-        private void btnFbhWithNr_Click(object sender, EventArgs e)
-        {
-            if (_FbhWithNrShield) return;
-            try
-            {
-                _FbhWithNrShield = true;
-
-                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
-                {
-
-
-#if NEWSETFOCUS
-                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
-#else
-                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
-#endif
-                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2MoveFbhWithNumber ", true, false, false);
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
-            }
-            finally
-            {
-                _FbhWithNrShield = false;
-            }
-
-        }
-
-        private bool _FbhWithoutNrShield = false;
-        private void btnFbhWithoutNr_Click(object sender, EventArgs e)
-        {
-            if (_FbhWithoutNrShield) return;
-            try
-            {
-                _FbhWithoutNrShield = true;
-
-                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
-                {
-
-
-#if NEWSETFOCUS
-                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
-#else
-                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
-#endif
-                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2MoveFbhWithoutNumber ", true, false, false);
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
-            }
-            finally
-            {
-                _FbhWithoutNrShield = false;
-            }
-
-        }
-
         private void txtTop_TextChanged(object sender, EventArgs e)
         {
             if (txtTop.Text != _NrOptions.Top)
@@ -220,7 +131,7 @@ namespace Plan2Ext.Nummerierung
 
                 Globs.CancelCommand();
 
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2NummerierungSelTop ", true, false, false);
+                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2NummerierungSelPrefix ", true, false, false);
             }
             catch (Exception ex)
             {
@@ -242,9 +153,9 @@ namespace Plan2Ext.Nummerierung
             _NrOptions.Number = txtNumber.Text;
         }
 
-        private void chkAutoCorr_CheckedChanged(object sender, EventArgs e)
+        private void chkFirstAttribute_CheckedChanged(object sender, EventArgs e)
         {
-            _NrOptions.AutoCorr = chkAutoCorr.Checked;
+            _NrOptions.UseFirstAttrib = chkFirstAttribute.Checked;
         }
 
         private bool _StartShield = false;
@@ -280,5 +191,6 @@ namespace Plan2Ext.Nummerierung
                 _StartShield = false;
             }
         }
+
     }
 }

@@ -28,17 +28,9 @@ namespace Plan2Ext.Nummerierung
             {
                 this.Attribname = "?";
             }
-            try
-            {
-                this.HBlockname = TheConfiguration.GetValueString("alx_V:ino_rb_HkBlockName");
-            }
-            catch (Exception)
-            {
-                this.Attribname = "?";
-            }
         }
 
-        private string _Top = "TOP01";
+        private string _Top = "";
         public string Top { get { return _Top; } set { _Top = value; } }
         public void SetTop(string topName)
         {
@@ -55,8 +47,11 @@ namespace Plan2Ext.Nummerierung
             Form.txtNumber.Text = num;
         }
 
-        private bool _AutoCorr = true;
+        private bool _AutoCorr = false;
         public bool AutoCorr { get { return _AutoCorr; } set { _AutoCorr = value; } }
+
+        private bool _UseFirstAttrib = false;
+        public bool UseFirstAttrib { get { return _UseFirstAttrib; } set { _UseFirstAttrib = value; } }
 
         private string _Blockname = "";
         public string Blockname { get { return _Blockname; } set { _Blockname = value; } }
@@ -65,14 +60,6 @@ namespace Plan2Ext.Nummerierung
             Form.txtBlockname.Text = blockName;
             _Blockname = blockName;
         }   
-
-        private string _HBlockname = "";
-        public string HBlockname { get { return _HBlockname; } set { _HBlockname = value; } }
-        public void SetHBlockname(string HBlockName)
-        {
-            Form.txtHBlockname.Text = HBlockName;
-            _HBlockname = HBlockName;
-        }
 
         private string _Attribname = "";
         public string Attribname { get { return _Attribname; } set { _Attribname = value; } }

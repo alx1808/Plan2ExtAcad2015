@@ -40,8 +40,8 @@ namespace Plan2Ext.Nummerierung
         }
         #endregion
 
-        [CommandMethod("Plan2NummerierungSelTop")]
-        static public void Plan2NummerierungSelTop()
+        [CommandMethod("Plan2NummerierungSelPrefix")]
+        static public void Plan2NummerierungSelPrefix()
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Plan2Ext.Nummerierung
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptEntityResult per = ed.GetEntity("\nTop-Text wählen: ");
+                    PromptEntityResult per = ed.GetNestedEntity("\nPrefix-Text wählen: ");
                     if (per.Status == PromptStatus.OK)
                     {
                         Transaction tr = doc.TransactionManager.StartTransaction();
@@ -70,7 +70,7 @@ namespace Plan2Ext.Nummerierung
                             DBText txt = obj as DBText;
                             if (txt == null) return;
 
-                            opts.SetTop("TOP" + txt.TextString);
+                            opts.SetTop(txt.TextString);
 
                             tr.Commit();
                         }
@@ -80,53 +80,7 @@ namespace Plan2Ext.Nummerierung
             }
             catch (System.Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2NummerierungSelTop aufgetreten! {0}", ex.Message));
-            }
-        }
-
-
-        [CommandMethod("Plan2NummerierungSelHBlock")]
-        static public void Plan2NummerierungSelHBlock()
-        {
-            try
-            {
-                if (!OpenNrPalette()) return;
-
-                var opts = Globs.TheNrOptions;
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                using (DocumentLock m_doclock = doc.LockDocument())
-                {
-                    DocumentCollection dm = Application.DocumentManager;
-                    if (doc == null) return;
-                    Editor ed = doc.Editor;
-#if NEWSETFOCUS
-                    doc.Window.Focus();
-#else
-                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
-#endif
-
-                    PromptEntityResult per = ed.GetEntity("\nHöhenblock wählen: ");
-                    if (per.Status == PromptStatus.OK)
-                    {
-                        Transaction tr = doc.TransactionManager.StartTransaction();
-                        using (tr)
-                        {
-                            DBObject obj = tr.GetObject(per.ObjectId, OpenMode.ForRead);
-                            BlockReference br = obj as BlockReference;
-                            if (br == null) return;
-
-                            opts.SetHBlockname(br.Name);
-
-                            tr.Commit();
-                        }
-                    }
-                }
-
-            }
-            catch (System.Exception ex)
-            {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2NummerierungSelHBlock aufgetreten! {0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2NummerierungSelPrefix aufgetreten! {0}", ex.Message));
             }
         }
 
