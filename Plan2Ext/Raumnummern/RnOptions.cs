@@ -96,6 +96,9 @@ namespace Plan2Ext.Raumnummern
         private bool _AutoCorr = true;
         public bool AutoCorr { get { return _AutoCorr; } set { _AutoCorr = value; } }
 
+        private bool _UseHiddenAttribute = false;
+        public bool UseHiddenAttribute { get { return _UseHiddenAttribute; } set { _UseHiddenAttribute = value; } }
+
         private string _Blockname = "";
         public string Blockname { get { return _Blockname; } set { _Blockname = value; } }
         public void SetBlockname(string blockName)

@@ -64,6 +64,7 @@
             this.btnInsertTop = new System.Windows.Forms.Button();
             this.txtTopNr = new System.Windows.Forms.TextBox();
             this.btnSum = new System.Windows.Forms.Button();
+            this.chkHiddenAttribute = new System.Windows.Forms.CheckBox();
             this.grNumber.SuspendLayout();
             this.grpFbHoehe.SuspendLayout();
             this.grpManually.SuspendLayout();
@@ -73,6 +74,7 @@
             // 
             this.grNumber.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grNumber.Controls.Add(this.chkHiddenAttribute);
             this.grNumber.Controls.Add(this.btnRemoveRaum);
             this.grNumber.Controls.Add(this.btnSelectTop);
             this.grNumber.Controls.Add(this.chkAutoCorr);
@@ -85,7 +87,7 @@
             this.grNumber.Controls.Add(this.lblTop);
             this.grNumber.Location = new System.Drawing.Point(0, 162);
             this.grNumber.Name = "grNumber";
-            this.grNumber.Size = new System.Drawing.Size(228, 182);
+            this.grNumber.Size = new System.Drawing.Size(228, 203);
             this.grNumber.TabIndex = 0;
             this.grNumber.TabStop = false;
             this.grNumber.Text = "Zuordnen";
@@ -94,7 +96,7 @@
             // 
             this.btnRemoveRaum.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRemoveRaum.Location = new System.Drawing.Point(6, 150);
+            this.btnRemoveRaum.Location = new System.Drawing.Point(6, 173);
             this.btnRemoveRaum.Name = "btnRemoveRaum";
             this.btnRemoveRaum.Size = new System.Drawing.Size(216, 23);
             this.btnRemoveRaum.TabIndex = 32;
@@ -132,7 +134,7 @@
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.Location = new System.Drawing.Point(6, 121);
+            this.btnStart.Location = new System.Drawing.Point(6, 144);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(216, 23);
             this.btnStart.TabIndex = 7;
@@ -465,13 +467,28 @@
             // 
             this.btnSum.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSum.Location = new System.Drawing.Point(6, 350);
+            this.btnSum.Location = new System.Drawing.Point(6, 371);
             this.btnSum.Name = "btnSum";
             this.btnSum.Size = new System.Drawing.Size(216, 23);
             this.btnSum.TabIndex = 33;
             this.btnSum.Text = "Summieren";
             this.btnSum.UseVisualStyleBackColor = true;
             this.btnSum.Click += new System.EventHandler(this.btnSum_Click);
+            // 
+            // chkHiddenAttribute
+            // 
+            this.chkHiddenAttribute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.chkHiddenAttribute.AutoSize = true;
+            this.chkHiddenAttribute.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkHiddenAttribute.Checked = true;
+            this.chkHiddenAttribute.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkHiddenAttribute.Location = new System.Drawing.Point(56, 121);
+            this.chkHiddenAttribute.Name = "chkHiddenAttribute";
+            this.chkHiddenAttribute.Size = new System.Drawing.Size(166, 17);
+            this.chkHiddenAttribute.TabIndex = 33;
+            this.chkHiddenAttribute.Text = "Verstecktes Nummern-Attribut";
+            this.chkHiddenAttribute.UseVisualStyleBackColor = true;
+            this.chkHiddenAttribute.CheckedChanged += new System.EventHandler(this.chkHiddenAttribute_CheckedChanged);
             // 
             // RnControl
             // 
@@ -535,5 +552,6 @@
         internal System.Windows.Forms.TextBox txtTopNr;
         private System.Windows.Forms.Button btnRemoveRaum;
         private System.Windows.Forms.Button btnSum;
+        internal System.Windows.Forms.CheckBox chkHiddenAttribute;
     }
 }

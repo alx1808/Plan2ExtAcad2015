@@ -75,13 +75,18 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
-
+                    var blockOids = new List<ObjectId>();
                     Engine _Engine = new Engine(opts);
 
                     Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$" });
                     Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
 
-                    while (_Engine.AddNumber()) { };
+                    while (_Engine.AddNumber(blockOids)) { };
+
+                    if (opts.UseHiddenAttribute)
+                    {
+                        _Engine.MoveNrToInfoAttribute(blockOids);
+                    }
                 }
 
             }

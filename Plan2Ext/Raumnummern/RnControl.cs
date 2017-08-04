@@ -74,6 +74,7 @@ namespace Plan2Ext.Raumnummern
             txtFlaechenAttributName.Text = _RnOptions.FlaechenAttributName;
             txtFlaechenGrenzeLayerName.Text = _RnOptions.FlaechenGrenzeLayerName;
             txtAbzFlaechenGrenzeLayerName.Text = _RnOptions.AbzFlaechenGrenzeLayerName;
+            chkHiddenAttribute.Checked = _RnOptions.UseHiddenAttribute;
         }
         #endregion
 
@@ -305,6 +306,11 @@ namespace Plan2Ext.Raumnummern
             _RnOptions.AutoCorr = chkAutoCorr.Checked;
         }
 
+        private void chkHiddenAttribute_CheckedChanged(object sender, EventArgs e)
+        {
+            _RnOptions.UseHiddenAttribute = chkHiddenAttribute.Checked;
+        }
+
         private bool _SelectBlockShield = false;
         private void btnSelectBlock_Click(object sender, EventArgs e)
         {
@@ -325,8 +331,6 @@ namespace Plan2Ext.Raumnummern
             {
                 _SelectBlockShield = false;
             }
-
-
         }
 
         private bool _SelectHBlockShield = false;

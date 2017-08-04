@@ -170,7 +170,34 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        internal bool AddNumber()
+        internal void MoveNrToInfoAttribute(List<ObjectId> blockOids)
+        {
+            if (blockOids == null || blockOids.Count == 0) return;
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                foreach (var oid in blockOids)
+                {
+                    var blockRef = (BlockReference)myT.GetObject(oid, OpenMode.ForRead);
+                    var attRef = GetBlockAttribute(NrAttribname, blockRef);
+                    if (attRef != null)
+                    {
+                        var nr = attRef.TextString;
+
+                        var attRefInfo = GetBlockAttribute("INFO", blockRef);
+                        if (attRefInfo != null)
+                        {
+                            attRefInfo.UpgradeOpen();
+                            attRefInfo.TextString = nr;
+                            attRef.UpgradeOpen();
+                            attRef.TextString = "";
+                        }
+                    }
+                }
+                myT.Commit();
+            }
+        }
+
+        internal bool AddNumber(List<ObjectId> blockOids)
         {
             DeleteAllFehlerLines();
             MarkRbs();
@@ -223,6 +250,8 @@ namespace Plan2Ext.Raumnummern
 
                 _RnOptions.SetNumber(newNr);
 
+                if (!blockOids.Contains(_CurrentBlock)) blockOids.Add(_CurrentBlock);
+
                 myT.Commit();
             }
 
@@ -250,6 +279,7 @@ namespace Plan2Ext.Raumnummern
         /// </remarks>
         internal bool SumTops()
         {
+            FehlerLinesOnOff(true);
             DeleteAllFehlerLines();
             CalcBlocksPerTop(); // berechnet _OidsPerTop
             var rbsPerTopNr = _OidsPerTop; // keine raumblöcke ohne topname
@@ -287,11 +317,11 @@ namespace Plan2Ext.Raumnummern
                     string topNr;
                     if (!GetTopNr(topOid, myT, out topNr)) continue;
                     topNr = topNr.Replace(" ", ""); // topnr in raumblock hat keine leerzeichen
-                    
+
                     List<ObjectId> rbs = null;
                     if (!rbsPerTopNr.TryGetValue(topNr, out rbs))
                     {
-                        InsertFehlerLineAt(topOid, _TOP_HAS_NO_RBS );
+                        InsertFehlerLineAt(topOid, _TOP_HAS_NO_RBS);
                         continue;
                     }
 
@@ -301,7 +331,7 @@ namespace Plan2Ext.Raumnummern
                         Plan2Ext.AreaEngine.FgRbStructure fgrb = null;
                         if (!fgrbsPerRb.TryGetValue(rbOid, out fgrb))
                         {
-                            InsertFehlerLineAt(rbOid, _RB_DOES_NOT_BELONG_TO_A_TOP );
+                            InsertFehlerLineAt(rbOid, _RB_DOES_NOT_BELONG_TO_A_TOP);
                             continue;
                         }
                         topStruct.FgRbs.Add(fgrb);
@@ -313,9 +343,9 @@ namespace Plan2Ext.Raumnummern
 
 
 
-                foreach (var fgrbStruct in _FgRbStructs.Values  )
+                foreach (var fgrbStruct in _FgRbStructs.Values)
                 {
-                    if (!fgRbUsed.Contains(fgrbStruct ))
+                    if (!fgRbUsed.Contains(fgrbStruct))
                     {
                         InsertFehlerLineAt(fgrbStruct.FlaechenGrenze, _ROOM_DOESNT_BELONG_TO_A_TOP);
                     }
@@ -333,7 +363,7 @@ namespace Plan2Ext.Raumnummern
             return true;
         }
 
-        private void SumM2(TopStructure topStruct,  Transaction myT)
+        private void SumM2(TopStructure topStruct, Transaction myT)
         {
             double sumArea = 0.0;
             foreach (var fgrb in topStruct.FgRbs)
@@ -346,7 +376,7 @@ namespace Plan2Ext.Raumnummern
             }
 
             var areaString = string.Format(CultureInfo.InvariantCulture, "{0}m2", sumArea.ToString("F2"));
-            SetBlockAttrib(topStruct.TopOid, Commands.TOPBLOCK_M2_ATTNAME , areaString);
+            SetBlockAttrib(topStruct.TopOid, Commands.TOPBLOCK_M2_ATTNAME, areaString);
         }
 
         private bool GetArea(ObjectId oid, Transaction myT, out double rbArea)
@@ -355,7 +385,7 @@ namespace Plan2Ext.Raumnummern
             var rb = myT.GetObject(oid, OpenMode.ForRead) as BlockReference;
             var m2Text = GetBlockAttribute(_RnOptions.FlaechenAttributName, rb);
             string prefix, suffix;
-            double? d = Plan2Ext.Globs.GetFirstDoubleInString(m2Text.TextString , out prefix, out suffix);
+            double? d = Plan2Ext.Globs.GetFirstDoubleInString(m2Text.TextString, out prefix, out suffix);
             if (d == null)
             {
                 InsertFehlerLineAt(oid, _WRONG_AREA_VALUE);
@@ -372,7 +402,7 @@ namespace Plan2Ext.Raumnummern
             if (topBlockRef == null)
             {
                 InsertFehlerLineAt(oid, _TOP_ELEMENT_IS_NO_BLOCKREF);
-                return false; 
+                return false;
             }
             var topNrAtt = GetBlockAttribute(TopBlockTopNrAttName, topBlockRef);
             if (topNrAtt == null)
@@ -415,13 +445,13 @@ namespace Plan2Ext.Raumnummern
             foreach (var fg in top.FgRbs)
             {
                 var inner = new List<ObjectId>();
-                AddToSet(inner,fg.Inseln);
+                AddToSet(inner, fg.Inseln);
                 AddToSet(inner, fg.Abzugsflaechen);
                 DeleteOldHatch(fg.FlaechenGrenze);
                 outerInner.Add(fg.FlaechenGrenze, inner);
             }
 
-            var oid = Plan2Ext.Globs.HatchPoly(outerInner,layer, col, _TransMan);
+            var oid = Plan2Ext.Globs.HatchPoly(outerInner, layer, col, _TransMan);
             var ids = new ObjectIdCollection();
             ids.Add(oid);
             Plan2Ext.Globs.DrawOrderBottom(ids);
@@ -446,7 +476,8 @@ namespace Plan2Ext.Raumnummern
         private void AddToSet(List<ObjectId> set, List<ObjectId> list)
         {
             foreach (var oid in list)
-            {oid:
+            {
+            oid:
 
                 if (!set.Contains(oid)) set.Add(oid);
             }
@@ -717,8 +748,17 @@ namespace Plan2Ext.Raumnummern
 
         private string GetTopName(ObjectId oid)
         {
-            string number = GetBlockAttribute(NrAttribname, oid);
-            return GetTopName(number);
+            var nummer = "";
+            if (_RnOptions.UseHiddenAttribute)
+            {
+                nummer = GetBlockAttribute("INFO", oid);
+            }
+            else
+            {
+                nummer = GetBlockAttribute(NrAttribname, oid);
+            }
+
+            return GetTopName(nummer);
         }
 
         private string GetTopName(string number)
@@ -1161,6 +1201,22 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        private void FehlerLinesOnOff(bool on)
+        {
+            if (on)
+            {
+                foreach (var fi in _FehlerInfos.Values)
+                {
+                    Plan2Ext.Globs.LayerOnAndThaw(fi.Layername);
+                }
+            }
+            else
+            {
+                var regexLayers = _FehlerInfos.Values.Select(x => "^" + x.Layername + "$").ToList();
+                Plan2Ext.Globs.LayerOffRegex(regexLayers);
+            }
+        }
+
         private Point3d? GetInsertPoint(ObjectId oid)
         {
             Point3d? position = null;
@@ -1189,6 +1245,7 @@ namespace Plan2Ext.Raumnummern
             return position;
         }
         #endregion
+
 
     }
 }
