@@ -462,7 +462,7 @@ namespace Plan2Ext.Raumnummern
 
                 Globs.CancelCommand();
 
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2FlaBereinig ", true, false, false);
+                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummernBereinig ", true, false, false);
             }
             catch (Exception ex)
             {

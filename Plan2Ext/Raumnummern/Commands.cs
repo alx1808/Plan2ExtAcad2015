@@ -688,6 +688,31 @@ namespace Plan2Ext.Raumnummern
 
         static RnPalette _RnPalette;
 
+        [CommandMethod("Plan2RaumnummernBereinig")]
+        static public void Plan2RaumnummernBereinig()
+        {
+            try
+            {
+
+                if (!OpenRnPalette()) return;
+
+                var opts = Globs.TheRnOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+                    Plan2Ext.Flaeche.BereinigFehlerlinienAndRegions();
+                    Engine _Engine = new Engine(opts);
+                    _Engine.BereinigFehlerlinien();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernBereinig aufgetreten! {0}", ex.Message));
+            }
+        }
+
+
         [LispFunction("Plan2Raumnummern")]
         public static object Plan2Raumnummern(ResultBuffer rb)
         {
