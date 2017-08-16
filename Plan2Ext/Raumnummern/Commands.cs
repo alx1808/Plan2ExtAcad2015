@@ -78,7 +78,7 @@ namespace Plan2Ext.Raumnummern
                     var blockOids = new List<ObjectId>();
                     Engine _Engine = new Engine(opts);
 
-                    Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$" });
+                    Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$", "^A_BE_HK" });
                     Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
 
                     while (_Engine.AddNumber(blockOids)) { };
@@ -87,8 +87,11 @@ namespace Plan2Ext.Raumnummern
                     {
                         _Engine.MoveNrToInfoAttribute(blockOids);
                     }
+                    else
+                    {
+                        _Engine.CopyNrToInfoAttribute(blockOids);
+                    }
                 }
-
             }
             catch (System.Exception ex)
             {
@@ -108,8 +111,19 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
+                    // zuerst fläche rechnen
+                    Plan2Ext.Flaeche.Modify = true;
+                    Plan2Ext.Flaeche.AktFlaeche(
+                        Application.DocumentManager.MdiActiveDocument,
+                        opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
+                        );
 
                     Engine _Engine = new Engine(opts);
+
+                    // danach regions etc. bereinig
+                    Plan2Ext.Flaeche.BereinigFehlerlinienAndRegions();
+                    //_Engine.BereinigFehlerlinien();
+
                     _Engine.SumTops();
                 }
             }

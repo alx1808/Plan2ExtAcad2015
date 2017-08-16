@@ -198,6 +198,31 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        internal void CopyNrToInfoAttribute(List<ObjectId> blockOids)
+        {
+            if (blockOids == null || blockOids.Count == 0) return;
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                foreach (var oid in blockOids)
+                {
+                    var blockRef = (BlockReference)myT.GetObject(oid, OpenMode.ForRead);
+                    var attRef = GetBlockAttribute(NrAttribname, blockRef);
+                    if (attRef != null)
+                    {
+                        var nr = attRef.TextString;
+
+                        var attRefInfo = GetBlockAttribute("INFO", blockRef);
+                        if (attRefInfo != null)
+                        {
+                            attRefInfo.UpgradeOpen();
+                            attRefInfo.TextString = nr;
+                        }
+                    }
+                }
+                myT.Commit();
+            }
+        }
+
         internal bool AddNumber(List<ObjectId> blockOids)
         {
             DeleteAllFehlerLines();

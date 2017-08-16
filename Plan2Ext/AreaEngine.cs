@@ -63,7 +63,7 @@ namespace Plan2Ext
         #endregion
 
         #region Internal
-        internal bool SelectFgAndRb(List<_AcDb.ObjectId> flaechenGrenzen, List<_AcDb.ObjectId> raumBloecke, string fgLayer, string rbName)
+        internal bool SelectFgAndRb(List<_AcDb.ObjectId> flaechenGrenzen, List<_AcDb.ObjectId> raumBloecke, string fgLayer, string rbName, bool selectAll=false)
         {
             flaechenGrenzen.Clear();
             raumBloecke.Clear();
@@ -87,15 +87,21 @@ namespace Plan2Ext
                 new _AcDb.TypedValue((int)_AcDb.DxfCode.Operator ,"OR>")
             });
 
-            _AcEd.PromptSelectionOptions SelOpts = new _AcEd.PromptSelectionOptions();
-            SelOpts.MessageForAdding = "Raumblöcke und Flächengrenzen wählen: ";
-
-            res = _Editor.GetSelection(SelOpts, filter);
-            if (res.Status != _AcEd.PromptStatus.OK)
+            if (selectAll)
             {
-                log.Debug("Auswahl wurde abgebrochen.");
-                if (res.Status == _AcEd.PromptStatus.Cancel) return false;
-                else return true;
+                res = _Editor.SelectAll(filter);
+            }
+            else
+            {
+                _AcEd.PromptSelectionOptions SelOpts = new _AcEd.PromptSelectionOptions();
+                SelOpts.MessageForAdding = "Raumblöcke und Flächengrenzen wählen: ";
+                res = _Editor.GetSelection(SelOpts, filter);
+                if (res.Status != _AcEd.PromptStatus.OK)
+                {
+                    log.Debug("Auswahl wurde abgebrochen.");
+                    if (res.Status == _AcEd.PromptStatus.Cancel) return false;
+                    else return true;
+                }
             }
 
 #if BRX_APP

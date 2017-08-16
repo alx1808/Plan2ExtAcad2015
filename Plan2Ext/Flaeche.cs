@@ -105,7 +105,7 @@ namespace Plan2Ext
         #endregion
 
 
-        public delegate void AktFlaecheDelegate(_AcAp.Document doc, string rbName, string flAttrib, string periAtt, string fgLayer, string afLayer);
+        public delegate void AktFlaecheDelegate(_AcAp.Document doc, string rbName, string flAttrib, string periAtt, string fgLayer, string afLayer, bool selectAll = false);
 
         [_AcTrx.LispFunction("DotNetCalcFlaeche")]
         public static _AcDb.ResultBuffer DotNetCalcFlaeche(_AcDb.ResultBuffer rb)
@@ -196,7 +196,7 @@ namespace Plan2Ext
             return null;
         }
 
-        internal static void AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer)
+        internal static void AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer, bool selectAll = false)
         {
             log.Debug("--------------------------");
 
@@ -219,7 +219,7 @@ namespace Plan2Ext
                 DeleteRegions();
                 DeleteFehlerSymbols();
 
-                if (!_AreaEngine.SelectFgAndRb(_FlaechenGrenzen, _Raumbloecke, _FgLayer, _RaumblockName)) return;
+                if (!_AreaEngine.SelectFgAndRb(_FlaechenGrenzen, _Raumbloecke, _FgLayer, _RaumblockName, selectAll)) return;
 
                 var fgRbStructs = AreaEngine.GetFgRbStructs(_RaumblockName, _FgLayer, _AfLayer, doc.Database);
                 var nrOfOverlaps = AreaEngine.NrOfOverlaps;
