@@ -306,9 +306,34 @@ namespace Plan2Ext.Raumnummern
             _RnOptions.AutoCorr = chkAutoCorr.Checked;
         }
 
+        private bool _chkHiddenAttributeFirstTime = true;
+        private bool _chkHiddenAttributeShield = false;
         private void chkHiddenAttribute_CheckedChanged(object sender, EventArgs e)
         {
+            if (_chkHiddenAttributeFirstTime)
+            {
+                _chkHiddenAttributeFirstTime = false;
+                return;
+            }
+            if (_chkHiddenAttributeShield) return;
             _RnOptions.UseHiddenAttribute = chkHiddenAttribute.Checked;
+            try
+            {
+                _chkHiddenAttributeShield = true;
+
+                Globs.CancelCommand();
+
+                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummerRnOnOff ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(ex.Message);
+            }
+            finally
+            {
+                _chkHiddenAttributeShield = false;
+            }
+
         }
 
         private bool _SelectBlockShield = false;

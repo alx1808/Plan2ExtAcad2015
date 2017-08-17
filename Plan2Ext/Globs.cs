@@ -180,6 +180,38 @@ namespace Plan2Ext
             return oid;
         }
 
+        public static void DelXrecord(_AcDb.ObjectId id, string key)
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+                if (ent != null)
+                {
+                    if (ent.ExtensionDictionary != default(_AcDb.ObjectId))
+                    {
+                        ent.UpgradeOpen();
+                        _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
+                        if (HasKey(xDict,key))
+                        {
+                            xDict.Remove(key);
+                        }
+                    }
+                }
+                tr.Commit();
+            }
+        }
+
+        private static bool HasKey(_AcDb.DBDictionary xDict, string key)
+        {
+            foreach (var val in xDict)
+            {
+                if (val.Key == key) return true;
+            }
+            return false;
+        }
+
         public static void SetXrecord(_AcDb.ObjectId id, string key, _AcDb.ResultBuffer resbuf)
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
@@ -1172,7 +1204,7 @@ namespace Plan2Ext
             }
         }
 
-        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId,List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
+        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId, List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
         {
             string patternName = "_SOLID";
             bool bAssociativity = false;
