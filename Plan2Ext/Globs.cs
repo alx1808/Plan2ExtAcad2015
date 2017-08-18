@@ -235,6 +235,7 @@ namespace Plan2Ext
 
         public static _AcDb.ResultBuffer GetXrecord(_AcDb.ObjectId id, string key)
         {
+            if (id == _AcDb.ObjectId.Null) return null;
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database db = doc.Database;
             _AcDb.ResultBuffer result = new _AcDb.ResultBuffer();

@@ -152,7 +152,7 @@ namespace Plan2Ext.Raumnummern
                     Engine _Engine = new Engine(opts);
 
                     // danach regions etc. bereinig
-                    Plan2Ext.Flaeche.BereinigFehlerlinienAndRegions();
+                    Plan2Ext.Flaeche.BereinigRegions();
                     //_Engine.BereinigFehlerlinien();
 
                     _Engine.SumTops();

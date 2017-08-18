@@ -398,6 +398,12 @@ namespace Plan2Ext
             DeleteFehlerSymbols();
         }
 
+        internal static void BereinigRegions()
+        {
+            InitVariablesFromConfig();
+            DeleteRegions();
+        }
+
         internal static void AktFlaecheOld(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer)
         {
             log.Debug("--------------------------");
