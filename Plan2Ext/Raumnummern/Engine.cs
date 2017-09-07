@@ -44,17 +44,27 @@ namespace Plan2Ext.Raumnummern
         internal const string HIDDEN_NUMMER_ATT = "INFO";
         internal const string TOP_PREFIX = "TOP";
 
-        private readonly Dictionary<int, int> _ColorIndexDict = new Dictionary<int, int>() { 
-            { 1, 141},
-            { 2, 21},
-            { 3, 72},
-            { 4, 50},
-            { 5, 24},
-            { 6, 111},
-            { 7, 11},
-            { 8, 53},
-            { 9, 101},
-            { 0, 31},
+        private readonly Dictionary<string, int> _ColorIndexDict = new Dictionary<string, int>() { 
+            { "1", 141},
+            { "2", 21},
+            { "3", 72},
+            { "4", 50},
+            { "5", 24},
+            { "6", 111},
+            { "7", 11},
+            { "8", 53},
+            { "9", 101},
+            { "0", 31},
+            { "J", 141},
+            { "I", 21},
+            { "H", 72},
+            { "G", 50},
+            { "F", 24},
+            { "E", 111},
+            { "D", 11},
+            { "C", 53},
+            { "B", 101},
+            { "A", 31},
         };
 
         #endregion
@@ -983,10 +993,11 @@ namespace Plan2Ext.Raumnummern
             var cArr = nrStr.ToCharArray();
             for (int i = cArr.Length - 1; i >= 0; i--)
             {
-                var c = cArr[i];
-                if (Char.IsDigit(c))
+                var c = cArr[i].ToString().ToUpperInvariant();
+                int colorIndex;
+                if (_ColorIndexDict.TryGetValue(c,out colorIndex))
                 {
-                    return _ColorIndexDict[int.Parse(c.ToString())];
+                    return colorIndex;
                 }
             }
             log.WarnFormat(CultureInfo.CurrentCulture, "Keine Farbe gefunden für Top '{0}'!", nrStr);

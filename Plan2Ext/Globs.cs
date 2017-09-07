@@ -607,7 +607,78 @@ namespace Plan2Ext
 
         #endregion
 
+        internal class LayerState
+        {
+            public string Name { get; set; }
+            public bool Off { get; set; }
+            public bool Frozen { get; set; }
+            public bool Locked { get; set; }
+        }
+        internal class LayersState
+        {
+            public string CurLayer { get; set; }
+            private Dictionary<string, LayerState> _LayerStates = new Dictionary<string, LayerState>();
+            public Dictionary<string, LayerState> LayerStates
+            {
+                get { return _LayerStates; }
+                set { _LayerStates = value; }
+            }
+        }
 
+        public static void RestoreLayersState(LayersState layersState)
+        {
+            // Get the current document and database
+            _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = acDoc.Database;
+
+            SetLayerCurrent(layersState.CurLayer);
+            var curLayer = _AcAp.Application.GetSystemVariable("CLAYER").ToString();
+
+            // Start a transaction
+            using (_AcDb.Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    
+                    if (string.Compare(curLayer, ltr.Name, StringComparison.OrdinalIgnoreCase) == 0) continue;
+
+                    LayerState ls;
+                    if (layersState.LayerStates.TryGetValue(ltr.Name.ToUpperInvariant(), out ls))
+                    {
+                        ltr.UpgradeOpen();
+                        ltr.IsOff = ls.Off;
+                        ltr.IsFrozen = ls.Frozen;
+                        ltr.IsLocked = ls.Locked;
+                    }
+                }
+                trans.Commit();
+            }
+        }
+
+        public static LayersState SaveLayersState()
+        {
+            // Get the current document and database
+            _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = acDoc.Database;
+
+            var states = new Dictionary<string, LayerState>();
+            var curLayer = _AcAp.Application.GetSystemVariable("CLAYER").ToString();
+
+            // Start a transaction
+            using (_AcDb.Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    states.Add(ltr.Name.ToUpperInvariant(), new LayerState() { Name = ltr.Name, Off = ltr.IsOff, Frozen = ltr.IsFrozen, Locked = ltr.IsLocked });
+                }
+                trans.Commit();
+            }
+            return new LayersState() { CurLayer = curLayer, LayerStates = states };
+        }
         public static void SetLayerCurrent(string layerName)
         {
             // Get the current document and database

@@ -137,6 +137,8 @@ namespace Plan2Ext.Raumnummern
             {
                 if (!OpenRnPalette()) return;
 
+                Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
+
                 var opts = Globs.TheRnOptions;
                 Document doc = Application.DocumentManager.MdiActiveDocument;
 
@@ -711,6 +713,8 @@ namespace Plan2Ext.Raumnummern
             try
             {
                 if (!OpenRnPalette()) return;
+
+                Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
 
                 var opts = Globs.TheRnOptions;
                 Document doc = Application.DocumentManager.MdiActiveDocument;

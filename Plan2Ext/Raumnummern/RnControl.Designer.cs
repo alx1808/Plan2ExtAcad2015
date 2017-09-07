@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.grNumber = new System.Windows.Forms.GroupBox();
+            this.chkHiddenAttribute = new System.Windows.Forms.CheckBox();
             this.btnRemoveRaum = new System.Windows.Forms.Button();
             this.btnSelectTop = new System.Windows.Forms.Button();
             this.chkAutoCorr = new System.Windows.Forms.CheckBox();
@@ -64,7 +65,8 @@
             this.btnInsertTop = new System.Windows.Forms.Button();
             this.txtTopNr = new System.Windows.Forms.TextBox();
             this.btnSum = new System.Windows.Forms.Button();
-            this.chkHiddenAttribute = new System.Windows.Forms.CheckBox();
+            this.chkShowSettings = new System.Windows.Forms.CheckBox();
+            this.btnLayerRestore = new System.Windows.Forms.Button();
             this.grNumber.SuspendLayout();
             this.grpFbHoehe.SuspendLayout();
             this.grpManually.SuspendLayout();
@@ -91,6 +93,21 @@
             this.grNumber.TabIndex = 0;
             this.grNumber.TabStop = false;
             this.grNumber.Text = "Zuordnen";
+            // 
+            // chkHiddenAttribute
+            // 
+            this.chkHiddenAttribute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.chkHiddenAttribute.AutoSize = true;
+            this.chkHiddenAttribute.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkHiddenAttribute.Checked = true;
+            this.chkHiddenAttribute.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkHiddenAttribute.Location = new System.Drawing.Point(56, 121);
+            this.chkHiddenAttribute.Name = "chkHiddenAttribute";
+            this.chkHiddenAttribute.Size = new System.Drawing.Size(166, 17);
+            this.chkHiddenAttribute.TabIndex = 33;
+            this.chkHiddenAttribute.Text = "Verstecktes Nummern-Attribut";
+            this.chkHiddenAttribute.UseVisualStyleBackColor = true;
+            this.chkHiddenAttribute.CheckedChanged += new System.EventHandler(this.chkHiddenAttribute_CheckedChanged);
             // 
             // btnRemoveRaum
             // 
@@ -236,7 +253,7 @@
             // 
             // grpManually
             // 
-            this.grpManually.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.grpManually.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpManually.Controls.Add(this.btnAbzFlaechenGrenzeLayerName);
             this.grpManually.Controls.Add(this.txtAbzFlaechenGrenzeLayerName);
@@ -254,12 +271,13 @@
             this.grpManually.Controls.Add(this.btnSelectBlock);
             this.grpManually.Controls.Add(this.txtBlockname);
             this.grpManually.Controls.Add(this.label1);
-            this.grpManually.Location = new System.Drawing.Point(3, 446);
+            this.grpManually.Location = new System.Drawing.Point(0, 429);
             this.grpManually.Name = "grpManually";
             this.grpManually.Size = new System.Drawing.Size(225, 178);
             this.grpManually.TabIndex = 8;
             this.grpManually.TabStop = false;
             this.grpManually.Text = "Blöcke und Attribute";
+            this.grpManually.Visible = false;
             // 
             // btnAbzFlaechenGrenzeLayerName
             // 
@@ -425,7 +443,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalcArea.Location = new System.Drawing.Point(12, 3);
             this.btnCalcArea.Name = "btnCalcArea";
-            this.btnCalcArea.Size = new System.Drawing.Size(143, 23);
+            this.btnCalcArea.Size = new System.Drawing.Size(98, 23);
             this.btnCalcArea.TabIndex = 9;
             this.btnCalcArea.Text = "Fläche rechnen";
             this.btnCalcArea.UseVisualStyleBackColor = true;
@@ -434,9 +452,9 @@
             // btnFlaBereinig
             // 
             this.btnFlaBereinig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFlaBereinig.Location = new System.Drawing.Point(161, 3);
+            this.btnFlaBereinig.Location = new System.Drawing.Point(116, 3);
             this.btnFlaBereinig.Name = "btnFlaBereinig";
-            this.btnFlaBereinig.Size = new System.Drawing.Size(64, 23);
+            this.btnFlaBereinig.Size = new System.Drawing.Size(53, 23);
             this.btnFlaBereinig.TabIndex = 50;
             this.btnFlaBereinig.Text = "Bereinig";
             this.btnFlaBereinig.UseVisualStyleBackColor = true;
@@ -475,25 +493,34 @@
             this.btnSum.UseVisualStyleBackColor = true;
             this.btnSum.Click += new System.EventHandler(this.btnSum_Click);
             // 
-            // chkHiddenAttribute
+            // chkShowSettings
             // 
-            this.chkHiddenAttribute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkHiddenAttribute.AutoSize = true;
-            this.chkHiddenAttribute.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chkHiddenAttribute.Checked = true;
-            this.chkHiddenAttribute.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkHiddenAttribute.Location = new System.Drawing.Point(56, 121);
-            this.chkHiddenAttribute.Name = "chkHiddenAttribute";
-            this.chkHiddenAttribute.Size = new System.Drawing.Size(166, 17);
-            this.chkHiddenAttribute.TabIndex = 33;
-            this.chkHiddenAttribute.Text = "Verstecktes Nummern-Attribut";
-            this.chkHiddenAttribute.UseVisualStyleBackColor = true;
-            this.chkHiddenAttribute.CheckedChanged += new System.EventHandler(this.chkHiddenAttribute_CheckedChanged);
+            this.chkShowSettings.AutoSize = true;
+            this.chkShowSettings.Location = new System.Drawing.Point(6, 406);
+            this.chkShowSettings.Name = "chkShowSettings";
+            this.chkShowSettings.Size = new System.Drawing.Size(89, 17);
+            this.chkShowSettings.TabIndex = 44;
+            this.chkShowSettings.Text = "Einstellungen";
+            this.chkShowSettings.UseVisualStyleBackColor = true;
+            this.chkShowSettings.CheckedChanged += new System.EventHandler(this.chkShowSettings_CheckedChanged);
+            // 
+            // btnLayerRestore
+            // 
+            this.btnLayerRestore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLayerRestore.Location = new System.Drawing.Point(175, 3);
+            this.btnLayerRestore.Name = "btnLayerRestore";
+            this.btnLayerRestore.Size = new System.Drawing.Size(53, 23);
+            this.btnLayerRestore.TabIndex = 52;
+            this.btnLayerRestore.Text = "Layer";
+            this.btnLayerRestore.UseVisualStyleBackColor = true;
+            this.btnLayerRestore.Click += new System.EventHandler(this.btnLayerRestore_Click);
             // 
             // RnControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnLayerRestore);
+            this.Controls.Add(this.chkShowSettings);
             this.Controls.Add(this.btnSum);
             this.Controls.Add(this.txtTopNr);
             this.Controls.Add(this.btnInsertTop);
@@ -553,5 +580,7 @@
         private System.Windows.Forms.Button btnRemoveRaum;
         private System.Windows.Forms.Button btnSum;
         internal System.Windows.Forms.CheckBox chkHiddenAttribute;
+        private System.Windows.Forms.CheckBox chkShowSettings;
+        private System.Windows.Forms.Button btnLayerRestore;
     }
 }
