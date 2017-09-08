@@ -187,19 +187,25 @@ namespace Plan2Ext
             using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
             {
                 _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
-                if (ent != null)
-                {
-                    if (ent.ExtensionDictionary != default(_AcDb.ObjectId))
-                    {
-                        ent.UpgradeOpen();
-                        _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
-                        if (HasKey(xDict,key))
-                        {
-                            xDict.Remove(key);
-                        }
-                    }
-                }
+                DelXrecord(tr, ent, key);
                 tr.Commit();
+            }
+        }
+
+        public static void DelXrecord(_AcDb.Transaction tr, _AcDb.DBObject dboForRead, string key)
+        {
+            if (dboForRead != null)
+            {
+                if (dboForRead.ExtensionDictionary != default(_AcDb.ObjectId))
+                {
+                    dboForRead.UpgradeOpen();
+                    _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(dboForRead.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
+                    if (HasKey(xDict, key))
+                    {
+                        xDict.Remove(key);
+                    }
+                    dboForRead.DowngradeOpen();
+                }
             }
         }
 
@@ -641,7 +647,7 @@ namespace Plan2Ext
                 foreach (var ltrOid in layTb)
                 {
                     _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-                    
+
                     if (string.Compare(curLayer, ltr.Name, StringComparison.OrdinalIgnoreCase) == 0) continue;
 
                     LayerState ls;

@@ -120,7 +120,7 @@ namespace Plan2Ext.Raumnummern
                     }
                     else
                     {
-                        _Engine.CopyAttribute(blockOids, Engine.HIDDEN_NUMMER_ATT,opts.Attribname);
+                        _Engine.CopyAttribute(blockOids, Engine.HIDDEN_NUMMER_ATT, opts.Attribname);
                     }
                 }
             }
@@ -679,6 +679,31 @@ namespace Plan2Ext.Raumnummern
             catch (System.Exception ex)
             {
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2MoveFbhWithNumber aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        [CommandMethod("Plan2RaumnummernRemoveAllInfos")]
+        static public void Plan2RaumnummernRemoveAllInfos()
+        {
+            try
+            {
+                if (!OpenRnPalette()) return;
+
+                var opts = Globs.TheRnOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+
+                    Engine _Engine = new Engine(opts);
+
+                    _Engine.RemoveAllInfos();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernRemoveAllInfos aufgetreten! {0}", ex.Message));
             }
         }
 

@@ -487,6 +487,70 @@ namespace Plan2Ext.Raumnummern
             return true;
         }
 
+        internal void RemoveAllInfos()
+        {
+            var elems = SelectAllInfoElements();
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                foreach (var oid in elems)
+                {
+                    var dbo = myT.GetObject(oid, OpenMode.ForRead  ); // has to be for read  -> later upgradopen
+                    var blockReference = dbo as BlockReference;
+                    if (blockReference != null)
+                    {
+                        if (blockReference.Name == Blockname)
+                        {
+                            // raumblock
+                            SetBlockAttrib(blockReference, NrAttribname, "");
+                            SetBlockAttrib(blockReference, HIDDEN_NUMMER_ATT, "");
+                        }
+                        else if (blockReference.Name == TopBlockName)
+                        {
+                            // topblock
+                            // SetBlockAttrib(blockReference , TopBlockTopNrAttName, "TOP");
+                            SetBlockAttrib(blockReference, Commands.TOPBLOCK_M2_ATTNAME, "00");
+                        }
+                        else
+                        {
+                            log.WarnFormat(CultureInfo.InvariantCulture, "Invalid block in selection! '{0}'", blockReference.Name);
+                        }
+                    }
+                    else
+                    {
+                        Polyline poly = dbo as Polyline;
+                        if (poly != null)
+                        {
+                            // flächengrenze
+                            Plan2Ext.Globs.DelXrecord(myT, poly, XREC_TOP_IN_FG);
+                            Plan2Ext.Globs.DelXrecord(myT, poly, XREC_HATCH_OF_RAUM);
+                        }
+                        else
+                        {
+                            Hatch hatch = dbo as Hatch;
+                            if (hatch != null)
+                            {
+                                // schraffur
+                                hatch.UpgradeOpen();
+                                if (!hatch.IsErased)
+                                {
+                                    hatch.Erase();
+                                }
+                                hatch.DowngradeOpen();
+                            }
+                            else
+                            {
+                                log.WarnFormat(CultureInfo.InvariantCulture, "Invalid element in selection! '{0}'", dbo.GetType().Name);
+                            }
+                        }
+                    }
+                }
+
+                myT.Commit();
+            }
+
+
+        }
+
         private void CheckRblockConsistency()
         {
             var rbsInTop = _FgRbStructs.Values.SelectMany(x => x.Raumbloecke).ToList();
@@ -995,7 +1059,7 @@ namespace Plan2Ext.Raumnummern
             {
                 var c = cArr[i].ToString().ToUpperInvariant();
                 int colorIndex;
-                if (_ColorIndexDict.TryGetValue(c,out colorIndex))
+                if (_ColorIndexDict.TryGetValue(c, out colorIndex))
                 {
                     return colorIndex;
                 }
@@ -1302,6 +1366,50 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        private List<ObjectId> SelectAllInfoElements()
+        {
+            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
+                new TypedValue((int)DxfCode.Operator,"<OR" ),
+
+                new TypedValue((int)DxfCode.Operator,"<AND" ),
+                new TypedValue((int)DxfCode.Start,"INSERT" ),
+                new TypedValue((int)DxfCode.BlockName,Blockname),
+                new TypedValue((int)DxfCode.Operator,"AND>" ),
+
+                new TypedValue((int)DxfCode.Operator,"<AND" ),
+                new TypedValue((int)DxfCode.Start,"INSERT" ),
+                new TypedValue((int)DxfCode.BlockName,Commands.TOPBLOCKNAME),
+                new TypedValue((int)DxfCode.Operator,"AND>" ),
+
+                new TypedValue((int)DxfCode.Operator,"<AND" ),
+                new TypedValue((int)DxfCode.Start,"HATCH" ),
+                new TypedValue((int)DxfCode.LayerName,"A_RA_TOP_*_F"),
+                new TypedValue((int)DxfCode.Operator,"AND>" ),
+
+                new TypedValue((int)DxfCode.Operator,"<AND" ),
+                new TypedValue((int)DxfCode.Start,"*POLYLINE" ),
+                new TypedValue((int)DxfCode.LayerName,_RnOptions.FlaechenGrenzeLayerName),
+                new TypedValue((int)DxfCode.Operator,"AND>" ),
+
+                new TypedValue((int)DxfCode.Operator,"OR>" ),
+
+            });
+
+            PromptSelectionOptions SelOpts = new PromptSelectionOptions();
+            SelOpts.MessageForAdding = "Elemente für die Entfernung aller Raumnummern-Informationen wählen: ";
+            PromptSelectionResult res = ed.GetSelection(SelOpts, filter);
+            if (res.Status != PromptStatus.OK) return new List<ObjectId>();
+
+#if BRX_APP
+            SelectionSet ss = res.Value;
+#else
+            using (SelectionSet ss = res.Value)
+#endif
+            {
+                return ss.GetObjectIds().ToList();
+            }
+        }
         private List<ObjectId> SelectAllTopBlocks()
         {
             var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
@@ -1331,22 +1439,46 @@ namespace Plan2Ext.Raumnummern
                 BlockReference blockEnt = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
                 if (blockEnt != null)
                 {
-                    AttributeReference attRef = null;
 
-                    attRef = GetBlockAttribute(attName, blockEnt);
-
-                    if (attRef != null)
-                    {
-                        attRef.UpgradeOpen();
-                        attRef.TextString = val;
-                    }
-                    else
+                    if (!SetBlockAttrib(blockEnt, attName, val))
                     {
                         throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Attribut '{0}' nicht gefunden!", attName));
+
                     }
+
+                    //AttributeReference attRef = null;
+                    //attRef = GetBlockAttribute(attName, blockEnt);
+
+                    //if (attRef != null)
+                    //{
+                    //    attRef.UpgradeOpen();
+                    //    attRef.TextString = val;
+                    //}
+                    //else
+                    //{
+                    //    throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Attribut '{0}' nicht gefunden!", attName));
+                    //}
                 }
 
                 myT.Commit();
+            }
+        }
+
+        private bool SetBlockAttrib(BlockReference blockEnt, string attName, string val)
+        {
+            if (blockEnt == null) return false;
+            AttributeReference attRef = null;
+            attRef = GetBlockAttribute(attName, blockEnt);
+            if (attRef != null)
+            {
+                attRef.UpgradeOpen();
+                attRef.TextString = val;
+                attRef.DowngradeOpen();
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 

@@ -67,6 +67,7 @@
             this.btnSum = new System.Windows.Forms.Button();
             this.chkShowSettings = new System.Windows.Forms.CheckBox();
             this.btnLayerRestore = new System.Windows.Forms.Button();
+            this.btnRemoveAllInfos = new System.Windows.Forms.Button();
             this.grNumber.SuspendLayout();
             this.grpFbHoehe.SuspendLayout();
             this.grpManually.SuspendLayout();
@@ -76,6 +77,7 @@
             // 
             this.grNumber.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grNumber.Controls.Add(this.btnRemoveAllInfos);
             this.grNumber.Controls.Add(this.chkHiddenAttribute);
             this.grNumber.Controls.Add(this.btnRemoveRaum);
             this.grNumber.Controls.Add(this.btnSelectTop);
@@ -89,7 +91,7 @@
             this.grNumber.Controls.Add(this.lblTop);
             this.grNumber.Location = new System.Drawing.Point(0, 162);
             this.grNumber.Name = "grNumber";
-            this.grNumber.Size = new System.Drawing.Size(228, 203);
+            this.grNumber.Size = new System.Drawing.Size(228, 231);
             this.grNumber.TabIndex = 0;
             this.grNumber.TabStop = false;
             this.grNumber.Text = "Zuordnen";
@@ -271,7 +273,7 @@
             this.grpManually.Controls.Add(this.btnSelectBlock);
             this.grpManually.Controls.Add(this.txtBlockname);
             this.grpManually.Controls.Add(this.label1);
-            this.grpManually.Location = new System.Drawing.Point(0, 429);
+            this.grpManually.Location = new System.Drawing.Point(0, 454);
             this.grpManually.Name = "grpManually";
             this.grpManually.Size = new System.Drawing.Size(225, 178);
             this.grpManually.TabIndex = 8;
@@ -485,7 +487,7 @@
             // 
             this.btnSum.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSum.Location = new System.Drawing.Point(6, 371);
+            this.btnSum.Location = new System.Drawing.Point(6, 399);
             this.btnSum.Name = "btnSum";
             this.btnSum.Size = new System.Drawing.Size(216, 23);
             this.btnSum.TabIndex = 33;
@@ -496,7 +498,7 @@
             // chkShowSettings
             // 
             this.chkShowSettings.AutoSize = true;
-            this.chkShowSettings.Location = new System.Drawing.Point(6, 406);
+            this.chkShowSettings.Location = new System.Drawing.Point(6, 431);
             this.chkShowSettings.Name = "chkShowSettings";
             this.chkShowSettings.Size = new System.Drawing.Size(89, 17);
             this.chkShowSettings.TabIndex = 44;
@@ -515,6 +517,18 @@
             this.btnLayerRestore.UseVisualStyleBackColor = true;
             this.btnLayerRestore.Click += new System.EventHandler(this.btnLayerRestore_Click);
             // 
+            // btnRemoveAllInfos
+            // 
+            this.btnRemoveAllInfos.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRemoveAllInfos.Location = new System.Drawing.Point(6, 202);
+            this.btnRemoveAllInfos.Name = "btnRemoveAllInfos";
+            this.btnRemoveAllInfos.Size = new System.Drawing.Size(216, 23);
+            this.btnRemoveAllInfos.TabIndex = 34;
+            this.btnRemoveAllInfos.Text = "Alle Infos entfernen";
+            this.btnRemoveAllInfos.UseVisualStyleBackColor = true;
+            this.btnRemoveAllInfos.Click += new System.EventHandler(this.btnRemoveAllInfos_Click);
+            // 
             // RnControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -530,7 +544,7 @@
             this.Controls.Add(this.grpFbHoehe);
             this.Controls.Add(this.grNumber);
             this.Name = "RnControl";
-            this.Size = new System.Drawing.Size(231, 627);
+            this.Size = new System.Drawing.Size(231, 698);
             this.grNumber.ResumeLayout(false);
             this.grNumber.PerformLayout();
             this.grpFbHoehe.ResumeLayout(false);
@@ -582,5 +596,6 @@
         internal System.Windows.Forms.CheckBox chkHiddenAttribute;
         private System.Windows.Forms.CheckBox chkShowSettings;
         private System.Windows.Forms.Button btnLayerRestore;
+        private System.Windows.Forms.Button btnRemoveAllInfos;
     }
 }
