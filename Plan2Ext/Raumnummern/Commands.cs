@@ -707,6 +707,30 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        [CommandMethod("Plan2RaumnummernRenameTop")]
+        static public void Plan2RaumnummernRenameTop()
+        {
+            try
+            {
+                if (!OpenRnPalette()) return;
+
+                var opts = Globs.TheRnOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+
+                    Engine _Engine = new Engine(opts);
+                    _Engine.RenameTop(opts.Top);
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernRenameTop aufgetreten! {0}", ex.Message));
+            }
+        }
+        
         [CommandMethod("Plan2RaumnummernRemoveRaum")]
         static public void Plan2RaumnummernRemoveRaum()
         {

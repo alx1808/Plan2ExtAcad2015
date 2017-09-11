@@ -244,6 +244,36 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        private bool _RenameTopShield = false;
+        private void btnRenameTop_Click(object sender, EventArgs e)
+        {
+            if (_RenameTopShield) return;
+            try
+            {
+                _RenameTopShield = true;
+
+                Globs.CancelCommand();
+
+                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
+                {
+#if NEWSETFOCUS
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummernRenameTop ", true, false, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernRenameTop aufgetreten! {0}", ex.Message));
+            }
+            finally
+            {
+                _RenameTopShield = false;
+            }
+        }
+
         private bool _RemoveRaumShield = false;
         private void btnRemoveRaum_Click(object sender, EventArgs e)
         {
