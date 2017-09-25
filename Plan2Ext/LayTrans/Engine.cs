@@ -55,6 +55,9 @@ namespace Plan2Ext.LayTrans
 
         internal bool LayTrans(string fileName)
         {
+
+            Plan2Ext.Globs.UnlockAllLayers();
+
             _Errors.Clear();
             var linfos = ExcelImport(fileName);
 
@@ -385,7 +388,7 @@ namespace Plan2Ext.LayTrans
         }
 
 
-        internal bool ExcelExport(string dwgDir = "")
+        internal bool ExcelExport(string[] dwgFiles = null)
         {
             Excel.Application myApp = null;
             Excel.Workbook workBook = null;
@@ -396,13 +399,13 @@ namespace Plan2Ext.LayTrans
                 myApp = new Excel.Application();
 
                 List<LayerInfo> layerInfos = null;
-                if (string.IsNullOrEmpty(dwgDir))
+                if (dwgFiles == null)
                 {
                     layerInfos = GetLayerInfos();
                 }
                 else
                 {
-                    var dwgFiles = System.IO.Directory.GetFiles(dwgDir, "*.dwg", System.IO.SearchOption.AllDirectories);
+                    //var dwgFiles = System.IO.Directory.GetFiles(dwgDir, "*.dwg", System.IO.SearchOption.AllDirectories);
                     layerInfos = GetLayerInfos(dwgFiles.ToList());
                 }
 

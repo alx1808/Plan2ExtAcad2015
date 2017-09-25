@@ -108,20 +108,38 @@ namespace Plan2Ext.LayTrans
                 using (_AcAp.DocumentLock m_doclock = doc.LockDocument())
                 {
                     string dirName = string.Empty;
+                    string[] dwgFileNames = null;
                     using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
                     {
                         folderBrowser.Description = "Verzeichnis mit Zeichnungen für den Layerexport";
                         folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
                         if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                         {
-                            return;
+                            var openFileDialog = new System.Windows.Forms.OpenFileDialog();
+                            openFileDialog.CheckFileExists = true;
+                            openFileDialog.CheckPathExists = true;
+                            openFileDialog.Multiselect = true;
+                            openFileDialog.Title = "Zeichnungen für Layerexport";
+                            openFileDialog.Filter = "Dwg" + "|*." + "Dwg";
+                            if (openFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                            {
+                                return;
+                            }
+                            else
+                            {
+                                dwgFileNames = openFileDialog.FileNames;
+                            }
                         }
-                        dirName = folderBrowser.SelectedPath;
+                        else
+                        {
+                            dirName = folderBrowser.SelectedPath;
+                            dwgFileNames = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
+                        }
                     }
                     //dirName = @"D:\Plan2\Data\Plan2PlotToDwf";
 
                     Engine engine = new Engine();
-                    var ok = engine.ExcelExport(dirName);
+                    var ok = engine.ExcelExport(dwgFileNames);
                     if (!ok)
                     {
                         _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler beim Plan2LayTransExportBulk!"));
@@ -155,9 +173,9 @@ namespace Plan2Ext.LayTrans
                 using (_AcAp.DocumentLock m_doclock = doc.LockDocument())
                 {
 
-                    _AcEd.Editor ed =  _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+                    _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
                     // First let's use the editor method, GetFileNameForOpen()
-                    _AcEd.PromptOpenFileOptions opts =                       new _AcEd.PromptOpenFileOptions("Excel-Datei für Layer-Infos");
+                    _AcEd.PromptOpenFileOptions opts = new _AcEd.PromptOpenFileOptions("Excel-Datei für Layer-Infos");
                     opts.Filter = "Excel (*.xlsx)|*.xlsx|Excel alt (*.xls)|*.xls";
                     _AcEd.PromptFileNameResult pr = ed.GetFileNameForOpen(opts);
                     if (pr.Status != _AcEd.PromptStatus.OK) return;
