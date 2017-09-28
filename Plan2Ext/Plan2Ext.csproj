@@ -134,6 +134,7 @@
     <Compile Include="Kleinbefehle\LayerAufteil.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
     <Compile Include="Kleinbefehle\ReplaceInLayoutNames.cs" />
+    <Compile Include="Kleinbefehle\Schraff2Solid.cs" />
     <Compile Include="LayerFilters\Commands.cs" />
     <Compile Include="Layouts.cs" />
     <Compile Include="LayTrans\Commands.cs" />

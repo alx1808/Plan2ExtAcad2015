@@ -852,6 +852,13 @@ namespace Plan2Ext
             }
         }
 
+        /// <summary>
+        /// Draworder to bottom
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <remarks>
+        /// Condition: ids pertain to modelspace
+        /// </remarks>
         public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids)
         {
             if (ids.Count == 0) return;
@@ -867,7 +874,23 @@ namespace Plan2Ext
 
                 tr.Commit();
             }
+        }
 
+        public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.ObjectId blockTableRecordOid)
+        {
+            if (ids.Count == 0) return;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (_AcDb.Transaction tr = doc.TransactionManager.StartTransaction())
+            {
+                _AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)tr.GetObject(blockTableRecordOid, _AcDb.OpenMode.ForRead);
+
+                var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+                dot.MoveToBottom(ids);
+
+                tr.Commit();
+            }
         }
 
         public static void LayerOffRegex(List<string> layerNames)
@@ -2434,6 +2457,13 @@ namespace Plan2Ext
                 log.WarnFormat("Invalid block with handle {0}!", br.Handle);
             }
             return "$$$InvalidBlock$$$";
+        }
+
+        internal static _AcDb.ObjectId GetBtrOfCurrentLayout(_AcDb.Transaction myTrans)
+        {
+            var acLayoutMgr = _AcDb.LayoutManager.Current;
+            var acLayout = (_AcDb.Layout)myTrans.GetObject(acLayoutMgr.GetLayoutId(acLayoutMgr.CurrentLayout), _AcDb.OpenMode.ForRead);
+            return acLayout.BlockTableRecordId;
         }
     }
 }
