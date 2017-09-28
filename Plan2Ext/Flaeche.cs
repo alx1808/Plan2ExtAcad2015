@@ -105,7 +105,7 @@ namespace Plan2Ext
         #endregion
 
 
-        public delegate void AktFlaecheDelegate(_AcAp.Document doc, string rbName, string flAttrib, string periAtt, string fgLayer, string afLayer, bool selectAll = false);
+        public delegate void AktFlaecheDelegate(_AcAp.Document doc, string rbName, string flAttrib, string periAtt, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true);
 
         [_AcTrx.LispFunction("DotNetCalcFlaeche")]
         public static _AcDb.ResultBuffer DotNetCalcFlaeche(_AcDb.ResultBuffer rb)
@@ -147,6 +147,8 @@ namespace Plan2Ext
                 log.DebugFormat("Dokumentname: {0}.", doc.Name);
 
                 GetArgs(rb);
+
+                Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
 
                 _CalcAreaPalette.Show(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer, new AktFlaecheDelegate(AktFlaeche));
 
@@ -196,7 +198,7 @@ namespace Plan2Ext
             return null;
         }
 
-        internal static void AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer, bool selectAll = false)
+        internal static void AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true)
         {
             log.Debug("--------------------------");
 
@@ -213,8 +215,11 @@ namespace Plan2Ext
 
                 if (!CheckBlockAndAtt()) return;
 
-                Plan2Ext.Globs.SetLayerCurrent("0");
-                Plan2Ext.Globs.LayersOnRestOffAllThawIC(GetLayerNamesToTurnOn());
+                if (layerSchalt)
+                {
+                    Plan2Ext.Globs.SetLayerCurrent("0");
+                    Plan2Ext.Globs.LayersOnRestOffAllThawIC(GetLayerNamesToTurnOn());
+                }
 
                 DeleteRegions();
                 DeleteFehlerSymbols();

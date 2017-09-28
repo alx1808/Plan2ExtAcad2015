@@ -46,7 +46,6 @@ namespace Plan2Ext.CalcArea
                 var pal = Plan2Ext.Flaeche.TheCalcAreaPalette;
                 if (pal == null) return;
 
-
                 Document doc = Application.DocumentManager.MdiActiveDocument;
                 log.DebugFormat("Dokumentname: {0}.", doc.Name);
                 if (doc == null) return;
@@ -54,21 +53,23 @@ namespace Plan2Ext.CalcArea
                 using (DocumentLock m_doclock = Application.DocumentManager.MdiActiveDocument.LockDocument())
                 {
                     Editor ed = doc.Editor;
-
-
 #if NEWSETFOCUS
                     Application.DocumentManager.MdiActiveDocument.Window.Focus();
 #else
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
+                    Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
 
                     Plan2Ext.Flaeche.AktFlaeche(Application.DocumentManager.MdiActiveDocument,
                         pal.RaumBlockName,
                         pal.AreaAttName,
                         pal.PeriAttName,
                         pal.LayerFg,
-                        pal.LayerAg
-                      );
+                        pal.LayerAg,
+                        selectAll: false,
+                        layerSchalt: pal.LayerSchaltung
+                        
+                     );
 
                 }
 

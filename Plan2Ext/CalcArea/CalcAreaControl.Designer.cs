@@ -50,6 +50,9 @@
             this.txtPeriAtt = new System.Windows.Forms.TextBox();
             this.lblPeriAtt = new System.Windows.Forms.Label();
             this.btnFlaBereinig = new System.Windows.Forms.Button();
+            this.btnLayerRestore = new System.Windows.Forms.Button();
+            this.chkLayerSchaltung = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnCalcArea
@@ -58,7 +61,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalcArea.Location = new System.Drawing.Point(6, 132);
             this.btnCalcArea.Name = "btnCalcArea";
-            this.btnCalcArea.Size = new System.Drawing.Size(173, 23);
+            this.btnCalcArea.Size = new System.Drawing.Size(114, 23);
             this.btnCalcArea.TabIndex = 38;
             this.btnCalcArea.Text = "Fläche rechnen";
             this.btnCalcArea.UseVisualStyleBackColor = true;
@@ -188,11 +191,12 @@
             this.typeTextBox.ReadOnly = true;
             this.typeTextBox.Size = new System.Drawing.Size(243, 148);
             this.typeTextBox.TabIndex = 40;
+            this.typeTextBox.Visible = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 164);
+            this.label1.Location = new System.Drawing.Point(3, 188);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(71, 13);
             this.label1.TabIndex = 41;
@@ -203,7 +207,7 @@
             this.txtHeightAtt.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtHeightAtt.Enabled = false;
-            this.txtHeightAtt.Location = new System.Drawing.Point(91, 161);
+            this.txtHeightAtt.Location = new System.Drawing.Point(91, 185);
             this.txtHeightAtt.Name = "txtHeightAtt";
             this.txtHeightAtt.Size = new System.Drawing.Size(130, 20);
             this.txtHeightAtt.TabIndex = 42;
@@ -211,7 +215,7 @@
             // btnSelVolAttribs
             // 
             this.btnSelVolAttribs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelVolAttribs.Location = new System.Drawing.Point(226, 159);
+            this.btnSelVolAttribs.Location = new System.Drawing.Point(226, 183);
             this.btnSelVolAttribs.Name = "btnSelVolAttribs";
             this.btnSelVolAttribs.Size = new System.Drawing.Size(24, 22);
             this.btnSelVolAttribs.TabIndex = 43;
@@ -222,7 +226,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 190);
+            this.label2.Location = new System.Drawing.Point(3, 214);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(73, 13);
             this.label2.TabIndex = 44;
@@ -233,7 +237,7 @@
             this.txtVolAtt.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtVolAtt.Enabled = false;
-            this.txtVolAtt.Location = new System.Drawing.Point(91, 187);
+            this.txtVolAtt.Location = new System.Drawing.Point(91, 211);
             this.txtVolAtt.Name = "txtVolAtt";
             this.txtVolAtt.Size = new System.Drawing.Size(130, 20);
             this.txtVolAtt.TabIndex = 45;
@@ -242,7 +246,7 @@
             // 
             this.btnCalcVol.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCalcVol.Location = new System.Drawing.Point(6, 213);
+            this.btnCalcVol.Location = new System.Drawing.Point(6, 237);
             this.btnCalcVol.Name = "btnCalcVol";
             this.btnCalcVol.Size = new System.Drawing.Size(243, 23);
             this.btnCalcVol.TabIndex = 46;
@@ -272,7 +276,7 @@
             // btnFlaBereinig
             // 
             this.btnFlaBereinig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFlaBereinig.Location = new System.Drawing.Point(185, 132);
+            this.btnFlaBereinig.Location = new System.Drawing.Point(126, 132);
             this.btnFlaBereinig.Name = "btnFlaBereinig";
             this.btnFlaBereinig.Size = new System.Drawing.Size(64, 23);
             this.btnFlaBereinig.TabIndex = 49;
@@ -280,10 +284,45 @@
             this.btnFlaBereinig.UseVisualStyleBackColor = true;
             this.btnFlaBereinig.Click += new System.EventHandler(this.btnFlaBereinig_Click);
             // 
+            // btnLayerRestore
+            // 
+            this.btnLayerRestore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLayerRestore.Location = new System.Drawing.Point(196, 132);
+            this.btnLayerRestore.Name = "btnLayerRestore";
+            this.btnLayerRestore.Size = new System.Drawing.Size(53, 23);
+            this.btnLayerRestore.TabIndex = 53;
+            this.btnLayerRestore.Text = "Layer";
+            this.btnLayerRestore.UseVisualStyleBackColor = true;
+            this.btnLayerRestore.Click += new System.EventHandler(this.btnLayerRestore_Click);
+            // 
+            // chkLayerSchaltung
+            // 
+            this.chkLayerSchaltung.AutoSize = true;
+            this.chkLayerSchaltung.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkLayerSchaltung.Checked = true;
+            this.chkLayerSchaltung.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkLayerSchaltung.Location = new System.Drawing.Point(91, 162);
+            this.chkLayerSchaltung.Name = "chkLayerSchaltung";
+            this.chkLayerSchaltung.Size = new System.Drawing.Size(15, 14);
+            this.chkLayerSchaltung.TabIndex = 54;
+            this.chkLayerSchaltung.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(5, 162);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(79, 13);
+            this.label3.TabIndex = 55;
+            this.label3.Text = "Layerschaltung";
+            // 
             // CalcAreaControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.chkLayerSchaltung);
+            this.Controls.Add(this.btnLayerRestore);
             this.Controls.Add(this.btnFlaBereinig);
             this.Controls.Add(this.txtPeriAtt);
             this.Controls.Add(this.lblPeriAtt);
@@ -337,5 +376,8 @@
         public System.Windows.Forms.TextBox txtPeriAtt;
         private System.Windows.Forms.Label lblPeriAtt;
         private System.Windows.Forms.Button btnFlaBereinig;
+        private System.Windows.Forms.Button btnLayerRestore;
+        public System.Windows.Forms.CheckBox chkLayerSchaltung;
+        private System.Windows.Forms.Label label3;
     }
 }

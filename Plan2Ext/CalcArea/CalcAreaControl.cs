@@ -532,5 +532,27 @@ namespace Plan2Ext.CalcArea
 
 
         }
+
+        private bool _LayerRestoreShield = false;
+        private void btnLayerRestore_Click(object sender, EventArgs e)
+        {
+            if (_LayerRestoreShield) return;
+            try
+            {
+                _LayerRestoreShield = true;
+
+                Globs.CancelCommand();
+
+                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RestoreLayerStatus ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(ex.Message);
+            }
+            finally
+            {
+                _LayerRestoreShield = false;
+            }
+        }
     }
 }

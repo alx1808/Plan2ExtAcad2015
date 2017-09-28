@@ -116,5 +116,7 @@ namespace Plan2Ext.CalcArea
 
     public string LayerAg { get { return userControl.txtAG.Text; } }
 
+    public bool LayerSchaltung { get { return userControl.chkLayerSchaltung.Checked; } }
+
   }
 }
