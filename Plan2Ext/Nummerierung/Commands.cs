@@ -149,6 +149,31 @@ namespace Plan2Ext.Nummerierung
             }
         }
 
+        [CommandMethod("Plan2NummerierungEindeutigkeit")]
+        static public void Plan2NummerierungEindeutigkeit()
+        {
+            try
+            {
+                if (!OpenNrPalette()) return;
+
+                var opts = Globs.TheNrOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+
+                    Engine engine = new Engine(opts);
+                    engine.CheckUniqueness();
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2NummerierungEindeutigkeit aufgetreten! {0}", ex.Message));
+            }
+        }
+        
         [CommandMethod("Plan2Nummerierung")]
         static public void Plan2Nummerierung()
         {

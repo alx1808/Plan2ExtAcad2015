@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.grpManually = new System.Windows.Forms.GroupBox();
+            this.chkFirstAttribute = new System.Windows.Forms.CheckBox();
             this.label2 = new System.Windows.Forms.Label();
             this.txtAttName = new System.Windows.Forms.TextBox();
             this.btnSelectBlock = new System.Windows.Forms.Button();
@@ -43,9 +44,11 @@
             this.lblSeparator = new System.Windows.Forms.Label();
             this.txtTop = new System.Windows.Forms.TextBox();
             this.lblTop = new System.Windows.Forms.Label();
-            this.chkFirstAttribute = new System.Windows.Forms.CheckBox();
+            this.grpExamine = new System.Windows.Forms.GroupBox();
+            this.btnEindeutigkeit = new System.Windows.Forms.Button();
             this.grpManually.SuspendLayout();
             this.grNumber.SuspendLayout();
+            this.grpExamine.SuspendLayout();
             this.SuspendLayout();
             // 
             // grpManually
@@ -64,6 +67,19 @@
             this.grpManually.TabIndex = 11;
             this.grpManually.TabStop = false;
             this.grpManually.Text = "Manuell";
+            // 
+            // chkFirstAttribute
+            // 
+            this.chkFirstAttribute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.chkFirstAttribute.AutoSize = true;
+            this.chkFirstAttribute.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkFirstAttribute.Location = new System.Drawing.Point(6, 71);
+            this.chkFirstAttribute.Name = "chkFirstAttribute";
+            this.chkFirstAttribute.Size = new System.Drawing.Size(147, 17);
+            this.chkFirstAttribute.TabIndex = 34;
+            this.chkFirstAttribute.Text = "Erstes Attribut verwenden";
+            this.chkFirstAttribute.UseVisualStyleBackColor = true;
+            this.chkFirstAttribute.CheckedChanged += new System.EventHandler(this.chkFirstAttribute_CheckedChanged);
             // 
             // label2
             // 
@@ -128,7 +144,7 @@
             this.grNumber.Controls.Add(this.lblTop);
             this.grNumber.Location = new System.Drawing.Point(3, 115);
             this.grNumber.Name = "grNumber";
-            this.grNumber.Size = new System.Drawing.Size(162, 129);
+            this.grNumber.Size = new System.Drawing.Size(159, 129);
             this.grNumber.TabIndex = 9;
             this.grNumber.TabStop = false;
             this.grNumber.Text = "Zuordnen";
@@ -136,7 +152,7 @@
             // btnSelectTop
             // 
             this.btnSelectTop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelectTop.Location = new System.Drawing.Point(132, 19);
+            this.btnSelectTop.Location = new System.Drawing.Point(129, 19);
             this.btnSelectTop.Name = "btnSelectTop";
             this.btnSelectTop.Size = new System.Drawing.Size(24, 20);
             this.btnSelectTop.TabIndex = 31;
@@ -150,7 +166,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnStart.Location = new System.Drawing.Point(6, 98);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(150, 23);
+            this.btnStart.Size = new System.Drawing.Size(147, 23);
             this.btnStart.TabIndex = 7;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
@@ -159,7 +175,7 @@
             // txtNumber
             // 
             this.txtNumber.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtNumber.Location = new System.Drawing.Point(91, 72);
+            this.txtNumber.Location = new System.Drawing.Point(88, 72);
             this.txtNumber.Name = "txtNumber";
             this.txtNumber.Size = new System.Drawing.Size(35, 20);
             this.txtNumber.TabIndex = 6;
@@ -178,7 +194,7 @@
             // txtSeparator
             // 
             this.txtSeparator.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtSeparator.Location = new System.Drawing.Point(91, 46);
+            this.txtSeparator.Location = new System.Drawing.Point(88, 46);
             this.txtSeparator.Name = "txtSeparator";
             this.txtSeparator.Size = new System.Drawing.Size(35, 20);
             this.txtSeparator.TabIndex = 4;
@@ -196,7 +212,7 @@
             // txtTop
             // 
             this.txtTop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtTop.Location = new System.Drawing.Point(61, 19);
+            this.txtTop.Location = new System.Drawing.Point(58, 19);
             this.txtTop.Name = "txtTop";
             this.txtTop.Size = new System.Drawing.Size(65, 20);
             this.txtTop.TabIndex = 2;
@@ -211,23 +227,35 @@
             this.lblTop.TabIndex = 1;
             this.lblTop.Text = "Prefix";
             // 
-            // chkFirstAttribute
+            // grpExamine
             // 
-            this.chkFirstAttribute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkFirstAttribute.AutoSize = true;
-            this.chkFirstAttribute.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chkFirstAttribute.Location = new System.Drawing.Point(6, 71);
-            this.chkFirstAttribute.Name = "chkFirstAttribute";
-            this.chkFirstAttribute.Size = new System.Drawing.Size(147, 17);
-            this.chkFirstAttribute.TabIndex = 34;
-            this.chkFirstAttribute.Text = "Erstes Attribut verwenden";
-            this.chkFirstAttribute.UseVisualStyleBackColor = true;
-            this.chkFirstAttribute.CheckedChanged += new System.EventHandler(this.chkFirstAttribute_CheckedChanged);
+            this.grpExamine.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpExamine.Controls.Add(this.btnEindeutigkeit);
+            this.grpExamine.Location = new System.Drawing.Point(3, 242);
+            this.grpExamine.Name = "grpExamine";
+            this.grpExamine.Size = new System.Drawing.Size(159, 57);
+            this.grpExamine.TabIndex = 12;
+            this.grpExamine.TabStop = false;
+            this.grpExamine.Text = "Prüfen";
+            // 
+            // btnEindeutigkeit
+            // 
+            this.btnEindeutigkeit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnEindeutigkeit.Location = new System.Drawing.Point(6, 19);
+            this.btnEindeutigkeit.Name = "btnEindeutigkeit";
+            this.btnEindeutigkeit.Size = new System.Drawing.Size(147, 23);
+            this.btnEindeutigkeit.TabIndex = 0;
+            this.btnEindeutigkeit.Text = "Eindeutigkeit";
+            this.btnEindeutigkeit.UseVisualStyleBackColor = true;
+            this.btnEindeutigkeit.Click += new System.EventHandler(this.btnEindeutigkeit_Click);
             // 
             // NrControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.grpExamine);
             this.Controls.Add(this.grpManually);
             this.Controls.Add(this.grNumber);
             this.Name = "NrControl";
@@ -237,6 +265,7 @@
             this.grpManually.PerformLayout();
             this.grNumber.ResumeLayout(false);
             this.grNumber.PerformLayout();
+            this.grpExamine.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -259,5 +288,7 @@
         internal System.Windows.Forms.TextBox txtTop;
         private System.Windows.Forms.Label lblTop;
         private System.Windows.Forms.CheckBox chkFirstAttribute;
+        private System.Windows.Forms.GroupBox grpExamine;
+        private System.Windows.Forms.Button btnEindeutigkeit;
     }
 }

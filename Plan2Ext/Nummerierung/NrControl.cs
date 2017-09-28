@@ -192,5 +192,26 @@ namespace Plan2Ext.Nummerierung
             }
         }
 
+        private bool _EindeutigkeitShield = false;
+        private void btnEindeutigkeit_Click(object sender, EventArgs e)
+        {
+            if (_EindeutigkeitShield) return;
+            try
+            {
+                _EindeutigkeitShield = true;
+
+                Globs.CancelCommand();
+
+                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2NummerierungEindeutigkeit ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(ex.Message);
+            }
+            finally
+            {
+                _EindeutigkeitShield = false;
+            }
+        }
     }
 }
