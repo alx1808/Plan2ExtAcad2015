@@ -47,7 +47,6 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
-
 #if ARX_APP
         /// <summary>
         /// http://adndevblog.typepad.com/autocad/2012/05/creating-and-accessing-layer-filter-information.html
