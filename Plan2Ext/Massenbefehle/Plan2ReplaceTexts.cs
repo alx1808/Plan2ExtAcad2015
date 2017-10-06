@@ -35,50 +35,34 @@ namespace Plan2Ext.Massenbefehle
                 log.Info("----------------------------------------------------------------------------------");
                 log.Info("Plan2ReplaceTexts");
 
-                string dirName = null;
                 _UsedXrefs.Clear();
                 _ErrorWithDwgs.Clear();
                 _NrOfReplacedTexts = 0;
                 _OldText = "";
                 _NewText = "";
 
-                using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+                string dirName = string.Empty;
+                string[] dwgFileNames = null;
+                if (!Plan2Ext.Globs.GetMultipleFileNames("AutoCAD-Zeichnung", "Dwg", "Verzeichnis mit Zeichnungen für die Umbenennung der Texte", "Zeichnungen für die Umbenennung der Texte", ref dwgFileNames, ref dirName))
                 {
-                    folderBrowser.Description = "Verzeichnis mit Zeichnungen für die Umbenennung der Blöcke";
-                    folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-                    //folderBrowser.ShowNewFolderButton = false;
-                    if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                    {
-                        return;
-                    }
-                    dirName = folderBrowser.SelectedPath;
+                    return;
                 }
                 //dirName = @"D:\Plan2\Data\Plan2ReplaceTexts\work";
 
                 Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
-
                 if (!GetOldText(ed)) return;
-
                 if (!GetNewText(ed)) return;
-
                 log.Info(string.Format(CultureInfo.CurrentCulture, "Ersetzung: '{0}' -> '{1}'.", _OldText, _NewText));
-
                 List<string> renameNotPossible = new List<string>();
 
-                var files = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
-
                 _UsedXrefs = new List<string>();
-                GetAllXRefFullPaths(files, _UsedXrefs);
-
-                foreach (var fileName in files)
+                GetAllXRefFullPaths(dwgFileNames, _UsedXrefs);
+                foreach (var fileName in dwgFileNames)
                 {
                     if (_UsedXrefs.Contains(fileName.ToUpperInvariant())) continue;
-
                     SetReadOnlyAttribute(fileName, false);
 
-                    //AcadApplication acadApp = (AcadApplication)Application.AcadApplication;
                     bool ok = true;
-
                     log.Info("----------------------------------------------------------------------------------");
                     log.Info(string.Format(CultureInfo.CurrentCulture, "Öffne Zeichnung {0}", fileName));
 
@@ -127,7 +111,6 @@ namespace Plan2Ext.Massenbefehle
                 }
 
                 ShowResultMessage(dirName.ToUpperInvariant());
-
             }
             catch (System.Exception ex)
             {

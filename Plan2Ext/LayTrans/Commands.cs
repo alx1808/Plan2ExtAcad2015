@@ -109,34 +109,10 @@ namespace Plan2Ext.LayTrans
                 {
                     string dirName = string.Empty;
                     string[] dwgFileNames = null;
-                    using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+                    if (!Plan2Ext.Globs.GetMultipleFileNames("AutoCAD-Zeichnung", "Dwg", "Verzeichnis mit Zeichnungen für den Layerexport", "Zeichnungen für Layerexport", ref dwgFileNames, ref dirName))
                     {
-                        folderBrowser.Description = "Verzeichnis mit Zeichnungen für den Layerexport";
-                        folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-                        if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                        {
-                            var openFileDialog = new System.Windows.Forms.OpenFileDialog();
-                            openFileDialog.CheckFileExists = true;
-                            openFileDialog.CheckPathExists = true;
-                            openFileDialog.Multiselect = true;
-                            openFileDialog.Title = "Zeichnungen für Layerexport";
-                            openFileDialog.Filter = "Dwg" + "|*." + "Dwg";
-                            if (openFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                            {
-                                return;
-                            }
-                            else
-                            {
-                                dwgFileNames = openFileDialog.FileNames;
-                            }
-                        }
-                        else
-                        {
-                            dirName = folderBrowser.SelectedPath;
-                            dwgFileNames = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
-                        }
+                        return;
                     }
-                    //dirName = @"D:\Plan2\Data\Plan2PlotToDwf";
 
                     Engine engine = new Engine();
                     var ok = engine.ExcelExport(dwgFileNames);
@@ -159,6 +135,7 @@ namespace Plan2Ext.LayTrans
                 _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayTransExportBulk aufgetreten! {0}", ex.Message));
             }
         }
+
 
         [_AcTrx.CommandMethod("Plan2LayTrans")]
         static public void Plan2LayTrans()

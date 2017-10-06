@@ -53,7 +53,7 @@ namespace Plan2Ext.Massenbefehle
         private static int _NrOfChangedAttributes = 0;
 
         /// <summary>
-        /// Wie Plan2SetAttValuesBulk aber in aktueller Zeichnung
+        /// Wie Plan2SetAttValues aber in aktueller Zeichnung
         /// </summary>
         [_AcTrx.CommandMethod("Plan2SetAttValues")]
         static public void Plan2SetAttValues()
@@ -105,7 +105,6 @@ namespace Plan2Ext.Massenbefehle
                 log.Info("----------------------------------------------------------------------------------");
                 log.Info("Plan2SetAttValuesBulk");
 
-                string dirName = null;
                 _UsedXrefs.Clear();
                 _ErrorWithDwgs.Clear();
                 _NrOfChangedAttributes = 0;
@@ -121,30 +120,19 @@ namespace Plan2Ext.Massenbefehle
                 string dwgName = doc.Name;
                 var dwgProposal = System.IO.Path.GetDirectoryName(dwgName);
 
-                using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+                string dirName = string.Empty;
+                string[] dwgFileNames = null;
+                if (!Plan2Ext.Globs.GetMultipleFileNames("AutoCAD-Zeichnung", "Dwg", "Verzeichnis mit Zeichnungen für die Umbenennung der Attributwerte", "Zeichnungen für die Umbenennung der Attributwerte", ref dwgFileNames, ref dirName, defaultPath: dwgProposal))
                 {
-                    folderBrowser.Description = "Verzeichnis mit Zeichnungen für die Umbenennung der Blöcke";
-                    folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-                    folderBrowser.SelectedPath = dwgProposal;
-                    //folderBrowser.ShowNewFolderButton = false;
-                    if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                    {
-                        return;
-                    }
-                    dirName = folderBrowser.SelectedPath;
+                    return;
                 }
-                //dirName = @"D:\Plan2\Data\Plan2ReplaceTexts\work";
-
                 doc.CloseAndDiscard();
 
                 List<string> saveFileNotPossible = new List<string>();
-
-                var files = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
-
                 _UsedXrefs = new List<string>();
-                GetAllXRefFullPaths(files, _UsedXrefs);
+                GetAllXRefFullPaths(dwgFileNames, _UsedXrefs);
 
-                foreach (var fileName in files)
+                foreach (var fileName in dwgFileNames)
                 {
                     if (_UsedXrefs.Contains(fileName.ToUpperInvariant())) continue;
 
@@ -200,7 +188,6 @@ namespace Plan2Ext.Massenbefehle
                 }
 
                 ShowResultMessage(dirName.ToUpperInvariant());
-
             }
             catch (System.Exception ex)
             {

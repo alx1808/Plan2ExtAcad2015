@@ -58,6 +58,47 @@ namespace Plan2Ext
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
 
+        public static bool GetMultipleFileNames(string fileTypeName, string ext, string folderBrowserTitle, string fileDialogTitle, ref string[] fileNames, ref string dirName, string defaultPath = null)
+        {
+            string[] fileNamesFromUser = null;
+            using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                folderBrowser.Description = folderBrowserTitle;
+                folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
+                if (!string.IsNullOrEmpty(defaultPath))
+                {
+                    folderBrowser.SelectedPath = defaultPath;
+                }
+                if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                {
+                    using (var openFileDialog = new System.Windows.Forms.OpenFileDialog())
+                    {
+                        openFileDialog.CheckFileExists = true;
+                        openFileDialog.CheckPathExists = true;
+                        openFileDialog.Multiselect = true;
+                        openFileDialog.Title = fileDialogTitle;
+                        var filter = fileTypeName + "|*." + ext;
+                        openFileDialog.Filter = filter;
+                        if (openFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            fileNamesFromUser = openFileDialog.FileNames;
+                        }
+                    }
+                }
+                else
+                {
+                    dirName = folderBrowser.SelectedPath;
+                    fileNamesFromUser = System.IO.Directory.GetFiles(dirName, "*." + ext, System.IO.SearchOption.AllDirectories);
+                }
+            }
+            fileNames = fileNamesFromUser.Where(x => x.EndsWith("." + ext, StringComparison.OrdinalIgnoreCase)).ToArray();
+            return true;
+        }
+
         public static int? GetFirstIntInString(string s, out string prefix, out string suffix)
         {
             var cArr = s.ToCharArray();

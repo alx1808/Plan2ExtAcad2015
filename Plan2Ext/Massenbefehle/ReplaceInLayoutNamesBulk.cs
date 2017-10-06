@@ -62,7 +62,6 @@ namespace Plan2Ext.Massenbefehle
                 log.Info("----------------------------------------------------------------------------------");
                 log.Info("Plan2ReplaceInLayoutNamesBulk");
 
-                string dirName = null;
                 _NrOfReplacedTexts = 0;
                 _OldText = "";
                 _NewText = "";
@@ -72,23 +71,15 @@ namespace Plan2Ext.Massenbefehle
 
                 if (!GetOldText(ed)) return;
                 if (!GetNewText(ed)) return;
-
-                using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
-                {
-                    folderBrowser.Description = "Verzeichnis mit Zeichnungen für die Umbenennung der Layouts";
-                    folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-                    if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                    {
-                        return;
-                    }
-                    dirName = folderBrowser.SelectedPath;
-                }
-
                 log.Info(string.Format(CultureInfo.CurrentCulture, "Ersetzung: '{0}' -> '{1}'.", _OldText, _NewText));
 
-                var files = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
-
-                foreach (var fileName in files)
+                string dirName = string.Empty;
+                string[] dwgFileNames = null;
+                if (!Plan2Ext.Globs.GetMultipleFileNames("AutoCAD-Zeichnung", "Dwg", "Verzeichnis mit Zeichnungen für die Umbenennung der Layouts", "Zeichnungen für die Umbenennung der Layouts", ref dwgFileNames, ref dirName))
+                {
+                    return;
+                }
+                foreach (var fileName in dwgFileNames)
                 {
                     SetReadOnlyAttribute(fileName, false);
 
@@ -159,7 +150,6 @@ namespace Plan2Ext.Massenbefehle
                 }
 
                 ShowResultMessage(dirName.ToUpperInvariant());
-
             }
             catch (System.Exception ex)
             {

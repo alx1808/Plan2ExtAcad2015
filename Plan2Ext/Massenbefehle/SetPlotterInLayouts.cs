@@ -98,8 +98,6 @@ namespace Plan2Ext.Massenbefehle
             _PlotterName = string.Empty;
             _DwgsWrongPlotter.Clear();
             List<string> saveNotPossible = new List<string>();
-
-
             try
             {
                 log.Info("----------------------------------------------------------------------------------");
@@ -111,21 +109,16 @@ namespace Plan2Ext.Massenbefehle
                 }
 
                 string dirName = string.Empty;
-                using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+                string[] dwgFileNames = null;
+                if (!Plan2Ext.Globs.GetMultipleFileNames("AutoCAD-Zeichnung", "Dwg", "Verzeichnis mit Zeichnungen für das Setzen des Plotters", "Zeichnungen für das Setzen des Plotters", ref dwgFileNames, ref dirName))
                 {
-                    folderBrowser.Description = "Verzeichnis mit Zeichnungen für die Umbenennung der Layouts";
-                    folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-                    if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                    {
-                        return;
-                    }
-                    dirName = folderBrowser.SelectedPath;
+                    return;
                 }
-
-                log.Info(string.Format(CultureInfo.CurrentCulture, "Plotter '{0}' wird gesetzt in Zeichnungen unter '{1}'.", _PlotterName, dirName));
-
-                var files = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
-                foreach (var fileName in files)
+                if (!string.IsNullOrEmpty(dirName))
+                {
+                    log.Info(string.Format(CultureInfo.CurrentCulture, "Plotter '{0}' wird gesetzt in Zeichnungen unter '{1}'.", _PlotterName, dirName));
+                }
+                foreach (var fileName in dwgFileNames)
                 {
                     SetReadOnlyAttribute(fileName, false);
 
@@ -176,7 +169,6 @@ namespace Plan2Ext.Massenbefehle
                 }
 
                 ShowResultMessage(dirName.ToUpperInvariant());
-
             }
             catch (System.Exception ex)
             {

@@ -116,21 +116,17 @@ namespace Plan2Ext.Massenbefehle
                 log.Info("Plan2PlotToDwfBulk");
 
                 string dirName = string.Empty;
-                using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+                string[] dwgFileNames = null;
+                if (!Plan2Ext.Globs.GetMultipleFileNames("AutoCAD-Zeichnung", "Dwg", "Verzeichnis mit Zeichnungen für den DWF-Plot", "Zeichnungen für den DWF-Plot", ref dwgFileNames, ref dirName))
                 {
-                    folderBrowser.Description = "Verzeichnis mit Zeichnungen für den DWF-Plot";
-                    folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-                    if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                    {
-                        return;
-                    }
-                    dirName = folderBrowser.SelectedPath;
+                    return;
                 }
-                //dirName = @"D:\Plan2\Data\Plan2PlotToDwf";
-                log.Info(string.Format(CultureInfo.CurrentCulture, "Zeichnungen unter '{0}' werden als DWF geplottet.", dirName));
+                if (!string.IsNullOrEmpty(dirName))
+                {
+                    log.Info(string.Format(CultureInfo.CurrentCulture, "Zeichnungen unter '{0}' werden als DWF geplottet.", dirName));
+                }
 
-                var files = System.IO.Directory.GetFiles(dirName, "*.dwg", System.IO.SearchOption.AllDirectories);
-                foreach (var fileName in files)
+                foreach (var fileName in dwgFileNames)
                 {
                     log.Info("----------------------------------------------------------------------------------");
                     log.Info(string.Format(CultureInfo.CurrentCulture, "Öffne Zeichnung {0}", fileName));
