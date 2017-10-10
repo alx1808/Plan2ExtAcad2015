@@ -136,6 +136,38 @@ namespace Plan2Ext.LayTrans
             }
         }
 
+        [_AcTrx.CommandMethod("Plan2LayTransExportWithNrElements")]
+        static public void Plan2LayTransExportWithNrElements()
+        {
+            try
+            {
+#if BRX_APP
+                return;
+#else
+                _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+                using (_AcAp.DocumentLock m_doclock = doc.LockDocument())
+                {
+                    Engine engine = new Engine();
+                    var ok = engine.ExcelExportWithNrElements();
+                    if (!ok)
+                    {
+                        _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler beim Export!"));
+                    }
+                    else
+                    {
+                        string msg = string.Format(CultureInfo.CurrentCulture, "Der Excel-Export wurde erfolgreich beendet.");
+                        _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(msg);
+                        log.Info(msg);
+                    }
+                }
+#endif
+            }
+            catch (System.Exception ex)
+            {
+                log.Error(ex.Message, ex);
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayTransExport aufgetreten! {0}", ex.Message));
+            }
+        }
 
         [_AcTrx.CommandMethod("Plan2LayTrans")]
         static public void Plan2LayTrans()

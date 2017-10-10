@@ -51,6 +51,7 @@ namespace Plan2Ext.LayTrans
 
 
         private List<string> HEADER = new List<string>() { "Alter Layer", "Neuer Layer", "Farbe", "Linientyp", "Linienstärke", "Transparenz", "Plot", "Beschreibung" };
+        private List<string> HEADER_WITH_NR_ELEMENTS = new List<string>() { "Layer", "Anzahl der Elemente", "Farbe", "Linientyp", "Linienstärke", "Transparenz", "Plot", "Beschreibung" };
         private List<string> _Errors = new List<string>();
 
         internal bool LayTrans(string fileName)
@@ -475,7 +476,82 @@ namespace Plan2Ext.LayTrans
             }
 
             return true;
+        }
 
+        internal bool ExcelExportWithNrElements(string[] dwgFiles = null)
+        {
+            if (dwgFiles != null) return false; // not supported yet
+
+            Excel.Application myApp = null;
+            Excel.Workbook workBook = null;
+            Excel.Worksheet sheet = null;
+
+            try
+            {
+                var elementsPerLayer = GetNrElementsPerLayer();
+                myApp = new Excel.Application();
+
+                List<LayerInfoWithNrElements> layerInfos = null;
+                if (dwgFiles == null)
+                {
+                    layerInfos = GetLayerInfosWithNrElements(elementsPerLayer);
+                }
+                else
+                {
+                    //layerInfos = GetLayerInfos(dwgFiles.ToList());
+                }
+
+                workBook = myApp.Workbooks.Add(Missing.Value);
+                sheet = workBook.ActiveSheet;
+
+                // Pull in all the cells of the worksheet
+                Excel.Range cells = sheet.Cells;
+                // set each cell's format to Text
+                cells.NumberFormat = "@";
+
+                var b1 = GetCellBez(0, 0);
+                var b2 = GetCellBez(0, HEADER_WITH_NR_ELEMENTS.Count);
+                var range = sheet.Range[b1, b2];
+                range.Font.Bold = true;
+                range.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+
+
+                int rowCount = 1 + layerInfos.Count; // colLists[0].Count;
+                int colCount = HEADER_WITH_NR_ELEMENTS.Count; // colLists.Count;
+                b2 = GetCellBez(rowCount - 1, colCount - 1);
+                range = sheet.Range[b1, b2];
+                //range.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+
+                string[,] indexMatrix = new string[rowCount, colCount];
+                for (int i = 0; i < HEADER_WITH_NR_ELEMENTS.Count; i++)
+                {
+                    indexMatrix[0, i] = HEADER_WITH_NR_ELEMENTS[i];
+                }
+                for (int r = 1; r <= layerInfos.Count; r++)
+                {
+                    var linfo = layerInfos[r - 1];
+                    List<string> vals = linfo.RowAsList();
+                    for (int i = 0; i < vals.Count; i++)
+                    {
+                        indexMatrix[r, i] = vals[i];
+                    }
+                }
+
+                range.set_Value(Excel.XlRangeValueDataType.xlRangeValueDefault, indexMatrix);
+                range.Font.Name = "Arial";
+                range.Columns.AutoFit();
+            }
+            finally
+            {
+                myApp.Visible = true;
+                myApp.ScreenUpdating = true;
+
+                releaseObject(sheet);
+                releaseObject(workBook);
+                releaseObject(myApp);
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -558,164 +634,97 @@ namespace Plan2Ext.LayTrans
             return linfos;
         }
 
+        private List<LayerInfoWithNrElements> GetLayerInfosWithNrElements(Dictionary<string, int> elementsPerLayer)
+        {
+            List<LayerInfoWithNrElements> linfos = new List<LayerInfoWithNrElements>();
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                    foreach (var ltrOid in layTb)
+                    {
+                        _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                        int nrElements = 0;
+                        if (!elementsPerLayer.TryGetValue(ltr.Name,out nrElements))
+                        {
+                            nrElements = 0;
+                        }
+                        linfos.Add(new LayerInfoWithNrElements(ltr, trans, nrElements));
+                    }
+                }
+                finally
+                {
+                    trans.Commit();
+                }
+            }
+
+            return linfos;
+        }
+
+        private Dictionary<string, int> GetNrElementsPerLayer()
+        {
+            var dict = new Dictionary<string, int>();
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    _AcDb.BlockTable blockTb = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                    foreach (var btrOid in blockTb)
+                    {
+                        var btr = (_AcDb.BlockTableRecord)trans.GetObject(btrOid, _AcDb.OpenMode.ForRead);
+                        foreach (_AcDb.ObjectId objId in btr)
+                        {
+                            _AcDb.Entity ent = trans.GetObject(objId, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+                            CountEntity(dict, ent);
+
+                            var bref = ent as _AcDb.BlockReference;
+                            if (bref != null)
+                            {
+                                foreach (_AcDb.ObjectId attId in bref.AttributeCollection)
+                                {
+                                    ent = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+                                    CountEntity(dict, ent);
+                                }
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    trans.Commit();
+                }
+            }
+
+            return dict;
+        }
+
+        private static void CountEntity(Dictionary<string, int> dict, _AcDb.Entity ent)
+        {
+            if (ent == null) return;
+            string layer = ent.Layer;
+            int nr;
+            if (dict.TryGetValue(layer, out nr))
+            {
+                dict[layer] = ++nr;
+            }
+            else
+            {
+                dict[layer] = 1;
+            }
+        }
+
         private class LayerInfo
         {
             //List<string> HEADER = new List<string>() { "Alter Layer", "Neuer Layer", "Farbe", "Linientyp", "Linienstärke", "Transparenz", "Beschreibung" };
 
-            private string _Errors = string.Empty;
-            public string Errors { get { return _Errors; } }
-
-            public string OldLayer { get; set; }
-            private string _NewLayer = string.Empty;
-            public string NewLayer
-            {
-                get { return _NewLayer; }
-                set
-                {
-                    _NewLayer = value;
-                    if (!string.IsNullOrEmpty(OldLayer) && !String.IsNullOrEmpty(_NewLayer)) _Ok = true;
-                    else
-                    {
-                        _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nKein neuer Layer für Layer '{0}'", OldLayer);
-                    }
-                }
-            }
-            private _AcCm.Color _ColorO = null;
-            private string _Color = string.Empty;
-            public string Color
-            {
-                get { return _Color; }
-                set
-                {
-                    _Color = value;
-
-                    StringToColor();
-                }
-            }
-
-            private _AcDb.ObjectId _LineTypeO;
-            private string _LineType = string.Empty;
-            public void SetLineType(string lt, _AcDb.Transaction trans, _AcDb.Database db)
-            {
-                _LineType = lt;
-                var lto = GetLinetypeFromName(_LineType, trans, db);
-                if (lto == default(_AcDb.ObjectId))
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Linientyp '{0}' für Layer '{1}'", _LineType, OldLayer);
-                    return;
-                }
-
-                _LineTypeO = lto;
-            }
-            public string LineType { get { return _LineType; } }
-            private _AcDb.LineWeight _LineWeightO;
-            private string _LineWeight = string.Empty;
-            public string LineWeight
-            {
-                get { return _LineWeight; }
-                set
-                {
-                    _LineWeight = value;
-                    SetLineWeight();
-
-
-                }
-            }
-
-            private void SetLineWeight()
-            {
-                _LineWeightO = _AcDb.LineWeight.ByLineWeightDefault;
-                if (string.IsNullOrEmpty(_LineWeight))
-                {
-                    return;
-                }
-                double d;
-                if (!double.TryParse(_LineWeight, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Linienstärke für Layer '{0}': {1}", OldLayer, _LineWeight);
-                    return;
-                }
-
-                d = d * 100.0;
-                int val = (int)Math.Floor(d);
-                string cmpVal = "LineWeight" + val.ToString().PadLeft(3, '0');
-
-                foreach (var e in Enum.GetValues(typeof(_AcDb.LineWeight)))
-                {
-                    if (cmpVal == e.ToString())
-                    {
-                        _LineWeightO = (_AcDb.LineWeight)e;
-                        return;
-                    }
-                }
-
-                _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Linienstärke für Layer '{0}': {1}", OldLayer, _LineWeight);
-
-            }
-            private _AcCm.Transparency _TransparencyO;
-            private string _Transparency = string.Empty;
-            public string Transparency
-            {
-                get { return _Transparency; }
-                set
-                {
-                    _Transparency = value;
-                    SetTransparency();
-
-                }
-
-            }
-
-            private void SetTransparency()
-            {
-                if (string.IsNullOrEmpty(_Transparency)) return;
-                int t;
-                if (!int.TryParse(_Transparency, out t))
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Transparenz für Layer '{0}': {1}", OldLayer, _Transparency);
-                    return;
-                }
-                if (t < 0 || t > 90)
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Transparenz für Layer '{0}': {1}", OldLayer, _Transparency);
-                    return;
-                }
-                Byte alpha = TransparenzToAlpha(t);
-                _TransparencyO = new _AcCm.Transparency(alpha);
-
-            }
-
-
-            private bool _IsPlottable = false;
-            private string _Plot = string.Empty;
-            public string Plot
-            {
-                get { return _Plot; }
-                set
-                {
-                    _Plot = value;
-                    SetPlot();
-                }
-            }
-
-            private void SetPlot()
-            {
-                _IsPlottable = false;
-                if (string.IsNullOrEmpty(_Plot)) return;
-
-                if (string.Compare(_Plot.Trim(), "Ja", StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    _IsPlottable = true;
-                }
-
-            }
-
-            public string Description { get; set; }
-
-            private bool _Ok = false;
-            public bool Ok { get { return _Ok; } }
-
-
+            #region Lifecycle
             public LayerInfo()
             {
             }
@@ -743,89 +752,13 @@ namespace Plan2Ext.LayTrans
 
                 Description = ltr.Description;
             }
+            #endregion
 
-            private string LineWeightToString()
-            {
-                int lw = (int)_LineWeightO;
-                if (lw < 0) return "";
-
-                double d = lw / 100.0;
-                return d.ToString("F", CultureInfo.InvariantCulture);
-            }
-
-            private void StringToColor()
-            {
-                if (string.IsNullOrEmpty(_Color))
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nFehler in Eintrag für Layer '{0}': Es ist keine Farbe festgelegt!", OldLayer);
-                    return;
-                }
-
-                var vals = _Color.Split(new char[] { '/' });
-                if (vals.Length != 1 && vals.Length != 3)
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Farbe für Layer '{0}': {1}", OldLayer, _Color);
-                    return;
-                }
-
-                if (vals.Length == 1)
-                {
-                    byte index;
-                    if (!GetColorInt(vals[0], out index)) return;
-
-                    _ColorO = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByColor, index);
-                }
-                else
-                {
-                    // rgb
-                    byte rIndex, gIndex, bIndex;
-                    if (!GetColorInt(vals[0], out rIndex)) return;
-                    if (!GetColorInt(vals[1], out gIndex)) return;
-                    if (!GetColorInt(vals[2], out bIndex)) return;
-
-                    _ColorO = _AcCm.Color.FromRgb(rIndex, gIndex, bIndex);
-
-                }
-
-
-            }
-
-            private bool GetColorInt(string val, out byte index)
-            {
-                if (!byte.TryParse(val, out index))
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert für Farbe für Layer '{0}': {1}", OldLayer, _Color);
-                    return false;
-                }
-                if (index < 0 || index > 256)
-                {
-                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert für Farbe für Layer '{0}': {1}", OldLayer, _Color);
-                    return false;
-                }
-                return true;
-            }
-
-
-            private string ColorToString()
-            {
-                if (_ColorO.IsByAci)
-                {
-                    return _ColorO.ColorIndex.ToString(CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    return string.Format(CultureInfo.InvariantCulture, "{0}/{1}/{2}",
-                        _ColorO.Red.ToString(CultureInfo.InvariantCulture),
-                        _ColorO.Green.ToString(CultureInfo.InvariantCulture),
-                        _ColorO.Blue.ToString(CultureInfo.InvariantCulture));
-                }
-            }
-
-            internal List<string> RowAsList()
+            #region Internal
+            internal virtual List<string> RowAsList()
             {
                 return new List<string>() { OldLayer, NewLayer, Color, LineType, LineWeight, Transparency, Plot, Description };
             }
-
 
             internal void ModifyLayer(_AcDb.LayerTableRecord ltr, _AcDb.Transaction trans, _AcDb.Database db)
             {
@@ -856,8 +789,286 @@ namespace Plan2Ext.LayTrans
                 ltr.IsPlottable = _IsPlottable;
 
             }
+            #endregion
+
+            #region Properties
+            private string _Errors = string.Empty;
+            public string Errors { get { return _Errors; } }
+
+            public string OldLayer { get; set; }
+            private string _NewLayer = string.Empty;
+            public string NewLayer
+            {
+                get { return _NewLayer; }
+                set
+                {
+                    _NewLayer = value;
+                    if (!string.IsNullOrEmpty(OldLayer) && !String.IsNullOrEmpty(_NewLayer)) _Ok = true;
+                    else
+                    {
+                        _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nKein neuer Layer für Layer '{0}'", OldLayer);
+                    }
+                }
+            }
+            protected _AcCm.Color _ColorO = null;
+            private string _Color = string.Empty;
+            public string Color
+            {
+                get { return _Color; }
+                set
+                {
+                    _Color = value;
+                    StringToColor();
+                }
+            }
+
+            protected _AcDb.ObjectId _LineTypeO;
+            protected string _LineType = string.Empty;
+            public void SetLineType(string lt, _AcDb.Transaction trans, _AcDb.Database db)
+            {
+                _LineType = lt;
+                var lto = GetLinetypeFromName(_LineType, trans, db);
+                if (lto == default(_AcDb.ObjectId))
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Linientyp '{0}' für Layer '{1}'", _LineType, OldLayer);
+                    return;
+                }
+
+                _LineTypeO = lto;
+            }
+            public string LineType { get { return _LineType; } }
+            protected _AcDb.LineWeight _LineWeightO;
+            private string _LineWeight = string.Empty;
+            public string LineWeight
+            {
+                get { return _LineWeight; }
+                set
+                {
+                    _LineWeight = value;
+                    SetLineWeight();
+
+
+                }
+            }
+
+            protected _AcCm.Transparency _TransparencyO;
+            private string _Transparency = string.Empty;
+            public string Transparency
+            {
+                get { return _Transparency; }
+                set
+                {
+                    _Transparency = value;
+                    SetTransparency();
+                }
+            }
+
+            private bool _IsPlottable = false;
+            private string _Plot = string.Empty;
+            public string Plot
+            {
+                get { return _Plot; }
+                set
+                {
+                    _Plot = value;
+                    SetPlot();
+                }
+            }
+
+            public string Description { get; set; }
+
+            private bool _Ok = false;
+            public bool Ok { get { return _Ok; } }
+
+            #endregion
+
+            #region Protected
+            protected void SetLineWeight()
+            {
+                _LineWeightO = _AcDb.LineWeight.ByLineWeightDefault;
+                if (string.IsNullOrEmpty(_LineWeight))
+                {
+                    return;
+                }
+                double d;
+                if (!double.TryParse(_LineWeight, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Linienstärke für Layer '{0}': {1}", OldLayer, _LineWeight);
+                    return;
+                }
+
+                d = d * 100.0;
+                int val = (int)Math.Floor(d);
+                string cmpVal = "LineWeight" + val.ToString().PadLeft(3, '0');
+
+                foreach (var e in Enum.GetValues(typeof(_AcDb.LineWeight)))
+                {
+                    if (cmpVal == e.ToString())
+                    {
+                        _LineWeightO = (_AcDb.LineWeight)e;
+                        return;
+                    }
+                }
+
+                _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Linienstärke für Layer '{0}': {1}", OldLayer, _LineWeight);
+            }
+
+            protected void SetTransparency()
+            {
+                if (string.IsNullOrEmpty(_Transparency)) return;
+                int t;
+                if (!int.TryParse(_Transparency, out t))
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Transparenz für Layer '{0}': {1}", OldLayer, _Transparency);
+                    return;
+                }
+                if (t < 0 || t > 90)
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Transparenz für Layer '{0}': {1}", OldLayer, _Transparency);
+                    return;
+                }
+                Byte alpha = TransparenzToAlpha(t);
+                _TransparencyO = new _AcCm.Transparency(alpha);
+
+            }
+
+            protected void SetPlot()
+            {
+                _IsPlottable = false;
+                if (string.IsNullOrEmpty(_Plot)) return;
+
+                if (string.Compare(_Plot.Trim(), "Ja", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    _IsPlottable = true;
+                }
+            }
+
+            protected string LineWeightToString()
+            {
+                int lw = (int)_LineWeightO;
+                if (lw < 0) return "";
+
+                double d = lw / 100.0;
+                return d.ToString("F", CultureInfo.InvariantCulture);
+            }
+            protected void StringToColor()
+            {
+                if (string.IsNullOrEmpty(_Color))
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nFehler in Eintrag für Layer '{0}': Es ist keine Farbe festgelegt!", OldLayer);
+                    return;
+                }
+
+                var vals = _Color.Split(new char[] { '/' });
+                if (vals.Length != 1 && vals.Length != 3)
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Eintrag für Farbe für Layer '{0}': {1}", OldLayer, _Color);
+                    return;
+                }
+
+                if (vals.Length == 1)
+                {
+                    byte index;
+                    if (!GetColorInt(vals[0], out index)) return;
+
+                    _ColorO = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByColor, index);
+                }
+                else
+                {
+                    // rgb
+                    byte rIndex, gIndex, bIndex;
+                    if (!GetColorInt(vals[0], out rIndex)) return;
+                    if (!GetColorInt(vals[1], out gIndex)) return;
+                    if (!GetColorInt(vals[2], out bIndex)) return;
+
+                    _ColorO = _AcCm.Color.FromRgb(rIndex, gIndex, bIndex);
+                }
+            }
+
+            protected bool GetColorInt(string val, out byte index)
+            {
+                if (!byte.TryParse(val, out index))
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert für Farbe für Layer '{0}': {1}", OldLayer, _Color);
+                    return false;
+                }
+                if (index < 0 || index > 256)
+                {
+                    _Errors = _Errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert für Farbe für Layer '{0}': {1}", OldLayer, _Color);
+                    return false;
+                }
+                return true;
+            }
+
+            protected string ColorToString()
+            {
+                if (_ColorO.IsByAci)
+                {
+                    return _ColorO.ColorIndex.ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    return string.Format(CultureInfo.InvariantCulture, "{0}/{1}/{2}",
+                        _ColorO.Red.ToString(CultureInfo.InvariantCulture),
+                        _ColorO.Green.ToString(CultureInfo.InvariantCulture),
+                        _ColorO.Blue.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+            #endregion
+
         }
 
+        private class LayerInfoWithNrElements : LayerInfo
+        {
+            #region Lifecycle
+            public LayerInfoWithNrElements()
+            {
+            }
+            public LayerInfoWithNrElements(_AcDb.LayerTableRecord ltr, _AcDb.Transaction trans, int nrElements)
+            {
+                OldLayer = ltr.Name;
+                NewLayer = "";
+                _ColorO = ltr.Color;
+                Color = ColorToString();
+                _LineTypeO = ltr.LinetypeObjectId;
+                _LineType = Engine.GetNameFromLinetypeOid(ltr.LinetypeObjectId, trans);
+                _LineWeightO = ltr.LineWeight;
+                LineWeight = LineWeightToString();
+                _TransparencyO = ltr.Transparency;
+                if (_TransparencyO != default(_AcCm.Transparency))
+                {
+                    Transparency = Engine.AlphaToTransparenz(_TransparencyO.Alpha).ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    Transparency = string.Empty;
+                }
+                if (ltr.IsPlottable) Plot = "Ja";
+                else Plot = "Nein";
+
+                Description = ltr.Description;
+
+                _NrElements = nrElements;
+            }
+            #endregion
+
+            #region Properties
+            protected int _NrElements = 0;
+            protected int NrElements
+            {
+                get { return _NrElements; }
+                set { _NrElements = value; }
+            }
+            #endregion
+
+            #region Internal
+            internal override List<string> RowAsList()
+            {
+                return new List<string>() { OldLayer, NrElements.ToString(CultureInfo.InvariantCulture), Color, LineType, LineWeight, Transparency, Plot, Description };
+            }
+
+            #endregion
+        }
 
         public static string GetCellBez(int rowIndex, int colIndex)
         {
