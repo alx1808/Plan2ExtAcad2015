@@ -130,6 +130,47 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        [LispFunction("CalcAreaNet")]
+        public double CalcAreaNet(ResultBuffer rb)
+        {
+            double m2 = -1.0;
+            try
+            {
+                //Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
+
+                var opts = new RnOptions();
+
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+                    // zuerst fläche rechnen
+                    Plan2Ext.Flaeche.Modify = true;
+                    Plan2Ext.Flaeche.AktFlaeche(
+                        Application.DocumentManager.MdiActiveDocument,
+                        opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true, layerSchalt: false);
+
+                    Engine _Engine = new Engine(opts);
+
+                    // danach regions etc. bereinig
+                    Plan2Ext.Flaeche.BereinigRegions();
+
+                    if (!_Engine.SumFgs(ref m2))
+                    {
+                        m2 = -1.0;
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in CalcAreaNet aufgetreten! {0}", ex.Message));
+                return -1.0;
+            }
+
+            return m2;
+        }
+
+
         [CommandMethod("Plan2RaumnummernSum")]
         static public void Plan2RaumnummernSum()
         {
@@ -730,7 +771,7 @@ namespace Plan2Ext.Raumnummern
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernRenameTop aufgetreten! {0}", ex.Message));
             }
         }
-        
+
         [CommandMethod("Plan2RaumnummernRemoveRaum")]
         static public void Plan2RaumnummernRemoveRaum()
         {

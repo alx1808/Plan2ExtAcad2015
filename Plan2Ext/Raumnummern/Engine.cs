@@ -401,7 +401,7 @@ namespace Plan2Ext.Raumnummern
 
                 if (topNr == topNrNeu)
                 {
-                    _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nTop hat bereits die Topnummer '{0}'.",topNr));
+                    _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nTop hat bereits die Topnummer '{0}'.", topNr));
                     return true;
                 }
 
@@ -602,6 +602,63 @@ namespace Plan2Ext.Raumnummern
             CheckRblockConsistency();
 
             return true;
+        }
+        /// <summary>
+        /// Auswahl von Flächengrenzen. Nur dieser werden summiert und schraffiert. Die Summe der Fläche der Raumblöcke wird zurückgegeben.
+        /// </summary>
+        /// <returns></returns>
+        internal bool SumFgs(ref double m2)
+        {
+            FehlerLinesOnOff(true);
+            DeleteAllFehlerLines();
+
+            var fgOids = SelectFgs();
+            if (fgOids.Count == 0) return false;
+            var fgrbs = _FgRbStructs.Values.Where(x => fgOids.Contains(x.FlaechenGrenze)).ToList();
+
+            var topNr = RandomTopNr.NextTopNr; // TOP_PREFIX + "01";
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+
+                var fgRbToRemove = new List<AreaEngine.FgRbStructure>();
+                foreach (var fgrb in fgrbs)
+                    {
+                        if (fgrb.Raumbloecke.Count != 1)
+                        {
+                            InsertFehlerLineAt(fgrb.FlaechenGrenze, _INVALID_NR_OF_RBS_IN_ROOM);
+                            fgRbToRemove.Add(fgrb);
+                            continue;
+                        }
+                    }
+                foreach (var fgRb in fgRbToRemove)
+                {
+                    fgrbs.Remove(fgRb);
+                }
+
+                var topStruct = new TopStructure() { TopNummer = topNr };
+                topStruct.FgRbs = fgrbs;
+
+                HatchIt(topStruct);
+                m2 = GetSumM2FromBlocks(topStruct, myT);
+
+                myT.Commit();
+            }
+
+            return true;
+        }
+
+        private static class RandomTopNr
+        {
+            private static char _CurrentTopNr = 'z';
+            public static string NextTopNr
+            {
+                get
+                {
+                    if (_CurrentTopNr == 'z') _CurrentTopNr = 'a';
+                    else _CurrentTopNr++;
+                    return TOP_PREFIX + _CurrentTopNr;
+                }
+            }
         }
 
         internal void RemoveAllInfos()
@@ -1209,6 +1266,20 @@ namespace Plan2Ext.Raumnummern
             SetBlockAttrib(topStruct.TopOid, Commands.TOPBLOCK_M2_ATTNAME, areaString);
         }
 
+        private double GetSumM2FromBlocks(TopStructure topStruct, Transaction myT)
+        {
+            double sumArea = 0.0;
+            foreach (var fgrb in topStruct.FgRbs)
+            {
+                double rbArea;
+                if (GetArea(fgrb.Raumbloecke[0], myT, out rbArea))
+                {
+                    sumArea += rbArea;
+                }
+            }
+            return sumArea;
+        }
+
         private bool GetArea(ObjectId oid, Transaction myT, out double rbArea)
         {
             rbArea = -1.0;
@@ -1333,7 +1404,7 @@ namespace Plan2Ext.Raumnummern
             int color = GetHatchColor(top.TopNummer);
             _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor();
             col.ColorIndex = (_AcIntCom.AcColor)color;
-            string nrStr = GetTopNr(top);
+            string nrStr = (top.TopOid.IsNull) ? top.TopNummer : GetTopNr(top);
             string layer = GetHatchLayer(nrStr);
             Plan2Ext.Globs.LayerOnAndThaw(layer);
             var outerInner = new Dictionary<ObjectId, List<ObjectId>>();
@@ -1580,6 +1651,29 @@ namespace Plan2Ext.Raumnummern
                 return ss.GetObjectIds().ToList();
             }
         }
+
+        private List<ObjectId> SelectFgs()
+        {
+            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
+                new TypedValue((int)DxfCode.Start,"*POLYLINE" ),
+                new TypedValue((int)DxfCode.LayerName , _RnOptions.FlaechenGrenzeLayerName)
+            });
+            var options = new PromptSelectionOptions();
+            options.MessageForAdding = "Flächengrenzen wählen: ";
+            PromptSelectionResult res = ed.GetSelection(options,filter);
+            if (res.Status != PromptStatus.OK) return new List<ObjectId>();
+
+#if BRX_APP
+            SelectionSet ss = res.Value;
+#else
+            using (SelectionSet ss = res.Value)
+#endif
+            {
+                return ss.GetObjectIds().ToList();
+            }
+        }
+
         private List<ObjectId> SelectAllTopBlocks()
         {
             var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
