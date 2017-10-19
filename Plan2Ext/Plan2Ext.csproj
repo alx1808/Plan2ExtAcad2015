@@ -105,6 +105,7 @@
     <Compile Include="CalcArea\CalculateAreaPalette.cs" />
     <Compile Include="CalcArea\Commands.cs" />
     <Compile Include="CalcArea\Engine.cs" />
+    <Compile Include="CalcArea\Excelizer.cs" />
     <Compile Include="CenterBlock\CenterBlockControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

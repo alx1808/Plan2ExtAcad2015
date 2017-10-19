@@ -153,7 +153,7 @@ namespace Plan2Ext.Raumnummern
                     Engine _Engine = new Engine(opts);
 
                     // danach regions etc. bereinig
-                    Plan2Ext.Flaeche.BereinigRegions();
+                    Plan2Ext.Flaeche.BereinigRegions(automated: false);
 
                     if (!_Engine.SumFgs(ref m2))
                     {
@@ -195,7 +195,7 @@ namespace Plan2Ext.Raumnummern
                     Engine _Engine = new Engine(opts);
 
                     // danach regions etc. bereinig
-                    Plan2Ext.Flaeche.BereinigRegions();
+                    Plan2Ext.Flaeche.BereinigRegions(automated: false);
                     //_Engine.BereinigFehlerlinien();
 
                     _Engine.SumTops();
@@ -840,7 +840,7 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
-                    Plan2Ext.Flaeche.BereinigFehlerlinienAndRegions();
+                    Plan2Ext.Flaeche.BereinigFehlerlinienAndRegions(automated: false);
                     Engine _Engine = new Engine(opts);
                     _Engine.BereinigFehlerlinien();
                 }

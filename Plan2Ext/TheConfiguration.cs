@@ -84,10 +84,10 @@ namespace Plan2Ext
 
         private static void LoadConfig()
         {
-            _Loaded = true;
             GetEncoding();
             GetConfiguration();
             ReadVals();
+            _Loaded = true;
 
         }
         private static void ReadVals()

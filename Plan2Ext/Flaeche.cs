@@ -105,7 +105,7 @@ namespace Plan2Ext
         #endregion
 
 
-        public delegate void AktFlaecheDelegate(_AcAp.Document doc, string rbName, string flAttrib, string periAtt, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true);
+        public delegate List<AktFlaecheErrorType> AktFlaecheDelegate(_AcAp.Document doc, string rbName, string flAttrib, string periAtt, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true, bool automated = false);
 
         [_AcTrx.LispFunction("DotNetCalcFlaeche")]
         public static _AcDb.ResultBuffer DotNetCalcFlaeche(_AcDb.ResultBuffer rb)
@@ -198,14 +198,27 @@ namespace Plan2Ext
             return null;
         }
 
-        internal static void AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true)
+        public enum AktFlaecheErrorType
+        {
+            NoError,
+            NoRaumBlock,
+            MoreThanOneRaumBlock,
+            InvalidGeometry,
+            RaumblocksWithoutFlaechengrenze,
+            BlockHasNotThisM2Attribute,
+            NoFlaechengrenzen,
+            WrongM2,
+        }
+
+        internal static List<AktFlaecheErrorType> AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true, bool automated = false)
         {
             log.Debug("--------------------------");
 
+            var errorList = new List<AktFlaecheErrorType>();
             _AreaEngine = new AreaEngine();
             try
             {
-                InitVariablesFromConfig();
+                if (!automated) InitVariablesFromConfig();
 
                 if (!string.IsNullOrEmpty(rbName)) _RaumblockName = rbName;
                 if (!string.IsNullOrEmpty(flAttrib)) _FlAttrib = flAttrib;
@@ -213,7 +226,11 @@ namespace Plan2Ext
                 if (!string.IsNullOrEmpty(fgLayer)) _FgLayer = fgLayer;
                 if (!string.IsNullOrEmpty(afLayer)) _AfLayer = afLayer;
 
-                if (!CheckBlockAndAtt()) return;
+                if (!CheckBlockAndAtt(automated))
+                {
+                    errorList.Add(AktFlaecheErrorType.BlockHasNotThisM2Attribute);
+                    return errorList;
+                }
 
                 if (layerSchalt)
                 {
@@ -224,7 +241,7 @@ namespace Plan2Ext
                 DeleteRegions();
                 DeleteFehlerSymbols();
 
-                if (!_AreaEngine.SelectFgAndRb(_FlaechenGrenzen, _Raumbloecke, _FgLayer, _RaumblockName, selectAll)) return;
+                if (!_AreaEngine.SelectFgAndRb(_FlaechenGrenzen, _Raumbloecke, _FgLayer, _RaumblockName, selectAll)) return errorList;
 
                 var fgRbStructs = AreaEngine.GetFgRbStructs(_RaumblockName, _FgLayer, _AfLayer, doc.Database);
                 var nrOfOverlaps = AreaEngine.NrOfOverlaps;
@@ -236,8 +253,9 @@ namespace Plan2Ext
                 {
                     string msg = "Es wurden keine Raumpolylinien gewählt!";
                     log.Warn(msg);
-                    _AcAp.Application.ShowAlertDialog(msg);
-                    return;
+                    if (!automated) _AcAp.Application.ShowAlertDialog(msg);
+                    errorList.Add(AktFlaecheErrorType.NoFlaechengrenzen);
+                    return errorList;
                 }
 
                 // init div
@@ -265,7 +283,6 @@ namespace Plan2Ext
                         {
                             string handles = string.Join(",", ssAF.Select(x => x.Handle.ToString()).ToArray());
                             log.DebugFormat("Abzugpolylinien und abzuziehende Flächengrenzen: {0}", handles);
-
                         }
                         var ssRB = new List<_AcDb.ObjectId>();
                         ssRB.AddRange(info.Raumbloecke);
@@ -273,7 +290,6 @@ namespace Plan2Ext
                         {
                             string handles = string.Join(",", ssRB.Select(x => x.Handle.ToString()).ToArray());
                             log.DebugFormat("Raumblöcke: {0}", handles);
-
                         }
                         double dM2, dPeri;
                         bool errorSymbolSet;
@@ -284,6 +300,7 @@ namespace Plan2Ext
                                 log.WarnFormat("Ungültige Geometrie in Flächengrenze {0}!", elFG.Handle.ToString());
                                 FehlerLineOrHatchPoly(elFG, _GeomIncorrectLayer, 255, 255, 0, tm, Globs.GetMiddlePoint(elFG));
                             }
+                            if (!errorList.Contains(AktFlaecheErrorType.InvalidGeometry)) errorList.Add(AktFlaecheErrorType.InvalidGeometry);
                             continue;
                         }
 
@@ -296,6 +313,7 @@ namespace Plan2Ext
                         {
                             log.WarnFormat("Kein Raumblock in Flächengrenze {0}!", elFG.Handle.ToString());
                             FehlerLineOrHatchPoly(elFG, _InvalidNrRb, 255, 0, 0, tm, Globs.GetMiddlePoint(elFG));
+                            if (!errorList.Contains(AktFlaecheErrorType.NoRaumBlock)) errorList.Add(AktFlaecheErrorType.NoRaumBlock);
                             fehlerKeinRb++;
 
                         }
@@ -303,6 +321,7 @@ namespace Plan2Ext
                         {
                             log.WarnFormat("Mehr als ein Raumblock in Flächengrenze {0}!", elFG.Handle.ToString());
                             FehlerLineOrHatchPoly(elFG, _InvalidNrRb, 255, 0, 0, tm, Globs.GetMiddlePoint(elFG));
+                            if (!errorList.Contains(AktFlaecheErrorType.MoreThanOneRaumBlock)) errorList.Add(AktFlaecheErrorType.MoreThanOneRaumBlock);
                             fehlerMehrRb++;
                         }
                         else
@@ -359,6 +378,7 @@ namespace Plan2Ext
                             if (Differs && (!_Modify))
                             {
                                 FehlerLineOrHatchPoly(elFG, _DiffersLayer, 0, 0, 255, tm, Globs.GetLabelOrStartPoint(elFG));
+                                if (!errorList.Contains(AktFlaecheErrorType.WrongM2)) errorList.Add(AktFlaecheErrorType.WrongM2);
                                 fehlerWertFalsch++;
                             }
                         }
@@ -372,6 +392,7 @@ namespace Plan2Ext
                             _AcIntCom.AcadBlockReference rbBlock = (_AcIntCom.AcadBlockReference)Globs.ObjectIdToAcadEntity(_Raumbloecke[i], tm);
                             insPoints.Add(rbBlock.InsertionPoint);
                         }
+                        if (!errorList.Contains(AktFlaecheErrorType.RaumblocksWithoutFlaechengrenze)) errorList.Add(AktFlaecheErrorType.RaumblocksWithoutFlaechengrenze);
                         _AcCm.Color col = _AcCm.Color.FromRgb((byte)0, (byte)255, (byte)0);
                         Plan2Ext.Globs.InsertFehlerLines(insPoints, _LooseBlockLayer, 50, Math.PI * 1.25, col);
                     }
@@ -384,8 +405,7 @@ namespace Plan2Ext
                             msg += string.Format(CultureInfo.CurrentCulture, "\nBlöcke ohne Flächenattribut: {0}!", attsNotFound.ToString());
                         }
                         log.Debug(msg);
-                        _AcAp.Application.ShowAlertDialog(msg);
-
+                        if (!automated) _AcAp.Application.ShowAlertDialog(msg);
                     }
 
                     myT.Commit();
@@ -394,18 +414,20 @@ namespace Plan2Ext
             finally
             {
             }
+
+            return errorList;
         }
 
-        internal static void BereinigFehlerlinienAndRegions()
+        internal static void BereinigFehlerlinienAndRegions(bool automated)
         {
-            InitVariablesFromConfig();
+            if (!automated) InitVariablesFromConfig();
             DeleteRegions();
             DeleteFehlerSymbols();
         }
 
-        internal static void BereinigRegions()
+        internal static void BereinigRegions(bool automated)
         {
-            InitVariablesFromConfig();
+            if (!automated) InitVariablesFromConfig();
             DeleteRegions();
         }
 
@@ -435,7 +457,7 @@ namespace Plan2Ext
                 if (!string.IsNullOrEmpty(fgLayer)) _FgLayer = fgLayer;
                 if (!string.IsNullOrEmpty(afLayer)) _AfLayer = afLayer;
 
-                if (!CheckBlockAndAtt()) return;
+                if (!CheckBlockAndAtt(false)) return;
 
                 Plan2Ext.Globs.SetLayerCurrent("0");
                 Plan2Ext.Globs.LayersOnRestOffAllThawIC(GetLayerNamesToTurnOn());
@@ -724,7 +746,7 @@ namespace Plan2Ext
             return Plan2Ext.Globs.GetBlockAttributeLayers(_RaumblockName);
         }
 
-        private static void InitVariablesFromConfig()
+        public static void InitVariablesFromConfig()
         {
             string val;
             if (GetFromConfig(out val, "alx_V:ino_rbName")) _RaumblockName = val;
@@ -756,7 +778,7 @@ namespace Plan2Ext
             }
         }
 
-        private static bool CheckBlockAndAtt()
+        private static bool CheckBlockAndAtt(bool automated)
         {
             try
             {
@@ -764,7 +786,7 @@ namespace Plan2Ext
                 {
                     string msg = string.Format(CultureInfo.CurrentCulture, "Der Block '{0}' hat kein Attribut '{1}'!", _RaumblockName, _FlAttrib);
                     log.Debug(msg);
-                    _AcAp.Application.ShowAlertDialog(msg);
+                    if (!automated) _AcAp.Application.ShowAlertDialog(msg);
                     return false;
                 }
 
@@ -772,7 +794,7 @@ namespace Plan2Ext
             catch (Exception ex)
             {
                 log.Error(ex.Message, ex);
-                _AcAp.Application.ShowAlertDialog(ex.Message);
+                if (!automated) _AcAp.Application.ShowAlertDialog(ex.Message);
                 return false;
             }
             return true;
