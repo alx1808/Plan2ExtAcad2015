@@ -660,6 +660,7 @@ namespace Plan2Ext
             public bool Off { get; set; }
             public bool Frozen { get; set; }
             public bool Locked { get; set; }
+            public bool IsPlottable { get; set; }
         }
         internal class LayersState
         {
@@ -698,6 +699,7 @@ namespace Plan2Ext
                         ltr.IsOff = ls.Off;
                         ltr.IsFrozen = ls.Frozen;
                         ltr.IsLocked = ls.Locked;
+                        ltr.IsPlottable = ls.IsPlottable;
                     }
                 }
                 trans.Commit();
@@ -720,7 +722,7 @@ namespace Plan2Ext
                 foreach (var ltrOid in layTb)
                 {
                     _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-                    states.Add(ltr.Name.ToUpperInvariant(), new LayerState() { Name = ltr.Name, Off = ltr.IsOff, Frozen = ltr.IsFrozen, Locked = ltr.IsLocked });
+                    states.Add(ltr.Name.ToUpperInvariant(), new LayerState() { Name = ltr.Name, Off = ltr.IsOff, Frozen = ltr.IsFrozen, Locked = ltr.IsLocked, IsPlottable = ltr.IsPlottable });
                 }
                 trans.Commit();
             }
@@ -773,6 +775,27 @@ namespace Plan2Ext
                     {
                         ltr.UpgradeOpen();
                         ltr.IsLocked = false;
+                    }
+                }
+                trans.Commit();
+            }
+        }
+
+        public static void OnThawAllLayers()
+        {
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    if (ltr.IsOff || ltr.IsFrozen)
+                    {
+                        ltr.UpgradeOpen();
+                        ltr.IsFrozen = false;
+                        ltr.IsOff = false;
                     }
                 }
                 trans.Commit();

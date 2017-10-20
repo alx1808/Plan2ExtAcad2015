@@ -63,6 +63,48 @@ namespace Plan2Ext
             return layoutNames;
         }
 
+        public static List<string> GetOrderedLayoutNames()
+        {
+            var layouts = new List<_AcDb.Layout>();
+            _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database acCurDb = acDoc.Database;
+            using (_AcDb.Transaction trans = acCurDb.TransactionManager.StartTransaction())
+            {
+                _AcDb.DBDictionary lays = trans.GetObject(acCurDb.LayoutDictionaryId, _AcDb.OpenMode.ForRead) as _AcDb.DBDictionary;
+                foreach (_AcDb.DBDictionaryEntry item in lays)
+                {
+                    layouts.Add((_AcDb.Layout)trans.GetObject(item.Value, _AcDb.OpenMode.ForRead));
+                }
+                trans.Commit();
+            }
+            return layouts.OrderBy(x => x.TabOrder).Select(x => x.LayoutName).ToList();
+        }
+
+        public static bool SetLayoutActive(string name)
+        {
+            if (!GetLayoutNames().Contains(name)) return false;
+
+            _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database acCurDb = acDoc.Database;
+            using (_AcDb.Transaction trans = acCurDb.TransactionManager.StartTransaction())
+            {
+                // Reference the Layout Manager
+                _AcDb.LayoutManager acLayoutMgr = _AcDb.LayoutManager.Current;
+
+                // Open the layout
+                _AcDb.Layout layout = trans.GetObject(acLayoutMgr.GetLayoutId(name), _AcDb.OpenMode.ForRead) as _AcDb.Layout;
+                // Set the layout current if it is not already
+                if (layout.TabSelected == false)
+                {
+                    acLayoutMgr.CurrentLayout = layout.LayoutName;
+                }
+
+                // Save the changes made
+                trans.Commit();
+            }
+            return true;
+        }
+
         public static void CreateLayout(string name)
         {
             _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
