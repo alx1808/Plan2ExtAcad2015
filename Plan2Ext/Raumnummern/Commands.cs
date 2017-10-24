@@ -693,10 +693,10 @@ namespace Plan2Ext.Raumnummern
         {
             string distVar = "alx_V:ino_rb_fbhYDistNoNr";
 
-            Plan2MoveFb(distVar);
+            Plan2MoveFb(distVar,true);
         }
 
-        private static void Plan2MoveFb(string distVar)
+        private static void Plan2MoveFb(string distVar, bool ignoreIfNrExists = false)
         {
             try
             {
@@ -713,7 +713,7 @@ namespace Plan2Ext.Raumnummern
                     string sDist = TheConfiguration.GetValueString(distVar);
                     double dist = double.Parse(sDist, CultureInfo.InvariantCulture);
 
-                    _Engine.MoveFbh(0.0, dist);
+                    _Engine.MoveFbh(0.0, dist, ignoreIfNrExists);
                 }
 
             }

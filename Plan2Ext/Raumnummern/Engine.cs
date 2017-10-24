@@ -148,7 +148,7 @@ namespace Plan2Ext.Raumnummern
         #endregion
 
         #region Internal
-        internal void MoveFbh(double xDist, double yDist)
+        internal void MoveFbh(double xDist, double yDist, bool ignoreIfNrExists)
         {
             List<ObjectId> allHkBlocks = SelectAllHkBlocks();
 
@@ -165,6 +165,11 @@ namespace Plan2Ext.Raumnummern
 
                     RbInfo par = GetNearest(blockRef.Position, RbInsPoints);
                     if (par == null) continue;
+
+                    if (ignoreIfNrExists && NrAttWithValueExists(par))
+                    {
+                        continue;
+                    }
 
                     Vector2d v = new Vector2d(xDist * par.Scale, yDist * par.Scale);
                     v = v.RotateBy(par.Rot);
@@ -188,6 +193,28 @@ namespace Plan2Ext.Raumnummern
 
                 myT.Commit();
             }
+        }
+
+        private bool NrAttWithValueExists(RbInfo par)
+        {
+            bool exists = false;
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var blockRef = (BlockReference)trans.GetObject(par.Oid, OpenMode.ForRead);
+                foreach (ObjectId attId in blockRef.AttributeCollection)
+                {
+                    var anyAttRef = trans.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                    if (anyAttRef != null && string.Compare(anyAttRef.Tag, _RnOptions.Attribname, StringComparison.OrdinalIgnoreCase ) == 0)
+                    {
+                        if (!string.IsNullOrEmpty(anyAttRef.TextString.Trim())) exists = true;
+                        break;
+                    }
+                }
+                trans.Commit();
+            }
+            return exists;
         }
 
         internal void DeleteNummerAttribute(List<ObjectId> blockOids)
@@ -622,14 +649,14 @@ namespace Plan2Ext.Raumnummern
 
                 var fgRbToRemove = new List<AreaEngine.FgRbStructure>();
                 foreach (var fgrb in fgrbs)
+                {
+                    if (fgrb.Raumbloecke.Count != 1)
                     {
-                        if (fgrb.Raumbloecke.Count != 1)
-                        {
-                            InsertFehlerLineAt(fgrb.FlaechenGrenze, _INVALID_NR_OF_RBS_IN_ROOM);
-                            fgRbToRemove.Add(fgrb);
-                            continue;
-                        }
+                        InsertFehlerLineAt(fgrb.FlaechenGrenze, _INVALID_NR_OF_RBS_IN_ROOM);
+                        fgRbToRemove.Add(fgrb);
+                        continue;
                     }
+                }
                 foreach (var fgRb in fgRbToRemove)
                 {
                     fgrbs.Remove(fgRb);
@@ -907,6 +934,7 @@ namespace Plan2Ext.Raumnummern
             public Point3d Pos { get; set; }
             public double Rot { get; set; }
             public double Scale { get; set; }
+            public ObjectId Oid { get; set; }
         }
 
 
@@ -922,7 +950,8 @@ namespace Plan2Ext.Raumnummern
                 {
                     Pos = new Point3d(blockRef.Position.X, blockRef.Position.Y, blockRef.Position.Z),
                     Rot = blockRef.Rotation,
-                    Scale = blockRef.ScaleFactors.X
+                    Scale = blockRef.ScaleFactors.X,
+                    Oid = oid
                 });
             }
             return ret;
@@ -1661,7 +1690,7 @@ namespace Plan2Ext.Raumnummern
             });
             var options = new PromptSelectionOptions();
             options.MessageForAdding = "Flächengrenzen wählen: ";
-            PromptSelectionResult res = ed.GetSelection(options,filter);
+            PromptSelectionResult res = ed.GetSelection(options, filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
 #if BRX_APP

@@ -1108,6 +1108,7 @@ namespace Plan2Ext
                         valuePerTag[anyAttRef.Tag] = anyAttRef.TextString;
                     }
                 }
+                trans.Commit();
             }
             return valuePerTag;
         }
