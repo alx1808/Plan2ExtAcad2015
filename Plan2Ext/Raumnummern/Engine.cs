@@ -43,6 +43,7 @@ namespace Plan2Ext.Raumnummern
 
         internal const string HIDDEN_NUMMER_ATT = "INFO";
         internal const string TOP_PREFIX = "TOP";
+        internal const string TOP_LAYER_PREFIX = "A_RA_TOP_";
 
         private readonly Dictionary<string, int> _ColorIndexDict = new Dictionary<string, int>() { 
             { "1", 141},
@@ -1237,7 +1238,7 @@ namespace Plan2Ext.Raumnummern
 
         private static string GetHatchLayer(string nrStr)
         {
-            return string.Format(CultureInfo.InvariantCulture, "A_RA_TOP_{0}_F", nrStr);
+            return string.Format(CultureInfo.InvariantCulture, TOP_LAYER_PREFIX +  "{0}_F", nrStr);
         }
 
         private static string GetDigitsFromTopPart(string nrStr)
@@ -1654,7 +1655,7 @@ namespace Plan2Ext.Raumnummern
 
                 new TypedValue((int)DxfCode.Operator,"<AND" ),
                 new TypedValue((int)DxfCode.Start,"HATCH" ),
-                new TypedValue((int)DxfCode.LayerName,"A_RA_TOP_*_F"),
+                new TypedValue((int)DxfCode.LayerName, TOP_LAYER_PREFIX+ "*_F"),
                 new TypedValue((int)DxfCode.Operator,"AND>" ),
 
                 new TypedValue((int)DxfCode.Operator,"<AND" ),

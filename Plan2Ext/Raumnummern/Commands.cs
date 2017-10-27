@@ -148,8 +148,9 @@ namespace Plan2Ext.Raumnummern
                     Plan2Ext.Flaeche.Modify = true;
                     Plan2Ext.Flaeche.AktFlaeche(
                         Application.DocumentManager.MdiActiveDocument,
-                        opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true, layerSchalt: false);
+                        opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true, layerSchalt: true);
 
+                    Plan2Ext.Globs.LayerOnAndThawRegex(new List<string>() { "^" + Engine.TOP_LAYER_PREFIX });
                     Engine _Engine = new Engine(opts);
 
                     // danach regions etc. bereinig
