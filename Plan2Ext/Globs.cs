@@ -881,7 +881,7 @@ namespace Plan2Ext
             }
         }
 
-        public static bool LayerOnAndThaw(string layerName)
+        public static bool LayerOnAndThaw(string layerName, bool unlock=false)
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
@@ -897,6 +897,10 @@ namespace Plan2Ext
                     log.InfoFormat("Taue und schalte Layer {0} ein.", ltr.Name);
                     ltr.UpgradeOpen();
                     ltr.IsOff = false;
+                    if (unlock)
+                    {
+                        ltr.IsLocked = false;
+                    }
                     if (string.Compare(_AcAp.Application.GetSystemVariable("CLAYER").ToString(), ltr.Name, StringComparison.OrdinalIgnoreCase) != 0)
                     {
                         if (ltr.IsFrozen) needsRegen = true;
@@ -1160,6 +1164,36 @@ namespace Plan2Ext
                 trans.Commit();
             }
             return attLayers;
+        }
+
+        public static List<string> GetBlockRefLayers(string blockName)
+        {
+            List<string> blockRefLayers = new List<string>();
+
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.BlockTable bt = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+
+                // Iterate through it, dumping objects
+                foreach (_AcDb.ObjectId objId in btr)
+                {
+                    _AcDb.BlockReference br = trans.GetObject(objId, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+                    if (br != null)
+                    {
+                        var bn = GetBlockname(br, trans);
+                        if (bn == blockName)
+                        {
+                            var layName = br.Layer;
+                            if (!blockRefLayers.Contains(layName)) blockRefLayers.Add(layName);
+                        }
+                    }
+                }
+                trans.Commit();
+            }
+            return blockRefLayers;
         }
 
         public static List<string> GetBlockAttributeNames(string blockName)
