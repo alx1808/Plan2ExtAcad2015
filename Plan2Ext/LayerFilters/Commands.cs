@@ -39,6 +39,82 @@ namespace Plan2Ext.LayerFilters
 {
     public class Commands
     {
+        #region PLan2CreateX_NotPlotFilter
+        private const string LAYER_FILTER_NAME_X_NICHT_PLOTTEN = "NICHT_PLOTTEN";
+        private const string LAYER_FILTER_EXPRESSION_X_NICHT_PLOTTEN = "NAME==\"X_*\" AND PLOTTABLE==\"False\"";
+        [_AcTrx.CommandMethod("Plan2CreateX_NotPlotFilter")]
+        public static void Plan2CreateX_NotPlotFilter()
+        {
+            try
+            {
+                _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+                _AcEd.Editor ed = doc.Editor;
+                _AcDb.Database db = doc.Database;
+                _AcLm.LayerFilterTree lft = db.LayerFilters;
+                Plan2CreateX_NotPlotFilter(lft, db, ed);
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(ex.Message);
+            }
+        }
+
+        private static void Plan2CreateX_NotPlotFilter(_AcLm.LayerFilterTree lft, _AcDb.Database db, _AcEd.Editor ed)
+        {
+            var layerFilter = lft.Root;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                _AcLm.LayerGroup group = null;
+                _AcLm.LayerFilter theLF = RecFindLayerFilterWithName(layerFilter.NestedFilters, LAYER_FILTER_NAME_X_NICHT_PLOTTEN, 0, 100);
+                if (theLF != null)
+                {
+                    var checkGroup = theLF as _AcLm.LayerGroup;
+                    if (checkGroup != null) throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Es gibt bereits eine Gruppe namens '{0}'! Bitte manuell löschen oder umbenennen.", LAYER_FILTER_NAME_X_NICHT_PLOTTEN));
+                    if (!theLF.AllowDelete) throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Layerfilter '{0}' kann nicht gelöscht werden!", LAYER_FILTER_NAME_X_NICHT_PLOTTEN));
+                    group = theLF.Parent as _AcLm.LayerGroup;
+                    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nLösche bestehenden Layerfilter {0} mit Filterexpression='{1}'.", LAYER_FILTER_NAME_X_NICHT_PLOTTEN, theLF.FilterExpression));
+                    theLF.Parent.NestedFilters.Remove(theLF);
+                }
+                // create a new layer filter  
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nErstelle Layerfilter {0} mit Filterexpression='{1}'.", LAYER_FILTER_NAME_X_NICHT_PLOTTEN, LAYER_FILTER_EXPRESSION_X_NICHT_PLOTTEN));
+                var df = new _AcLm.LayerFilter();
+                df.Name = LAYER_FILTER_NAME_X_NICHT_PLOTTEN;
+                df.FilterExpression = LAYER_FILTER_EXPRESSION_X_NICHT_PLOTTEN;
+                if (group != null)
+                {
+                    group.NestedFilters.Add(df);
+                }
+                else
+                {
+                    layerFilter.NestedFilters.Add(df);
+                }
+                db.LayerFilters = lft;
+                trans.Commit();
+            }
+        }
+        private static _AcLm.LayerFilter RecFindLayerFilterWithName(_AcLm.LayerFilterCollection layerFilterCollection, string name, int level, int maxLevel)
+        {
+            level++;
+            if (level >= maxLevel) return null;
+            foreach (_AcLm.LayerFilter layerFilter in layerFilterCollection)
+            {
+                var group = layerFilter as _AcLm.LayerGroup;
+                if (group != null)
+                {
+                    if (string.Compare(group.Name, name, StringComparison.OrdinalIgnoreCase) == 0) return layerFilter;
+                    var lf = RecFindLayerFilterWithName(group.NestedFilters, name, level, maxLevel);
+                    if (lf != null) return lf;
+                }
+                else
+                {
+                    if (string.Compare(layerFilter.Name, name, StringComparison.OrdinalIgnoreCase) == 0) return layerFilter;
+                }
+            }
+            return null;
+        }
+
+        #endregion
+
         /// <summary>
         /// http://adndevblog.typepad.com/autocad/2014/06/importing-layer-filters.html
         /// </summary>
@@ -58,7 +134,7 @@ namespace Plan2Ext.LayerFilters
             using (_AcDb.Database srcDb = new _AcDb.Database(false, false))
             {
                 srcDb.ReadDwgFile(filePath, _AcDb.FileOpenMode.OpenForReadAndAllShare, false, String.Empty);
-                ImportNestedFilters(srcDb.LayerFilters.Root, lft.Root, srcDb, destDb, false,ed);
+                ImportNestedFilters(srcDb.LayerFilters.Root, lft.Root, srcDb, destDb, false, ed);
             }
             destDb.LayerFilters = lft;
         }
@@ -159,7 +235,7 @@ namespace Plan2Ext.LayerFilters
                         }
                     }
                     // Import other filters  
-                    ImportNestedFilters(sf, df, srcDb, destDb, copyLayer,ed);
+                    ImportNestedFilters(sf, df, srcDb, destDb, copyLayer, ed);
                 }
                 tr.Commit();
             }
