@@ -53,6 +53,8 @@
             this.btnLayerRestore = new System.Windows.Forms.Button();
             this.chkLayerSchaltung = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.chkOnlyCheck = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnCalcArea
@@ -185,18 +187,18 @@
             this.typeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.typeTextBox.Location = new System.Drawing.Point(7, 273);
+            this.typeTextBox.Location = new System.Drawing.Point(7, 278);
             this.typeTextBox.Multiline = true;
             this.typeTextBox.Name = "typeTextBox";
             this.typeTextBox.ReadOnly = true;
-            this.typeTextBox.Size = new System.Drawing.Size(243, 148);
+            this.typeTextBox.Size = new System.Drawing.Size(243, 143);
             this.typeTextBox.TabIndex = 40;
             this.typeTextBox.Visible = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 188);
+            this.label1.Location = new System.Drawing.Point(3, 200);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(71, 13);
             this.label1.TabIndex = 41;
@@ -207,7 +209,7 @@
             this.txtHeightAtt.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtHeightAtt.Enabled = false;
-            this.txtHeightAtt.Location = new System.Drawing.Point(91, 185);
+            this.txtHeightAtt.Location = new System.Drawing.Point(91, 197);
             this.txtHeightAtt.Name = "txtHeightAtt";
             this.txtHeightAtt.Size = new System.Drawing.Size(130, 20);
             this.txtHeightAtt.TabIndex = 42;
@@ -215,7 +217,7 @@
             // btnSelVolAttribs
             // 
             this.btnSelVolAttribs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelVolAttribs.Location = new System.Drawing.Point(226, 183);
+            this.btnSelVolAttribs.Location = new System.Drawing.Point(226, 195);
             this.btnSelVolAttribs.Name = "btnSelVolAttribs";
             this.btnSelVolAttribs.Size = new System.Drawing.Size(24, 22);
             this.btnSelVolAttribs.TabIndex = 43;
@@ -226,7 +228,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 214);
+            this.label2.Location = new System.Drawing.Point(3, 226);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(73, 13);
             this.label2.TabIndex = 44;
@@ -237,7 +239,7 @@
             this.txtVolAtt.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtVolAtt.Enabled = false;
-            this.txtVolAtt.Location = new System.Drawing.Point(91, 211);
+            this.txtVolAtt.Location = new System.Drawing.Point(91, 223);
             this.txtVolAtt.Name = "txtVolAtt";
             this.txtVolAtt.Size = new System.Drawing.Size(130, 20);
             this.txtVolAtt.TabIndex = 45;
@@ -246,7 +248,7 @@
             // 
             this.btnCalcVol.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCalcVol.Location = new System.Drawing.Point(6, 237);
+            this.btnCalcVol.Location = new System.Drawing.Point(6, 249);
             this.btnCalcVol.Name = "btnCalcVol";
             this.btnCalcVol.Size = new System.Drawing.Size(243, 23);
             this.btnCalcVol.TabIndex = 46;
@@ -316,10 +318,31 @@
             this.label3.TabIndex = 55;
             this.label3.Text = "Layerschaltung";
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(5, 179);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(55, 13);
+            this.label4.TabIndex = 57;
+            this.label4.Text = "nur prüfen";
+            // 
+            // chkOnlyCheck
+            // 
+            this.chkOnlyCheck.AutoSize = true;
+            this.chkOnlyCheck.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkOnlyCheck.Location = new System.Drawing.Point(91, 179);
+            this.chkOnlyCheck.Name = "chkOnlyCheck";
+            this.chkOnlyCheck.Size = new System.Drawing.Size(15, 14);
+            this.chkOnlyCheck.TabIndex = 56;
+            this.chkOnlyCheck.UseVisualStyleBackColor = true;
+            // 
             // CalcAreaControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.chkOnlyCheck);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.chkLayerSchaltung);
             this.Controls.Add(this.btnLayerRestore);
@@ -379,5 +402,7 @@
         private System.Windows.Forms.Button btnLayerRestore;
         public System.Windows.Forms.CheckBox chkLayerSchaltung;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        public System.Windows.Forms.CheckBox chkOnlyCheck;
     }
 }

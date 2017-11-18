@@ -59,7 +59,7 @@ namespace Plan2Ext.CalcArea
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
                     Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
-
+                    Plan2Ext.Flaeche.Modify = !pal.OnlyCheck;
                     Plan2Ext.Flaeche.AktFlaeche(Application.DocumentManager.MdiActiveDocument,
                         pal.RaumBlockName,
                         pal.AreaAttName,
@@ -70,9 +70,7 @@ namespace Plan2Ext.CalcArea
                         layerSchalt: pal.LayerSchaltung
 
                      );
-
                 }
-
             }
             catch (System.Exception ex)
             {

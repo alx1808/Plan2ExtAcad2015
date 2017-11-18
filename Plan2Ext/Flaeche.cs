@@ -210,7 +210,17 @@ namespace Plan2Ext
             WrongM2,
         }
 
-        internal static List<AktFlaecheErrorType> AktFlaeche(_AcAp.Document doc, string rbName, string flAttrib, string periAttrib, string fgLayer, string afLayer, bool selectAll = false, bool layerSchalt = true, bool automated = false)
+        internal static List<AktFlaecheErrorType> AktFlaeche(
+            _AcAp.Document doc, 
+            string rbName, 
+            string flAttrib, 
+            string periAttrib, 
+            string fgLayer, 
+            string afLayer, 
+            bool selectAll = false, 
+            bool layerSchalt = true, 
+            bool automated = false
+            )
         {
             log.Debug("--------------------------");
 

@@ -603,7 +603,7 @@ namespace Plan2Ext
                     var block = ent as _AcDb.BlockReference;
                     if (block != null)
                     {
-                        if (string.Compare(block.Name, rbName, StringComparison.OrdinalIgnoreCase) == 0)
+                        if (string.Compare(Plan2Ext.Globs.GetBlockname(block,tr), rbName, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             rbs.Add(ent);
                         }
