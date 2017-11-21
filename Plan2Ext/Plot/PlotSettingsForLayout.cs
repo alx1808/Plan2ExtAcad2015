@@ -70,10 +70,10 @@ namespace Plan2Ext.Plot
                 if (!string.IsNullOrEmpty(device))
                 {
                     var devs = psv.GetPlotDeviceList();
-                    
+
                     if (devs.ContainsIgnoreUc(ref device))
                     {
-                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName); 
+                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
                         psv.SetPlotConfigurationName(ps, device, null);
                         psv.RefreshLists(ps);
                     }
@@ -87,11 +87,11 @@ namespace Plan2Ext.Plot
 
                 if (!string.IsNullOrEmpty(mediaName))
                 {
-                    
+
                     var mns = psv.GetCanonicalMediaNameList(ps);
                     if (mns.ContainsIgnoreUc(ref mediaName))
                     {
-                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze PageSize '{0}' für Layout '{1}'.", mediaName, lay.LayoutName); 
+                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze PageSize '{0}' für Layout '{1}'.", mediaName, lay.LayoutName);
                         psv.SetCanonicalMediaName(ps, mediaName);
                     }
                     else
@@ -110,23 +110,19 @@ namespace Plan2Ext.Plot
                 }
 
                 // Set the pen settings
-                if (!string.IsNullOrEmpty(styleSheet))
+                var ssl = psv.GetPlotStyleSheetList();
+                if (string.IsNullOrEmpty(styleSheet) || ssl.ContainsIgnoreUc(ref styleSheet))
                 {
-                    var ssl = psv.GetPlotStyleSheetList();
-
-                    if (ssl.ContainsIgnoreUc(ref styleSheet))
-                    {
-                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName); 
-                        psv.SetCurrentStyleSheet(ps, styleSheet);
-                    }
-                    else
-                    {
-                        log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", mediaName);
-                    }
+                    log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName);
+                    psv.SetCurrentStyleSheet(ps, styleSheet);
+                }
+                else
+                {
+                    log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", mediaName);
                 }
 
                 // Copy the PlotSettings data back to the Layout
-                if (scaleNumerator.HasValue && scaleDenominator.HasValue )
+                if (scaleNumerator.HasValue && scaleDenominator.HasValue)
                 {
                     log.InfoFormat(CultureInfo.CurrentCulture, "Setze Scale '{0}:{2}' für Layout '{1}'.", scaleNumerator.Value.ToString(), lay.LayoutName, scaleDenominator.Value.ToString());
                     _AcDb.CustomScale cs = new _AcDb.CustomScale(scaleNumerator.Value, scaleDenominator.Value);
@@ -158,7 +154,6 @@ namespace Plan2Ext.Plot
                     }
                     log.InfoFormat(CultureInfo.CurrentCulture, "Setze Rotation '{0}' für Layout '{1}'.", pRot.ToString(), lay.LayoutName);
                     psv.SetPlotRotation(ps, pRot);
-                    
                 }
 
                 // plottype hardcoded auf fenster
@@ -263,14 +258,12 @@ namespace Plan2Ext.Plot
                 TolerantGet(arr, out rotation, 7);
 
                 return SetPlotSettings(loName, device, pageSize, styleSheet, scaleNumerator, scaleDenominator, rotation);
-
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message, ex);
                 return false;
             }
-
         }
 
         private static bool SetPlotSettings(string loName, string device, string pageSize, string styleSheet, double? scaleNumerator, double? scaleDenominator, short? plotRotation)
@@ -293,8 +286,6 @@ namespace Plan2Ext.Plot
             }
 
             return true;
-
-
         }
 
         private static void TolerantGet(_AcDb.TypedValue[] arr, out string val, int index)

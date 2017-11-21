@@ -41,7 +41,7 @@ namespace Plan2Ext.LayerFilters
     {
         #region PLan2CreateX_NotPlotFilter
         private const string LAYER_FILTER_NAME_X_NICHT_PLOTTEN = "NICHT_PLOTTEN";
-        private const string LAYER_FILTER_EXPRESSION_X_NICHT_PLOTTEN = "NAME==\"X_*\" AND PLOTTABLE==\"False\"";
+        private const string LAYER_FILTER_EXPRESSION_X_NICHT_PLOTTEN = "PLOTTABLE==\"False\" OR NAME==\"X_*\" OR NAME==\"RKV*\"";
         [_AcTrx.CommandMethod("Plan2CreateX_NotPlotFilter")]
         public static void Plan2CreateX_NotPlotFilter()
         {
