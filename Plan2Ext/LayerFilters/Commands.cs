@@ -39,6 +39,57 @@ namespace Plan2Ext.LayerFilters
 {
     public class Commands
     {
+        [_AcTrx.LispFunction("GetLayersAccordingToFilter")]
+        public static _AcDb.ResultBuffer GetLayersAccordingToFilter(_AcDb.ResultBuffer rb)
+        {
+            if (rb == null) return null;
+            var arr = rb.AsArray();
+            if (arr.Length < 1) return null;
+            string filterName = arr[0].Value.ToString();
+
+            List<string> layerNames = new List<string>();
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                _AcLm.LayerFilterTree lft = db.LayerFilters;
+                var layerFilter = lft.Root;
+                _AcLm.LayerFilter theLF = RecFindLayerFilterWithName(layerFilter.NestedFilters, filterName, 0, 100);
+                if (theLF != null)
+                {
+                    var group = theLF as _AcLm.LayerGroup;
+                    if (group == null)
+                    {
+                        _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                        List<_AcDb.LayerTableRecord> ltrs = new List<_AcDb.LayerTableRecord>();
+                        foreach (var ltrOid in layTb)
+                        {
+                            _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                            if (theLF.Filter(ltr))
+                            {
+                                layerNames.Add(ltr.Name);
+                            }
+                        }
+                    }
+                }
+                trans.Commit();
+            }
+
+            if (layerNames.Count > 0)
+            {
+                _AcDb.ResultBuffer rbRet = new _AcDb.ResultBuffer();
+                foreach (var name in layerNames)
+                {
+                    rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, name));
+                }
+                return rbRet;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
         #region PLan2CreateX_NotPlotFilter
         private const string LAYER_FILTER_NAME_X_NICHT_PLOTTEN = "NICHT_PLOTTEN";
         private const string LAYER_FILTER_EXPRESSION_X_NICHT_PLOTTEN = "PLOTTABLE==\"False\" OR NAME==\"X_*\" OR NAME==\"RKV*\"";
