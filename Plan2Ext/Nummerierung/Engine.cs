@@ -42,6 +42,8 @@ namespace Plan2Ext.Nummerierung
         #region Members
         private TransactionManager _TransMan = null;
         private ObjectId _CurrentBlock = ObjectId.Null;
+        private ObjectId _LastBlock = ObjectId.Null;
+        private string _LastAttName = string.Empty;
         private NrOptions _RnOptions = null;
         List<ObjectId> _Blocks = new List<ObjectId>();
         #endregion
@@ -60,23 +62,43 @@ namespace Plan2Ext.Nummerierung
         #region Internal
         internal bool AddNumber()
         {
+            bool result = false;
             using (Transaction myT = _TransMan.StartTransaction())
             {
-                if (!SelectBlock()) return false;
-                if (_RnOptions.UseFirstAttrib)
+                var res = SelectBlock();
+                switch (res)
                 {
-                    SetFirstBlockAttrib(_CurrentBlock, GetCompleteNumber(_RnOptions.Number));
+                    case SelectBlockReturn.terminate:
+                        _LastAttName = string.Empty;
+                        _LastBlock = ObjectId.Null;
+                        break;
+                    case SelectBlockReturn.entSelected:
+                        _LastBlock = _CurrentBlock;
+                        if (_RnOptions.UseFirstAttrib)
+                        {
+                            SetFirstBlockAttrib(_CurrentBlock, GetCompleteNumber(_RnOptions.Number));
+                        }
+                        else
+                        {
+                            SetBlockAttrib(_CurrentBlock, _RnOptions.Attribname, GetCompleteNumber(_RnOptions.Number));
+                        }
+                        BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
+                        string newNr = Increment(_RnOptions.Number);
+                        _RnOptions.SetNumber(newNr);
+                        result = true;
+                        break;
+                    case SelectBlockReturn.kwEnd:
+                        if (_LastBlock != ObjectId.Null && !String.IsNullOrEmpty(_LastAttName))
+                        {
+                            AppendEToBlockAttrib(_LastBlock, _LastAttName);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                else
-                {
-                    SetBlockAttrib(_CurrentBlock, _RnOptions.Attribname, GetCompleteNumber(_RnOptions.Number));
-                }
-                BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
-                string newNr = Increment(_RnOptions.Number);
-                _RnOptions.SetNumber(newNr);
                 myT.Commit();
             }
-            return true;
+            return result;
         }
 
         internal void CheckUniqueness()
@@ -97,7 +119,7 @@ namespace Plan2Ext.Nummerierung
                     AttributeReference idNummerAtt = null;
                     if (this._RnOptions.UseFirstAttrib)
                     {
-                        idNummerAtt = GetFirstBlockAttribute(blockRef); 
+                        idNummerAtt = GetFirstBlockAttribute(blockRef);
                     }
                     else
                     {
@@ -137,19 +159,28 @@ namespace Plan2Ext.Nummerierung
         #endregion
 
         #region Private
-        private bool SelectBlock()
+        private enum SelectBlockReturn
         {
-
+            terminate,
+            entSelected,
+            kwEnd,
+        }
+        private SelectBlockReturn SelectBlock()
+        {
             _CurrentBlock = ObjectId.Null;
             Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
             PromptEntityOptions entopts = new PromptEntityOptions("\nBlock wählen: ");
             entopts.SetRejectMessage(string.Format(CultureInfo.CurrentCulture, _NoRaumblockMessage, _RnOptions.Blockname));
             entopts.AddAllowedClass(typeof(BlockReference), true);
-            //entopts.Message = "Pick an entity of your choice from the drawing";
-            PromptEntityResult ent = null;
-            //ADDED INPUT CONTEXT REACTOR	
 
-            bool ret = false;
+            if (_LastBlock != ObjectId.Null)
+            {
+                entopts.Keywords.Add("Ende");
+                var ds = entopts.Keywords.GetDisplayString(showNoDefault: true);
+            }
+
+            PromptEntityResult ent = null;
+            SelectBlockReturn ret = SelectBlockReturn.terminate;
             var ok = false;
             while (!ok)
             {
@@ -162,17 +193,22 @@ namespace Plan2Ext.Nummerierung
                     ed.WriteMessage("\nKein gültiges Elemente gewählt!");
                 }
 
-                if (ent.Status != PromptStatus.OK)
+                if (ent.Status == PromptStatus.Keyword)
                 {
                     ok = true;
-                    ret = false;
+                    ret = SelectBlockReturn.kwEnd;
+                }
+                else if (ent.Status != PromptStatus.OK)
+                {
+                    ok = true;
+                    ret = SelectBlockReturn.terminate;
                 }
                 else if (_RnOptions.UseFirstAttrib)
                 {
                     //
                     _CurrentBlock = ent.ObjectId;
                     ok = true;
-                    ret = true;
+                    ret = SelectBlockReturn.entSelected;
                 }
                 else
                 {
@@ -190,7 +226,7 @@ namespace Plan2Ext.Nummerierung
                         {
                             _CurrentBlock = entid;
                             ok = true;
-                            ret = true;
+                            ret = SelectBlockReturn.entSelected;
                         }
 
                         myT.Commit();
@@ -212,6 +248,7 @@ namespace Plan2Ext.Nummerierung
                     AttributeReference attRef = GetFirstBlockAttribute(blockEnt);
                     if (attRef != null)
                     {
+                        _LastAttName = attRef.Tag;
                         attRef.UpgradeOpen();
                         attRef.TextString = val;
                     }
@@ -224,9 +261,36 @@ namespace Plan2Ext.Nummerierung
             }
         }
 
+        private void AppendEToBlockAttrib(ObjectId oid, string attName)
+        {
+            if (oid == ObjectId.Null) return;
+
+            using (Transaction myT = _TransMan.StartTransaction())
+            {
+                BlockReference blockEnt = _TransMan.GetObject(oid, OpenMode.ForRead) as BlockReference;
+                if (blockEnt != null)
+                {
+                    AttributeReference attRef = null;
+                    attRef = GetBlockAttribute(attName, blockEnt);
+                    if (attRef != null)
+                    {
+                        attRef.UpgradeOpen();
+                        attRef.TextString = attRef.TextString + "e";
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Attribut '{0}' nicht gefunden!", attName));
+                    }
+                }
+
+                myT.Commit();
+            }
+        }
+
         private void SetBlockAttrib(ObjectId oid, string attName, string val)
         {
             if (oid == ObjectId.Null) return;
+            _LastAttName = attName;
 
             using (Transaction myT = _TransMan.StartTransaction())
             {
