@@ -2580,5 +2580,12 @@ namespace Plan2Ext
             var acLayout = (_AcDb.Layout)myTrans.GetObject(acLayoutMgr.GetLayoutId(acLayoutMgr.CurrentLayout), _AcDb.OpenMode.ForRead);
             return acLayout.BlockTableRecordId;
         }
+
+        internal static bool TypedValueToBool(_AcDb.TypedValue tv)
+        {
+            if (tv.TypeCode == (int)_AcBrx.LispDataType.T_atom) return true;
+            if (tv.TypeCode == (int)_AcBrx.LispDataType.Nil) return false;
+            throw new ArgumentException("Typed value is not a boolean", paramName: "tv");
+        }
     }
 }

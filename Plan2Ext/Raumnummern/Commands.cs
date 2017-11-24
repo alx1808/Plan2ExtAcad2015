@@ -136,9 +136,10 @@ namespace Plan2Ext.Raumnummern
             double m2 = -1.0;
             try
             {
-                //Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
-
-                var opts = new RnOptions();
+                Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
+                OpenRnPalette();
+                var opts = Globs.TheRnOptions;
+                //var opts = new RnOptions();
 
                 Document doc = Application.DocumentManager.MdiActiveDocument;
 

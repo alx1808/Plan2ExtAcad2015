@@ -39,6 +39,47 @@ namespace Plan2Ext.LayerFilters
 {
     public class Commands
     {
+        /// <summary>
+        /// Sets defaultvisibility
+        /// </summary>
+        /// <param name="rb">
+        /// First: visibility (boolean) -> true means layer is frozen
+        /// Second: layername
+        /// </param>
+        /// <returns></returns>
+        [_AcTrx.LispFunction("SetDefaultVisibilityForLayer")]
+        public static bool SetDefaultVisibilityForLayer(_AcDb.ResultBuffer rb)
+        {
+            if (rb == null) return false;
+            var arr = rb.AsArray();
+            if (arr.Length < 2) return false;
+            var vis = Plan2Ext.Globs.TypedValueToBool(arr[0]);
+            string layerName = arr[1].Value.ToString();
+            if (string.IsNullOrEmpty(layerName)) return false;
+
+
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                List<_AcDb.LayerTableRecord> ltrs = new List<_AcDb.LayerTableRecord>();
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    if (string.Compare(ltr.Name, layerName,StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        ltr.UpgradeOpen();
+                        ltr.ViewportVisibilityDefault = vis;
+                        ltr.DowngradeOpen();
+                        break;
+                    }
+                }
+                trans.Commit();
+            }
+            return true;
+        }
+
         [_AcTrx.LispFunction("GetLayersAccordingToFilter")]
         public static _AcDb.ResultBuffer GetLayersAccordingToFilter(_AcDb.ResultBuffer rb)
         {
