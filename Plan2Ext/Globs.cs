@@ -76,6 +76,10 @@ namespace Plan2Ext
                         openFileDialog.CheckPathExists = true;
                         openFileDialog.Multiselect = true;
                         openFileDialog.Title = fileDialogTitle;
+                        if (!string.IsNullOrEmpty(defaultPath))
+                        {
+                            openFileDialog.InitialDirectory = defaultPath;
+                        }
                         var filter = fileTypeName + "|*." + ext;
                         openFileDialog.Filter = filter;
                         if (openFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
