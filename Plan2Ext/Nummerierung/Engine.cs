@@ -275,7 +275,7 @@ namespace Plan2Ext.Nummerierung
                     if (attRef != null)
                     {
                         attRef.UpgradeOpen();
-                        attRef.TextString = attRef.TextString + "e";
+                        attRef.TextString = attRef.TextString + "E";
                     }
                     else
                     {
