@@ -120,6 +120,8 @@
     <Compile Include="DocumentHandling.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Fenster\Examiner.cs" />
+    <Compile Include="Fenster\Searcher.cs" />
     <Compile Include="HoehenPruefung\Commands.cs" />
     <Compile Include="HoehenPruefung\Engine.cs" />
     <Compile Include="HoehenPruefung\Globs.cs" />
@@ -183,6 +185,7 @@
     <Compile Include="RaumHoePruefung\HoePrOptions.cs" />
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
     <Compile Include="Raumnummern\Summarizer.cs" />
+    <Compile Include="Searcher.cs" />
     <Compile Include="TestExplode.cs" />
     <Compile Include="TheConfiguration.cs" />
     <Compile Include="Commands.cs" />

@@ -124,6 +124,7 @@ namespace Plan2Ext.Fenster
 
             }
         }
+
         public string HoeheString
         {
             get
@@ -216,8 +217,6 @@ namespace Plan2Ext.Fenster
             }
         }
 
-
-
         private double _Staerke = 0.07;
         public double Staerke
         {
@@ -240,6 +239,27 @@ namespace Plan2Ext.Fenster
             }
         }
 
+        private double _WeitePruefTol = 0.01;
+        public double WeitePruefTol
+        {
+            get { return _WeitePruefTol; }
+            set { if (value > 0.0) _WeitePruefTol = value; }
+        }
+        public string WeitePruefTolString
+        {
+            get
+            {
+                return (_WeitePruefTol * 100.0).ToString(CultureInfo.InvariantCulture);
+            }
+            set
+            {
+                double val;
+                if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
+                {
+                    WeitePruefTol = (val / 100.0);
+                }
+            }
+        }
 
         private double _Stock = 0.06;
         public double Stock
@@ -340,6 +360,5 @@ namespace Plan2Ext.Fenster
             }
             return fa;
         }
-
     }
 }

@@ -52,6 +52,7 @@ namespace Plan2Ext.Fenster
             this.txtStock.Text = _FensterOptions.StockString;
             this.txtSprossenBreite.Text = _FensterOptions.SprossenBreiteString;
             this.txtAbstand.Text = _FensterOptions.TextAbstandString;
+            this.txtWeiteTol.Text = _FensterOptions.WeitePruefTolString;
             txtFluegelStaerke.Text = _FensterOptions.FluegelStaerkeString;
 
         }
@@ -191,6 +192,27 @@ namespace Plan2Ext.Fenster
             }
         }
 
+        private bool txtWeiteTol_Shield = false;
+        private void txtWeiteTol_Validating(object sender, CancelEventArgs e)
+        {
+            if (txtWeiteTol_Shield) return;
+            try
+            {
+                txtWeiteTol_Shield = true;
+                _FensterOptions.WeitePruefTolString = txtWeiteTol.Text;
+                txtWeiteTol.Text = _FensterOptions.WeitePruefTolString;
+
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in FensterOptions aufgetreten! {0}", ex.Message));
+            }
+            finally
+            {
+                txtWeiteTol_Shield = false;
+            }
+        }
+
         private bool txtStock_Shield = false;
         private void txtStock_Validating(object sender, CancelEventArgs e)
         {
@@ -230,6 +252,40 @@ namespace Plan2Ext.Fenster
             finally
             {
                 txtFluegelStaerke_Shield = false;
+            }
+        }
+
+        private void btnExamine_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _AcAp.DocumentCollection dm = _AcAp.Application.DocumentManager;
+                _AcAp.Document doc = dm.MdiActiveDocument;
+                Editor ed = doc.Editor;
+#if NEWSETFOCUS
+                doc.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
+                using (_AcAp.DocumentLock m_doclock = doc.LockDocument())
+                {
+
+                    var examiner = new Examiner();
+                    Examiner.Weite_Eps = _FensterOptions.WeitePruefTol;
+                    var nrErrors = examiner.CheckWindowWidth();
+                    if (nrErrors == 0)
+                    {
+                        _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(CultureInfo.InvariantCulture, "\nFensterprüfung erfolgreich."));
+                    }
+                    else
+                    {
+                        _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(CultureInfo.InvariantCulture, "\nFensterprüfung: Anzahl der Fehler: {0}.",nrErrors));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(ex.Message);
             }
         }
 
@@ -567,6 +623,5 @@ namespace Plan2Ext.Fenster
                 _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Befehl Fenster aufgetreten! {0}", ex.Message));
             }
         }
-
     }
 }

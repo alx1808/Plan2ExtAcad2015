@@ -58,6 +58,9 @@
             this.rbnSprosse1 = new System.Windows.Forms.RadioButton();
             this.rbnSprosse0 = new System.Windows.Forms.RadioButton();
             this.btnFenster = new System.Windows.Forms.Button();
+            this.btnExamine = new System.Windows.Forms.Button();
+            this.txtWeiteTol = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.grpFenster.SuspendLayout();
             this.grpSprossen.SuspendLayout();
             this.SuspendLayout();
@@ -77,14 +80,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtWidth.Location = new System.Drawing.Point(95, 83);
             this.txtWidth.Name = "txtWidth";
-            this.txtWidth.Size = new System.Drawing.Size(133, 20);
+            this.txtWidth.Size = new System.Drawing.Size(101, 20);
             this.txtWidth.TabIndex = 1;
             this.txtWidth.Validating += new System.ComponentModel.CancelEventHandler(this.txtWidth_Validating);
             // 
             // btnSelWidth
             // 
             this.btnSelWidth.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelWidth.Location = new System.Drawing.Point(234, 81);
+            this.btnSelWidth.Location = new System.Drawing.Point(202, 81);
             this.btnSelWidth.Name = "btnSelWidth";
             this.btnSelWidth.Size = new System.Drawing.Size(24, 22);
             this.btnSelWidth.TabIndex = 2;
@@ -107,14 +110,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtHeight.Location = new System.Drawing.Point(95, 109);
             this.txtHeight.Name = "txtHeight";
-            this.txtHeight.Size = new System.Drawing.Size(133, 20);
+            this.txtHeight.Size = new System.Drawing.Size(101, 20);
             this.txtHeight.TabIndex = 4;
             this.txtHeight.Validating += new System.ComponentModel.CancelEventHandler(this.txtHeight_Validating);
             // 
             // butSelHeight
             // 
             this.butSelHeight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.butSelHeight.Location = new System.Drawing.Point(234, 107);
+            this.butSelHeight.Location = new System.Drawing.Point(202, 107);
             this.butSelHeight.Name = "butSelHeight";
             this.butSelHeight.Size = new System.Drawing.Size(24, 22);
             this.butSelHeight.TabIndex = 5;
@@ -137,14 +140,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtParapet.Location = new System.Drawing.Point(95, 135);
             this.txtParapet.Name = "txtParapet";
-            this.txtParapet.Size = new System.Drawing.Size(133, 20);
+            this.txtParapet.Size = new System.Drawing.Size(101, 20);
             this.txtParapet.TabIndex = 7;
             this.txtParapet.Validating += new System.ComponentModel.CancelEventHandler(this.txtParapet_Validating);
             // 
             // btnSelParapet
             // 
             this.btnSelParapet.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelParapet.Location = new System.Drawing.Point(234, 133);
+            this.btnSelParapet.Location = new System.Drawing.Point(202, 133);
             this.btnSelParapet.Name = "btnSelParapet";
             this.btnSelParapet.Size = new System.Drawing.Size(24, 22);
             this.btnSelParapet.TabIndex = 8;
@@ -167,7 +170,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOlAb.Location = new System.Drawing.Point(95, 377);
             this.txtOlAb.Name = "txtOlAb";
-            this.txtOlAb.Size = new System.Drawing.Size(133, 20);
+            this.txtOlAb.Size = new System.Drawing.Size(101, 20);
             this.txtOlAb.TabIndex = 18;
             this.txtOlAb.Validating += new System.ComponentModel.CancelEventHandler(this.txtOlAb_Validating);
             // 
@@ -186,7 +189,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtStaerke.Location = new System.Drawing.Point(95, 261);
             this.txtStaerke.Name = "txtStaerke";
-            this.txtStaerke.Size = new System.Drawing.Size(133, 20);
+            this.txtStaerke.Size = new System.Drawing.Size(101, 20);
             this.txtStaerke.TabIndex = 12;
             this.txtStaerke.Validating += new System.ComponentModel.CancelEventHandler(this.txtStaerke_Validating);
             // 
@@ -205,7 +208,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtStock.Location = new System.Drawing.Point(95, 287);
             this.txtStock.Name = "txtStock";
-            this.txtStock.Size = new System.Drawing.Size(133, 20);
+            this.txtStock.Size = new System.Drawing.Size(101, 20);
             this.txtStock.TabIndex = 14;
             this.txtStock.Validating += new System.ComponentModel.CancelEventHandler(this.txtStock_Validating);
             // 
@@ -215,7 +218,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSprossenBreite.Location = new System.Drawing.Point(95, 339);
             this.txtSprossenBreite.Name = "txtSprossenBreite";
-            this.txtSprossenBreite.Size = new System.Drawing.Size(133, 20);
+            this.txtSprossenBreite.Size = new System.Drawing.Size(101, 20);
             this.txtSprossenBreite.TabIndex = 16;
             this.txtSprossenBreite.Validating += new System.ComponentModel.CancelEventHandler(this.txtSprossenBreite_Validating);
             // 
@@ -231,7 +234,7 @@
             // btnSelAbstand
             // 
             this.btnSelAbstand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelAbstand.Location = new System.Drawing.Point(234, 401);
+            this.btnSelAbstand.Location = new System.Drawing.Point(202, 401);
             this.btnSelAbstand.Name = "btnSelAbstand";
             this.btnSelAbstand.Size = new System.Drawing.Size(24, 22);
             this.btnSelAbstand.TabIndex = 21;
@@ -245,7 +248,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtAbstand.Location = new System.Drawing.Point(95, 403);
             this.txtAbstand.Name = "txtAbstand";
-            this.txtAbstand.Size = new System.Drawing.Size(133, 20);
+            this.txtAbstand.Size = new System.Drawing.Size(101, 20);
             this.txtAbstand.TabIndex = 20;
             this.txtAbstand.Validating += new System.ComponentModel.CancelEventHandler(this.txtAbstand_Validating);
             // 
@@ -264,7 +267,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFluegelStaerke.Location = new System.Drawing.Point(95, 313);
             this.txtFluegelStaerke.Name = "txtFluegelStaerke";
-            this.txtFluegelStaerke.Size = new System.Drawing.Size(133, 20);
+            this.txtFluegelStaerke.Size = new System.Drawing.Size(101, 20);
             this.txtFluegelStaerke.TabIndex = 23;
             this.txtFluegelStaerke.Validating += new System.ComponentModel.CancelEventHandler(this.txtFluegelStaerke_Validating);
             // 
@@ -285,7 +288,7 @@
             this.grpFenster.Controls.Add(this.rbnStandard);
             this.grpFenster.Location = new System.Drawing.Point(0, 7);
             this.grpFenster.Name = "grpFenster";
-            this.grpFenster.Size = new System.Drawing.Size(258, 70);
+            this.grpFenster.Size = new System.Drawing.Size(226, 70);
             this.grpFenster.TabIndex = 26;
             this.grpFenster.TabStop = false;
             this.grpFenster.Text = "Fenstertyp";
@@ -323,7 +326,7 @@
             this.grpSprossen.Controls.Add(this.rbnSprosse0);
             this.grpSprossen.Location = new System.Drawing.Point(0, 165);
             this.grpSprossen.Name = "grpSprossen";
-            this.grpSprossen.Size = new System.Drawing.Size(258, 84);
+            this.grpSprossen.Size = new System.Drawing.Size(226, 84);
             this.grpSprossen.TabIndex = 2;
             this.grpSprossen.TabStop = false;
             this.grpSprossen.Text = "Sprossen";
@@ -368,19 +371,53 @@
             // 
             this.btnFenster.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFenster.Location = new System.Drawing.Point(6, 440);
+            this.btnFenster.Location = new System.Drawing.Point(3, 538);
             this.btnFenster.Name = "btnFenster";
-            this.btnFenster.Size = new System.Drawing.Size(252, 23);
+            this.btnFenster.Size = new System.Drawing.Size(220, 23);
             this.btnFenster.TabIndex = 27;
             this.btnFenster.Text = "Fenster";
             this.btnFenster.UseVisualStyleBackColor = true;
             this.btnFenster.Visible = false;
             this.btnFenster.Click += new System.EventHandler(this.btnFenster_Click);
             // 
+            // btnExamine
+            // 
+            this.btnExamine.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExamine.Location = new System.Drawing.Point(3, 441);
+            this.btnExamine.Name = "btnExamine";
+            this.btnExamine.Size = new System.Drawing.Size(193, 23);
+            this.btnExamine.TabIndex = 28;
+            this.btnExamine.Text = "Prüfen";
+            this.btnExamine.UseVisualStyleBackColor = true;
+            this.btnExamine.Click += new System.EventHandler(this.btnExamine_Click);
+            // 
+            // txtWeiteTol
+            // 
+            this.txtWeiteTol.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtWeiteTol.Location = new System.Drawing.Point(95, 470);
+            this.txtWeiteTol.Name = "txtWeiteTol";
+            this.txtWeiteTol.Size = new System.Drawing.Size(101, 20);
+            this.txtWeiteTol.TabIndex = 30;
+            this.txtWeiteTol.Validating += new System.ComponentModel.CancelEventHandler(this.txtWeiteTol_Validating);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(3, 473);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(78, 13);
+            this.label2.TabIndex = 29;
+            this.label2.Text = "Breite Tol. (cm)";
+            // 
             // FensterOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.txtWeiteTol);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.btnExamine);
             this.Controls.Add(this.btnFenster);
             this.Controls.Add(this.grpSprossen);
             this.Controls.Add(this.grpFenster);
@@ -408,7 +445,7 @@
             this.Controls.Add(this.lblWidth);
             this.MinimumSize = new System.Drawing.Size(143, 164);
             this.Name = "FensterOptionsControl";
-            this.Size = new System.Drawing.Size(261, 491);
+            this.Size = new System.Drawing.Size(229, 613);
             this.grpFenster.ResumeLayout(false);
             this.grpFenster.PerformLayout();
             this.grpSprossen.ResumeLayout(false);
@@ -450,5 +487,8 @@
         private System.Windows.Forms.RadioButton rbnSprosse1;
         private System.Windows.Forms.RadioButton rbnSprosse0;
         private System.Windows.Forms.Button btnFenster;
+        private System.Windows.Forms.Button btnExamine;
+        internal System.Windows.Forms.TextBox txtWeiteTol;
+        private System.Windows.Forms.Label label2;
     }
 }

@@ -14,9 +14,9 @@ using Teigha.DatabaseServices;
 using Teigha.Runtime;
 
 #elif ARX_APP
-  using Autodesk.AutoCAD.ApplicationServices;
-  using Autodesk.AutoCAD.DatabaseServices;
-  using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Runtime;
 #endif
 
 
@@ -37,6 +37,13 @@ namespace Plan2Ext.Fenster
         #endregion
 
         static FensterOptionsPalette _FensterOptionsPalette;
+
+        [CommandMethod("Plan2CheckFenWidth")]
+        public static void Plan2CheckFenWidth()
+        {
+            var examiner = new Examiner();
+            examiner.CheckWindowWidth();
+        }
 
         [LispFunction("DotNetFensterOptions")]
         public static object DotNetFensterOptions(ResultBuffer rb)
