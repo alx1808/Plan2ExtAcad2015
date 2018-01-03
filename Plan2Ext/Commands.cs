@@ -47,6 +47,29 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
+        [_AcTrx.CommandMethod("Plan2Test")]
+        static public void Plan2Test()
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            _AcEd.Editor ed = doc.Editor;
+            var res = ed.GetEntity("Show rotated dimension: ");
+            if (res.Status != _AcEd.PromptStatus.OK) return;
+            var oid = res.ObjectId;
+
+            using (var trans = doc.TransactionManager.StartTransaction())
+            {
+                var dim = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.RotatedDimension;
+                if (dim != null)
+                {
+                    var deg = dim.Rotation * 180 / Math.PI;
+                    ed.WriteMessage(string.Format("\nRotation: {0}, Measurement: {1}", deg.ToString(), dim.Measurement.ToString()));
+                }
+                trans.Commit();
+            }
+        }
+
+
 #if ARX_APP
         /// <summary>
         /// http://adndevblog.typepad.com/autocad/2012/05/creating-and-accessing-layer-filter-information.html

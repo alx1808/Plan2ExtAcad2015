@@ -68,6 +68,13 @@ namespace Plan2Ext.Fenster
             set { _SearchTol = value; }
         }
 
+        private double _DimSearchTol = 5.0;
+        public double DimSearchTol
+        {
+            get { return _DimSearchTol; }
+            set { _DimSearchTol = value; }
+        }
+
         private double _OrthoToleranceRad = 5 * Math.PI / 180.0;
         public double OrthoToleranceRad
         {
@@ -83,15 +90,51 @@ namespace Plan2Ext.Fenster
             get { return _Weite_Eps; }
             set { _Weite_Eps = value; }
         }
+        private FensterWidthInfoFactory _FensterWidthInfoFactory = null;
         #endregion
 
+        #region Lifecycle
+
+        public Examiner()
+        {
+            _FensterWidthInfoFactory = new FensterWidthInfoFactory();
+        }
+
+        #endregion
+
+        #region FensterWidthInfo
+        private class FensterWidthInfoFactory
+        {
+            public FensterWidthInfo Create(FensterBlockInfo fbInfo, FensterLineInfo flInfo, SturzParaLineInfo stParaInfo, RotatedDimensionInfo rotDimInfo)
+            {
+                if (fbInfo == null) return null;
+                if (flInfo == null) return null;
+                if (stParaInfo != null)
+                {
+                    return new FensterWidthInfoViaSturzPara() { FbInfo = fbInfo, FlInfo = flInfo, StParaInfo = stParaInfo };
+                }
+                else
+                {
+                    if (rotDimInfo == null) return null;
+                    return new FensterWidthInfoViaRotatedDim() { FbInfo = fbInfo, FlInfo = flInfo, RotDimInfo = rotDimInfo };
+                }
+            }
+        }
+
         private class FensterWidthInfo
+        {
+            public virtual bool CheckWidth()
+            {
+                throw new NotImplementedException();
+            }
+        }
+        private class FensterWidthInfoViaSturzPara : FensterWidthInfo
         {
             public FensterBlockInfo FbInfo { get; set; }
             public FensterLineInfo FlInfo { get; set; }
             public SturzParaLineInfo StParaInfo { get; set; }
 
-            public bool CheckWidth()
+            public override bool CheckWidth()
             {
                 bool ok = true;
                 var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
@@ -133,6 +176,56 @@ namespace Plan2Ext.Fenster
             }
         }
 
+        private class FensterWidthInfoViaRotatedDim : FensterWidthInfo
+        {
+            public FensterBlockInfo FbInfo { get; set; }
+            public FensterLineInfo FlInfo { get; set; }
+            public RotatedDimensionInfo RotDimInfo { get; set; }
+
+            public override bool CheckWidth()
+            {
+                bool ok = true;
+                var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+                var db = doc.Database;
+                using (var tr = db.TransactionManager.StartTransaction())
+                {
+                    var fbRef = tr.GetObject(FbInfo.Oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+                    var attribs = Plan2Ext.Globs.GetAttributes(fbRef);
+                    string widthTxt;
+                    if (attribs.TryGetValue(WEITE_ATTRIBUTE_NAME, out widthTxt))
+                    {
+                        int weite;
+                        if (int.TryParse(widthTxt, out weite))
+                        {
+                            var rotDim = (_AcDb.RotatedDimension)tr.GetObject(RotDimInfo.Oid, _AcDb.OpenMode.ForRead);
+
+                            double dWeite = weite / 100.0;
+                            double diffWeite = Math.Abs(rotDim.Measurement/100.0 - dWeite);
+                            if (diffWeite > Weite_Eps)
+                            {
+                                Plan2Ext.Globs.InsertFehlerLines(new List<_AcGe.Point3d>() { fbRef.Position }, WEITE_DIFF_LAYER);
+                                ok = false;
+                            }
+                        }
+                        else
+                        {
+                            Plan2Ext.Globs.InsertFehlerLines(new List<_AcGe.Point3d>() { fbRef.Position }, NO_INT_IN_WEITE_ATTRIBUTE_LAYER);
+                            ok = false;
+                        }
+                    }
+                    else
+                    {
+                        Plan2Ext.Globs.InsertFehlerLines(new List<_AcGe.Point3d>() { fbRef.Position }, NO_WEITE_ATTRIBUTE_LAYER);
+                        ok = false;
+                    }
+
+                    tr.Commit();
+                }
+                return ok;
+            }
+        }
+        #endregion
+
         public int CheckWindowWidth()
         {
             DeleteFehlerSymbols();
@@ -156,7 +249,6 @@ namespace Plan2Ext.Fenster
             var fbsWithErrors = fwInfos.Where(x => !x.CheckWidth()).ToList();
             return fbsWithErrors.Count;
         }
-
 
         private List<string> _ConfiguredFensterBlockVarNames = new List<string>()
         {
@@ -206,29 +298,32 @@ namespace Plan2Ext.Fenster
             var searchers = new List<ObjectSearcher> {
                 new Plan2Ext.Fenster.FensterBlockInfo(),
                 new Plan2Ext.Fenster.FensterLineInfo(),
-                new Plan2Ext.Fenster.SturzParaLineInfo()
+                new Plan2Ext.Fenster.SturzParaLineInfo(),
+                new Plan2Ext.Fenster.RotatedDimensionInfo(),
             };
             var foundObjects = Plan2Ext.Searcher.Search(searchers);
             var fenBlocks = foundObjects.Select(x => x as Plan2Ext.Fenster.FensterBlockInfo).Where(x => x != null).ToList();
             var fenBLines = foundObjects.Select(x => x as Plan2Ext.Fenster.FensterLineInfo).Where(x => x != null).ToList();
             var sturzParaLines = foundObjects.Select(x => x as Plan2Ext.Fenster.SturzParaLineInfo).Where(x => x != null).ToList();
+            var rotatedDimensions = foundObjects.Select(x => x as Plan2Ext.Fenster.RotatedDimensionInfo).Where(x => x != null).ToList();
 
             foreach (var fenBlock in fenBlocks)
             {
                 var p = fenBlock.InsertPoint;
 
-                var orderedDistsToFenLines = fenBLines.Select(x => new { fbLine = x, dist = Dist2d(p, x.MiddelPoint) }).Where(x => x.dist < SearchTol).OrderBy(x => x.dist);
+                var orderedDistsToFenLines = fenBLines.Select(x => new { fbLine = x, dist = Dist2d(p, x.MiddlePoint) }).Where(x => x.dist < SearchTol).OrderBy(x => x.dist);
                 var fenLineInfo = orderedDistsToFenLines.FirstOrDefault(x => true);
                 Plan2Ext.Fenster.FensterLineInfo fbLine = null;
                 Plan2Ext.Fenster.SturzParaLineInfo spLine = null;
+                Plan2Ext.Fenster.RotatedDimensionInfo dim = null;
                 if (fenLineInfo != null)
                 {
                     fbLine = fenLineInfo.fbLine;
                     fenBLines.Remove(fbLine);
 
-                    var pm = fbLine.MiddelPoint;
+                    var pm = fbLine.MiddlePoint;
 
-                    var orderedDistsFbToSPLines = sturzParaLines.Select(x => new { spLine = x, dist = Dist2d(pm, x.MiddelPoint) }).Where(x => x.dist < SearchTol).OrderBy(x => x.dist);
+                    var orderedDistsFbToSPLines = sturzParaLines.Select(x => new { spLine = x, dist = Dist2d(pm, x.MiddlePoint) }).Where(x => x.dist < SearchTol).OrderBy(x => x.dist);
                     var orthoSpLines = orderedDistsFbToSPLines.Where(x => IsOrthogonal2D(x.spLine, fbLine));
                     var spLineInfo = orthoSpLines.FirstOrDefault(x => true);
                     if (spLineInfo != null)
@@ -238,7 +333,19 @@ namespace Plan2Ext.Fenster
                     }
                     else
                     {
-                        missingSpLinesPos.Add(p);
+                        // no sturz- or paraline -> fine dimension
+                        var orderedDistsFbToRotatedDims = rotatedDimensions.Select(x => new { dim = x, dist = Dist2d(pm, x.MiddlePoint) }).Where(x => x.dist < DimSearchTol).OrderBy(x => x.dist);
+                        var orthoRotDims = orderedDistsFbToRotatedDims.Where(x => IsOrthogonal2D(x.dim, fbLine));
+                        var dimLineInfo = orthoRotDims.FirstOrDefault(x => true);
+                        if (dimLineInfo != null)
+                        {
+                            dim = dimLineInfo.dim;
+                            rotatedDimensions.Remove(dim);
+                        }
+                        else
+                        {
+                            missingSpLinesPos.Add(p);
+                        }
                     }
                 }
                 else
@@ -246,9 +353,10 @@ namespace Plan2Ext.Fenster
                     missingFbLinesPos.Add(p);
                 }
 
-                if (spLine != null && fbLine != null)
+                var fwi = _FensterWidthInfoFactory.Create(fenBlock, fbLine, spLine, dim);
+                if (fwi != null)
                 {
-                    fwInfos.Add(new FensterWidthInfo() { FbInfo = fenBlock, FlInfo = fbLine, StParaInfo = spLine });
+                    fwInfos.Add(fwi);
                 }
             }
         }
@@ -267,6 +375,26 @@ namespace Plan2Ext.Fenster
             {
                 Plan2Ext.Globs.DeleteFehlerLines(layerName);
             }
+        }
+
+        private bool IsOrthogonal2D(RotatedDimensionInfo rotDim, FensterLineInfo fl)
+        {
+            var rdP1 = new _AcGe.Point2d();
+            var rdP2 = Plan2Ext.Globs.PolarPoints(rdP1,rotDim.Rotation,1.0);
+           
+            _AcGe.Vector2d v1 = new _AcGe.Vector2d(rdP2.X - rdP1.X, rdP2.Y - rdP1.Y);
+            _AcGe.Vector2d v2 = new _AcGe.Vector2d(fl.EndPoint.X - fl.StartPoint.X, fl.EndPoint.Y - fl.StartPoint.Y);
+            var dotProduct = v1.DotProduct(v2);
+
+            var lenProd = v1.Length * v2.Length;
+            if (lenProd == 0.0) return false;
+
+            var cosy = dotProduct / lenProd;
+            var ang = Math.Acos(cosy);
+            ang = Math.Min(ang, (2 * Math.PI) - ang);
+
+            var deviation = Math.Abs((Math.PI / 2.0) - ang);
+            return (deviation < _OrthoToleranceRad);
         }
 
         private bool IsOrthogonal2D(SturzParaLineInfo st, FensterLineInfo fl)

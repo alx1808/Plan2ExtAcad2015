@@ -36,6 +36,25 @@ using System.Threading.Tasks;
 
 namespace Plan2Ext.Fenster
 {
+    internal class RotatedDimensionInfo : ObjectSearcher
+    {
+        public _AcGe.Point3d MiddlePoint { get; set; }
+        public _AcGe.Point3d StartPoint { get; set; }
+        public _AcGe.Point3d EndPoint { get; set; }
+        public double Rotation { get; set; }
+
+        public override ObjectSearcher GetObject(_AcDb.DBObject dbo, _AcDb.Transaction tr)
+        {
+            _AcDb.RotatedDimension dim = dbo as _AcDb.RotatedDimension;
+            if (dim != null)
+            {
+                var linSeg = new _AcGe.LineSegment3d(dim.XLine1Point, dim.XLine2Point);
+                return new RotatedDimensionInfo() { Oid = dbo.ObjectId, MiddlePoint = linSeg.MidPoint, StartPoint = linSeg.StartPoint, EndPoint = linSeg.EndPoint, Rotation = dim.Rotation};
+            }
+            return null;
+        }
+    }
+
     internal class FensterBlockInfo : ObjectSearcher
     {
         private static List<string> _FensterBlockNames = new List<string>()
@@ -66,9 +85,10 @@ namespace Plan2Ext.Fenster
         }
         public _AcGe.Point3d InsertPoint { get; set; }
     }
+
     internal class FensterLineInfo : ObjectSearcher
     {
-        public _AcGe.Point3d MiddelPoint { get; set; }
+        public _AcGe.Point3d MiddlePoint { get; set; }
         public _AcGe.Point3d StartPoint { get; set; }
         public _AcGe.Point3d EndPoint { get; set; }
 
@@ -84,12 +104,12 @@ namespace Plan2Ext.Fenster
             if (line == null) return null;
             if (line.Layer != FensterLineInfo.Layer) return null;
             var linSeg = new _AcGe.LineSegment3d(line.StartPoint, line.EndPoint);
-            return new FensterLineInfo() { Oid = dbo.ObjectId, MiddelPoint = linSeg.MidPoint, StartPoint = linSeg.StartPoint, EndPoint = linSeg.EndPoint };
+            return new FensterLineInfo() { Oid = dbo.ObjectId, MiddlePoint = linSeg.MidPoint, StartPoint = linSeg.StartPoint, EndPoint = linSeg.EndPoint };
         }
     }
     internal class SturzParaLineInfo : ObjectSearcher
     {
-        public _AcGe.Point3d MiddelPoint { get; set; }
+        public _AcGe.Point3d MiddlePoint { get; set; }
         public _AcGe.Point3d StartPoint { get; set; }
         public _AcGe.Point3d EndPoint { get; set; }
 
@@ -105,7 +125,7 @@ namespace Plan2Ext.Fenster
             if (line == null) return null;
             if (!SturzParaLineInfo.Layers.Contains(line.Layer)) return null;
             var linSeg = new _AcGe.LineSegment3d(line.StartPoint, line.EndPoint);
-            return new SturzParaLineInfo() { Oid = dbo.ObjectId, MiddelPoint = linSeg.MidPoint, StartPoint = linSeg.StartPoint, EndPoint = linSeg.EndPoint};
+            return new SturzParaLineInfo() { Oid = dbo.ObjectId, MiddlePoint = linSeg.MidPoint, StartPoint = linSeg.StartPoint, EndPoint = linSeg.EndPoint};
         }
     }
 }
