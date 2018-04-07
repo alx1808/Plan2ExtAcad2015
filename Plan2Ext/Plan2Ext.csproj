@@ -135,6 +135,7 @@
     <Compile Include="HoehenPruefung\HoePrPalette.cs" />
     <Compile Include="HoehenPruefung\MyExtensions.cs" />
     <Compile Include="Kleinbefehle\AddMissingAttRefs.cs" />
+    <Compile Include="Kleinbefehle\BlockFarben.cs" />
     <Compile Include="Kleinbefehle\KurzBereinig.cs" />
     <Compile Include="Kleinbefehle\LayerAufteil.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
