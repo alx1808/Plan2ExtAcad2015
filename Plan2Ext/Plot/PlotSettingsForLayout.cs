@@ -266,6 +266,96 @@ namespace Plan2Ext.Plot
             }
         }
 
+        /// <summary>
+        /// Get plot settings -> not used yet
+        /// </summary>
+        /// <param name="rb">
+        /// layoutname 
+        /// </param>
+        /// <returns></returns>
+        [_AcTrx.LispFunction("Plan2GetPlotSettings")]
+        public static _AcDb.ResultBuffer GetPlotSettings(_AcDb.ResultBuffer rb)
+        {
+            try
+            {
+                var arr = rb.AsArray();
+
+                string loName, device, pageSize, styleSheet;
+                double scaleNumerator, scaleDenominator;
+                short rotation, scaleUnits;
+
+                TolerantGet(arr, out loName, 0);
+                //TolerantGet(arr, out device, 2);
+                //TolerantGet(arr, out pageSize, 3);
+                //TolerantGet(arr, out styleSheet, 4);
+                //TolerantGet(arr, out scaleNumerator, 5);
+                //TolerantGet(arr, out scaleDenominator, 6);
+                //TolerantGet(arr, out rotation, 7);
+
+                GetPlotSettings(loName, out device, out pageSize, out styleSheet, out scaleUnits, out scaleNumerator, out scaleDenominator, out rotation);
+
+                _AcDb.ResultBuffer rbRet = new _AcDb.ResultBuffer();
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, device));
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, pageSize));
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, styleSheet));
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Int16, scaleUnits));
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Double, scaleNumerator));
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Double, scaleDenominator));
+                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Int16, rotation));
+
+                return rbRet;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message, ex);
+                return null;
+            }
+        }
+
+        private static void GetPlotSettings(string loName, out string device, out string pageSize, out string styleSheet, out short scaleUnits, out double scaleNumerator, out double scaleDenominator, out short rotation)
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            _AcEd.Editor ed = doc.Editor;
+            _AcDb.LayoutManager layoutMgr = _AcDb.LayoutManager.Current;
+
+            var layoutId = layoutMgr.GetLayoutId(loName);
+            if (!layoutId.IsValid) throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Layout '{0}' existiert nicht!", loName));
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var lay = (_AcDb.Layout)tr.GetObject(layoutId, _AcDb.OpenMode.ForRead);
+
+                using (var ps = new _AcDb.PlotSettings(lay.ModelType))
+                {
+                    ps.CopyFrom(lay);
+                    device = ps.PlotConfigurationName;
+                    pageSize = ps.CanonicalMediaName;
+                    styleSheet = ps.CurrentStyleSheet;
+                    scaleUnits = (short)ps.PlotPaperUnits;
+                    var scale = ps.CustomPrintScale;
+                    scaleNumerator = scale.Numerator;
+                    scaleDenominator = scale.Denominator;
+                    var rot = ps.PlotRotation;
+                    rotation = 0;
+                    switch (rot)
+                    {
+                        case _AcDb.PlotRotation.Degrees090:
+                            rotation = 90;
+                            break;
+                        case _AcDb.PlotRotation.Degrees180:
+                            rotation = 180;
+                            break;
+                        case _AcDb.PlotRotation.Degrees270:
+                            rotation = 270;
+                            break;
+                    }
+                }
+
+                tr.Commit();
+            }
+        }
+
         private static bool SetPlotSettings(string loName, string device, string pageSize, string styleSheet, double? scaleNumerator, double? scaleDenominator, short? plotRotation)
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
