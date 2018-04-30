@@ -480,7 +480,14 @@ namespace Plan2Ext
         {
             //dirName = System.IO.Path.Combine(dirName, "PDF");
 
-            const string prefix = "PDF";
+            Plan2FinishPlot(dirName, "PDF");
+            Plan2FinishPlot(dirName, "PLT");
+
+            return true;
+        }
+
+        private static void Plan2FinishPlot(string dirName, string prefix)
+        {
             string targetDir = System.IO.Path.Combine(dirName, prefix);
             if (!System.IO.Directory.Exists(targetDir))
             {
@@ -494,7 +501,7 @@ namespace Plan2Ext
                 string fName = System.IO.Path.GetFileName(tempDir);
                 if (!fName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue; // ignore other dirs
 
-                var pdfFiles = System.IO.Directory.GetFiles(tempDir, "*.pdf", System.IO.SearchOption.TopDirectoryOnly);
+                var pdfFiles = System.IO.Directory.GetFiles(tempDir, "*." + prefix, System.IO.SearchOption.TopDirectoryOnly);
                 foreach (var pdf in pdfFiles)
                 {
                     System.IO.File.Copy(pdf, System.IO.Path.Combine(targetDir, System.IO.Path.GetFileName(pdf)), true);
@@ -502,10 +509,7 @@ namespace Plan2Ext
                 }
 
                 RecRemoveEmptyDir(tempDir);
-
             }
-
-            return true;
         }
 
         private static void RecRemoveEmptyDir(string tempDir)
