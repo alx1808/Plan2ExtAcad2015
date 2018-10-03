@@ -66,9 +66,6 @@ namespace Plan2Ext.LayTrans
                 using (_AcAp.DocumentLock m_doclock = doc.LockDocument())
                 {
 
-                    //_AcWnd.SaveFileDialog sfd = new _AcWnd.SaveFileDialog("Excel-Datei", "", "xlsx","LayTransSave", _AcWnd.SaveFileDialog.SaveFileDialogFlags.AllowAnyExtension);
-                    //System.Windows.Forms.DialogResult dr = sfd.ShowDialog();
-                    //if (dr != System.Windows.Forms.DialogResult.OK)  return;
 
                     Engine engine = new Engine();
                     var ok = engine.ExcelExport();
