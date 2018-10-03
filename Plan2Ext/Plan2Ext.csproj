@@ -96,6 +96,8 @@
     <Compile Include="AutoIdVergabe\ZuweisungsInfo.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
     <Compile Include="BlockToExcel\Excelizer.cs" />
+    <Compile Include="BlockTrans\Commands.cs" />
+    <Compile Include="BlockTrans\Engine.cs" />
     <Compile Include="CalcArea\CalcAreaControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
