@@ -82,8 +82,57 @@ namespace Plan2Ext.BlockTrans
             catch (Exception ex)
             {
                 Log.Error(ex.Message, ex);
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayTransExport aufgetreten! {0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockTransExport aufgetreten! {0}", ex.Message));
             }
         }
+
+        [_AcTrx.CommandMethod("Plan2BlockTrans")]
+        // ReSharper disable once UnusedMember.Global
+        public static void Plan2BlockTrans()
+        {
+            try
+            {
+#if BRX_APP
+                return;
+#else
+
+                _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+                // ReSharper disable once UnusedVariable
+                using (_AcAp.DocumentLock doclock = doc.LockDocument())
+                {
+
+                    _AcEd.Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+                    // First let's use the editor method, GetFileNameForOpen()
+                    _AcEd.PromptOpenFileOptions opts = new _AcEd.PromptOpenFileOptions("Excel-Datei für Block-Infos")
+                    {
+                        Filter = "Excel (*.xlsx)|*.xlsx|Excel alt (*.xls)|*.xls"
+                    };
+                    _AcEd.PromptFileNameResult pr = ed.GetFileNameForOpen(opts);
+                    if (pr.Status != _AcEd.PromptStatus.OK) return;
+
+                    string fileName = pr.StringResult;
+
+                    Engine engine = new Engine();
+                    var ok = engine.BlockTrans(fileName);
+                    if (!ok)
+                    {
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockTrans!"));
+                    }
+                    else
+                    {
+                        string msg = string.Format(CultureInfo.CurrentCulture, "Plan2BlockTrans wurde erfolgreich beendet.");
+                        Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(msg);
+                        Log.Info(msg);
+                    }
+                }
+#endif
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockTrans aufgetreten! {0}", ex.Message));
+            }
+        }
+
     }
 }

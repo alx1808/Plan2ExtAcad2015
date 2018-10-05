@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Globalization;
 using Autodesk.AutoCAD.ApplicationServices.Core;
+using StringComparison = System.StringComparison;
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 using _AcCm = Teigha.Colors;
@@ -33,6 +34,9 @@ using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcIntCom = Autodesk.AutoCAD.Interop.Common;
 using _AcInt = Autodesk.AutoCAD.Interop;
 using Excel = Microsoft.Office.Interop.Excel;
+// ReSharper disable CommentTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable IdentifierTypo
 
 
 namespace Plan2Ext.BlockTrans
@@ -43,8 +47,152 @@ namespace Plan2Ext.BlockTrans
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(LayTrans.Engine))));
         #endregion
 
+        private readonly List<string> _errors = new List<string>();
+
         // ReSharper disable once StringLiteralTypo
-        private readonly List<string> _header = new List<string>() { "Alter Name", "Neuer Name" };
+        private readonly List<string> _header = new List<string>() { "Alter Name", "Neuer Name", "Auflösen", "Einheit" };
+
+        internal bool BlockTrans(string fileName)
+        {
+
+            Globs.UnlockAllLayers();
+
+            _errors.Clear();
+            var linfos = ExcelImport(fileName);
+
+            foreach (var err in _errors)
+            {
+                Log.Warn(err);
+            }
+
+            //var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            //var db = doc.Database;
+            //using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            //{
+            //    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForWrite) as _AcDb.LayerTable;
+
+            //    foreach (var linfo in linfos)
+            //    {
+            //        CreateOrModifyLayer(linfo, doc, db, trans, layTb);
+            //    }
+
+            //    trans.Commit();
+            //}
+
+            //Dictionary<string, string> substDict = new Dictionary<string, string>();
+            //foreach (var linfo in linfos)
+            //{
+            //    substDict[linfo.OldBlockName.ToUpperInvariant()] = linfo.NewBlockName;
+            //}
+
+            //using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            //{
+            //    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForWrite) as _AcDb.LayerTable;
+
+            //    //foreach (var linfo in linfos)
+            //    //{
+            //    ReplaceLayerInEntities(substDict, trans, db);
+            //    //}
+
+            //    trans.Commit();
+            //}
+
+            //Plan2Ext.Globs.SetLayerCurrent("0");
+
+            //List<string> oldLayerNames = linfos.Select(x => x.OldBlockName).ToList();
+            //Plan2Ext.Globs.PurgeLayer(oldLayerNames);
+
+
+            return true;
+        }
+
+        private List<BlockInfo> ExcelImport(string fileName)
+        {
+            Excel.Application myApp = new Excel.Application();
+            Excel.Workbook workBook = null;
+            Excel.Worksheet sheet = null;
+            try
+            {
+                workBook = myApp.Workbooks.Open(fileName, Missing.Value, true); //, 5, "", "", true, Microsoft.Office.Interop.Excel.XlPlatform.xlWindows, "\t", false, false, 0, true, 1, 0);
+                sheet = workBook.Worksheets.get_Item(1);
+
+                var biis = GetBlockInfos(sheet);
+
+                workBook.Close(false, Missing.Value, Missing.Value);
+                myApp.Quit();
+
+                return biis;
+
+            }
+            finally
+            {
+                ReleaseObject(sheet);
+                ReleaseObject(workBook);
+                ReleaseObject(myApp);
+            }
+        }
+
+        private List<BlockInfo> GetBlockInfos(Excel.Worksheet sheet)
+        {
+            string b2;
+            Excel.Range range;
+            // test import
+            int nrRows, nrCols;
+            nrCols = _header.Count;
+            GetNrRows(sheet, out nrRows);
+            var b1 = GetCellBez(0, 0);
+            b2 = GetCellBez(nrRows, nrCols);
+            range = sheet.Range[b1, b2];
+            // ReSharper disable once UseIndexedProperty
+            object[,] impMatrix = range.get_Value(Excel.XlRangeValueDataType.xlRangeValueDefault);
+
+            var doc = Application.DocumentManager.MdiActiveDocument;
+
+            List<BlockInfo> biis = new List<BlockInfo>();
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    for (int r = 2; r <= nrRows; r++)
+                    {
+                        for (int c = 1; c <= nrCols; c++)
+                        {
+                            if (impMatrix[r, c] == null) impMatrix[r, c] = "";
+                        }
+                    }
+
+
+                    for (int r = 2; r <= nrRows; r++)
+                    {
+
+                        //List<string> HEADER = new List<string>() { "Alter Layer", "Neuer Layer", "Farbe", "Linientyp", "Linienstärke", "Transparenz", "Beschreibung" };
+
+                        BlockInfo blockInfo = new BlockInfo
+                        {
+                            OldBlockName = impMatrix[r, 1].ToString(),
+                            NewBlockName = impMatrix[r, 2].ToString(),
+                            Explodable = impMatrix[r, 3].ToString(),
+                            Units = impMatrix[r, 4].ToString()
+                        };
+
+                        if (blockInfo.Ok)
+                        {
+                            biis.Add(blockInfo);
+                        }
+                        if (!string.IsNullOrEmpty(blockInfo.Errors))
+                        {
+                            _errors.Add(blockInfo.Errors);
+                        }
+                    }
+                }
+                finally
+                {
+                    trans.Commit();
+                }
+            }
+
+            return biis;
+        }
 
         internal bool ExcelExport()
         {
@@ -111,6 +259,28 @@ namespace Plan2Ext.BlockTrans
             return true;
         }
 
+        private const int Maxrows = 3000;
+        private void GetNrRows(Excel.Worksheet sheet, out int nrRows)
+        {
+            nrRows = 0;
+
+            var b1 = GetCellBez(0, 0);
+            var b2 = GetCellBez(Maxrows, 0);
+            Log.DebugFormat("B1 '{0}' und B2 '{1}", b1, b2);
+            var range = sheet.Range[b1, b2];
+            Log.DebugFormat("Nach getrange!");
+
+            // ReSharper disable once UseIndexedProperty
+            object[,] indexMatrix = range.get_Value(Excel.XlRangeValueDataType.xlRangeValueDefault);
+
+            for (int i = 1; i <= Maxrows; i++)
+            {
+                var v1 = indexMatrix[i, 1];
+                if (v1 == null) break;
+                nrRows++;
+            }
+        }
+
         private List<BlockInfo> GetBlockInfos()
         {
             List<BlockInfo> blockInfos = new List<BlockInfo>();
@@ -128,7 +298,17 @@ namespace Plan2Ext.BlockTrans
                         {
                             _AcDb.BlockTableRecord ltr = (_AcDb.BlockTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
                             if (ltr.IsAnonymous || ltr.IsFromExternalReference || ltr.IsDependent || ltr.IsLayout) continue;
-                            blockInfos.Add(new BlockInfo(ltr, trans));
+
+                            //if (String.CompareOrdinal(ltr.Name, "alx") == 0)
+                            //{
+                            //    ltr.UpgradeOpen();
+                            //    ltr.Explodable = false;
+                            //    ltr.Name = "alx2";
+                            //    ltr.Units = _AcDb.UnitsValue.Angstroms;
+                            //    ltr.DowngradeOpen();
+                            //}
+
+                            blockInfos.Add(new BlockInfo(ltr));
                         }
                     }
                 }
@@ -157,12 +337,12 @@ namespace Plan2Ext.BlockTrans
             }
         }
 
-        public static string GetCellBez(int rowIndex, int colIndex)
+        private static string GetCellBez(int rowIndex, int colIndex)
         {
             return TranslateColumnIndexToName(colIndex) + (rowIndex + 1).ToString(CultureInfo.InvariantCulture);
         }
 
-        public static String TranslateColumnIndexToName(int index)
+        private static String TranslateColumnIndexToName(int index)
         {
             int quotient = (index) / 26;
 
@@ -180,17 +360,26 @@ namespace Plan2Ext.BlockTrans
         {
             #region Lifecycle
 
-            public BlockInfo(_AcDb.BlockTableRecord blockTableRecord, _AcDb.Transaction trans)
+            public BlockInfo()
             {
-                OldLayer = blockTableRecord.Name;
-                NewLayer = "";
+                Ok = true;
+            }
+            public BlockInfo(_AcDb.BlockTableRecord blockTableRecord)
+            {
+                Ok = true;
+                OldBlockName = blockTableRecord.Name;
+                NewBlockName = blockTableRecord.Name;
+                _explodable2 = blockTableRecord.Explodable;
+                _explodable = _explodable2.ToString();
+                _units2 = blockTableRecord.Units;
+                _units = _units2.ToString();
             }
             #endregion
 
             #region Internal
             internal List<string> RowAsList()
             {
-                return new List<string>() { OldLayer, NewLayer };
+                return new List<string>() { OldBlockName, NewBlockName, Explodable, Units };
             }
 
             #endregion
@@ -199,24 +388,93 @@ namespace Plan2Ext.BlockTrans
             private string _errors = string.Empty;
             public string Errors { get { return _errors; } }
 
-            public string OldLayer { get; set; }
-            private string _newLayer = string.Empty;
-            public string NewLayer
+            private string _oldBlockName = string.Empty;
+            public string OldBlockName
             {
-                get { return _newLayer; }
+                get { return _oldBlockName; }
                 set
                 {
-                    _newLayer = value;
-                    if (!string.IsNullOrEmpty(OldLayer) && !String.IsNullOrEmpty(_newLayer)) Ok = true;
-                    else
+                    _oldBlockName = value;
+                    if (String.IsNullOrEmpty(_oldBlockName))
                     {
+                        Ok = false;
                         // ReSharper disable once StringLiteralTypo
-                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nKein neuer Block für Block '{0}'", OldLayer);
+                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nKein bestehender Blockname '{0}'", _oldBlockName);
+                    }
+                }
+            }
+            private string _newBlockName = string.Empty;
+            public string NewBlockName
+            {
+                get { return _newBlockName; }
+                set
+                {
+                    _newBlockName = value;
+                    if (String.IsNullOrEmpty(_newBlockName))
+                    {
+                        Ok = false;
+                        // ReSharper disable once StringLiteralTypo
+                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nKein neuer Blockname für Block '{0}'", OldBlockName);
                     }
                 }
             }
 
-            public bool Ok { get; private set; }
+            private bool _explodable2 = true;
+            private string _explodable = string.Empty;
+            public string Explodable
+            {
+                get { return _explodable; }
+                set
+                {
+                    if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        _explodable2 = false;
+                        _explodable = _explodable2.ToString();
+                    }
+                    else if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        _explodable2 = true;
+                        _explodable = _explodable2.ToString();
+                    }
+                    else
+                    {
+                        Ok = false;
+                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert '{0}' für auslösbar für Block '{1}'",value, OldBlockName);
+                    }
+                }
+            }
+
+            private _AcDb.UnitsValue _units2 = _AcDb.UnitsValue.Undefined;
+            private string _units = string.Empty;
+            public string Units
+            {
+                get { return _units; }
+                set
+                {
+                    if (!TryConvertToUnits(value))
+                    {
+                        Ok = false;
+                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert '{0}' für Einheit für Block '{1}'", value, OldBlockName);
+                    }
+                }
+            }
+
+            private bool TryConvertToUnits(string value)
+            {
+                foreach (var enumValue in Enum.GetValues(typeof(_AcDb.UnitsValue)))
+                {
+                    var ev = (_AcDb.UnitsValue) enumValue;
+                    if (string.Compare(ev.ToString(), value, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        _units2 = ev;
+                        _units = _units2.ToString();
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public bool Ok { get; private set; } 
 
             #endregion
         }
