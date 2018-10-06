@@ -47,7 +47,7 @@ namespace Plan2Ext.BlockTrans
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(LayTrans.Engine))));
         #endregion
 
-        private readonly List<string> _errors = new List<string>();
+        public readonly List<string> Errors = new List<string>();
 
         // ReSharper disable once StringLiteralTypo
         private readonly List<string> _header = new List<string>() { "Alter Name", "Neuer Name", "Auflösen", "Einheit" };
@@ -57,53 +57,47 @@ namespace Plan2Ext.BlockTrans
 
             Globs.UnlockAllLayers();
 
-            _errors.Clear();
-            var linfos = ExcelImport(fileName);
+            Errors.Clear();
+            var blockInfos = ExcelImport(fileName);
 
-            foreach (var err in _errors)
+            foreach (var err in Errors)
             {
                 Log.Warn(err);
             }
 
-            //var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-            //var db = doc.Database;
-            //using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
-            //{
-            //    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForWrite) as _AcDb.LayerTable;
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            foreach (var blockInfo in blockInfos)
+            {
+                try
+                {
+                    using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+                    {
+                        _AcDb.BlockTable blockTable = trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead) as _AcDb.BlockTable;
 
-            //    foreach (var linfo in linfos)
-            //    {
-            //        CreateOrModifyLayer(linfo, doc, db, trans, layTb);
-            //    }
+                        if (blockTable != null && blockTable.Has(blockInfo.OldBlockName))
+                        {
+                            var oid = blockTable[blockInfo.OldBlockName];
+                            _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForWrite);
 
-            //    trans.Commit();
-            //}
+                            if (string.Compare(blockInfo.OldBlockName, blockInfo.NewBlockName, StringComparison.OrdinalIgnoreCase) != 0)
+                            {
+                                blockTableRecord.Name = blockInfo.NewBlockName;
+                            }
 
-            //Dictionary<string, string> substDict = new Dictionary<string, string>();
-            //foreach (var linfo in linfos)
-            //{
-            //    substDict[linfo.OldBlockName.ToUpperInvariant()] = linfo.NewBlockName;
-            //}
+                            blockTableRecord.Explodable = blockInfo.Explodable2;
+                            blockTableRecord.Units = blockInfo.Units2;
+                        }
+                        trans.Commit();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.WarnFormat(CultureInfo.CurrentCulture, "Fehler bei Block '{0}'! {1}",blockInfo.OldBlockName, ex.Message);
+                }
+            }
 
-            //using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
-            //{
-            //    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForWrite) as _AcDb.LayerTable;
-
-            //    //foreach (var linfo in linfos)
-            //    //{
-            //    ReplaceLayerInEntities(substDict, trans, db);
-            //    //}
-
-            //    trans.Commit();
-            //}
-
-            //Plan2Ext.Globs.SetLayerCurrent("0");
-
-            //List<string> oldLayerNames = linfos.Select(x => x.OldBlockName).ToList();
-            //Plan2Ext.Globs.PurgeLayer(oldLayerNames);
-
-
-            return true;
+            return Errors.Count == 0;
         }
 
         private List<BlockInfo> ExcelImport(string fileName)
@@ -114,6 +108,7 @@ namespace Plan2Ext.BlockTrans
             try
             {
                 workBook = myApp.Workbooks.Open(fileName, Missing.Value, true); //, 5, "", "", true, Microsoft.Office.Interop.Excel.XlPlatform.xlWindows, "\t", false, false, 0, true, 1, 0);
+                // ReSharper disable once UseIndexedProperty
                 sheet = workBook.Worksheets.get_Item(1);
 
                 var biis = GetBlockInfos(sheet);
@@ -134,14 +129,13 @@ namespace Plan2Ext.BlockTrans
 
         private List<BlockInfo> GetBlockInfos(Excel.Worksheet sheet)
         {
-            string b2;
             Excel.Range range;
             // test import
-            int nrRows, nrCols;
-            nrCols = _header.Count;
+            int nrRows;
+            var nrCols = _header.Count;
             GetNrRows(sheet, out nrRows);
             var b1 = GetCellBez(0, 0);
-            b2 = GetCellBez(nrRows, nrCols);
+            var b2 = GetCellBez(nrRows, nrCols);
             range = sheet.Range[b1, b2];
             // ReSharper disable once UseIndexedProperty
             object[,] impMatrix = range.get_Value(Excel.XlRangeValueDataType.xlRangeValueDefault);
@@ -160,13 +154,8 @@ namespace Plan2Ext.BlockTrans
                             if (impMatrix[r, c] == null) impMatrix[r, c] = "";
                         }
                     }
-
-
                     for (int r = 2; r <= nrRows; r++)
                     {
-
-                        //List<string> HEADER = new List<string>() { "Alter Layer", "Neuer Layer", "Farbe", "Linientyp", "Linienstärke", "Transparenz", "Beschreibung" };
-
                         BlockInfo blockInfo = new BlockInfo
                         {
                             OldBlockName = impMatrix[r, 1].ToString(),
@@ -181,7 +170,7 @@ namespace Plan2Ext.BlockTrans
                         }
                         if (!string.IsNullOrEmpty(blockInfo.Errors))
                         {
-                            _errors.Add(blockInfo.Errors);
+                            Errors.Add(blockInfo.Errors);
                         }
                     }
                 }
@@ -296,19 +285,9 @@ namespace Plan2Ext.BlockTrans
                     {
                         foreach (var ltrOid in blockTable)
                         {
-                            _AcDb.BlockTableRecord ltr = (_AcDb.BlockTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-                            if (ltr.IsAnonymous || ltr.IsFromExternalReference || ltr.IsDependent || ltr.IsLayout) continue;
-
-                            //if (String.CompareOrdinal(ltr.Name, "alx") == 0)
-                            //{
-                            //    ltr.UpgradeOpen();
-                            //    ltr.Explodable = false;
-                            //    ltr.Name = "alx2";
-                            //    ltr.Units = _AcDb.UnitsValue.Angstroms;
-                            //    ltr.DowngradeOpen();
-                            //}
-
-                            blockInfos.Add(new BlockInfo(ltr));
+                            _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                            if (blockTableRecord.IsAnonymous || blockTableRecord.IsFromExternalReference || blockTableRecord.IsDependent || blockTableRecord.IsLayout) continue;
+                            blockInfos.Add(new BlockInfo(blockTableRecord));
                         }
                     }
                 }
@@ -369,10 +348,10 @@ namespace Plan2Ext.BlockTrans
                 Ok = true;
                 OldBlockName = blockTableRecord.Name;
                 NewBlockName = blockTableRecord.Name;
-                _explodable2 = blockTableRecord.Explodable;
-                _explodable = _explodable2.ToString();
-                _units2 = blockTableRecord.Units;
-                _units = _units2.ToString();
+                Explodable2 = blockTableRecord.Explodable;
+                _explodable = Explodable2.ToString();
+                Units2 = blockTableRecord.Units;
+                _units = Units2.ToString();
             }
             #endregion
 
@@ -386,7 +365,7 @@ namespace Plan2Ext.BlockTrans
 
             #region Properties
             private string _errors = string.Empty;
-            public string Errors { get { return _errors; } }
+            public string Errors { get { return _errors; }}
 
             private string _oldBlockName = string.Empty;
             public string OldBlockName
@@ -419,36 +398,36 @@ namespace Plan2Ext.BlockTrans
                 }
             }
 
-            private bool _explodable2 = true;
+            public bool Explodable2 = true;
             private string _explodable = string.Empty;
             public string Explodable
             {
-                get { return _explodable; }
+                private get { return _explodable; }
                 set
                 {
                     if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
                     {
-                        _explodable2 = false;
-                        _explodable = _explodable2.ToString();
+                        Explodable2 = false;
+                        _explodable = Explodable2.ToString();
                     }
                     else if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
                     {
-                        _explodable2 = true;
-                        _explodable = _explodable2.ToString();
+                        Explodable2 = true;
+                        _explodable = Explodable2.ToString();
                     }
                     else
                     {
                         Ok = false;
-                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert '{0}' für auslösbar für Block '{1}'",value, OldBlockName);
+                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nUngültiger Wert '{0}' für auslösbar für Block '{1}'", value, OldBlockName);
                     }
                 }
             }
 
-            private _AcDb.UnitsValue _units2 = _AcDb.UnitsValue.Undefined;
+            public _AcDb.UnitsValue Units2 = _AcDb.UnitsValue.Undefined;
             private string _units = string.Empty;
             public string Units
             {
-                get { return _units; }
+                private get { return _units; }
                 set
                 {
                     if (!TryConvertToUnits(value))
@@ -463,18 +442,18 @@ namespace Plan2Ext.BlockTrans
             {
                 foreach (var enumValue in Enum.GetValues(typeof(_AcDb.UnitsValue)))
                 {
-                    var ev = (_AcDb.UnitsValue) enumValue;
+                    var ev = (_AcDb.UnitsValue)enumValue;
                     if (string.Compare(ev.ToString(), value, StringComparison.OrdinalIgnoreCase) == 0)
                     {
-                        _units2 = ev;
-                        _units = _units2.ToString();
+                        Units2 = ev;
+                        _units = Units2.ToString();
                         return true;
                     }
                 }
                 return false;
             }
 
-            public bool Ok { get; private set; } 
+            public bool Ok { get; private set; }
 
             #endregion
         }

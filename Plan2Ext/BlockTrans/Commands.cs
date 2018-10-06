@@ -30,6 +30,7 @@ using _AcInt = Autodesk.AutoCAD.Interop;
 #endif
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Autodesk.AutoCAD.ApplicationServices.Core;
 // ReSharper disable StringLiteralTypo
@@ -116,7 +117,9 @@ namespace Plan2Ext.BlockTrans
                     var ok = engine.BlockTrans(fileName);
                     if (!ok)
                     {
-                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockTrans!"));
+                        var errors = GetFirstErrors(engine, maximumNrOfErrors: 10);
+                        var msg = string.Join("\n", errors);
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockTrans!\n" + msg));
                     }
                     else
                     {
@@ -134,5 +137,19 @@ namespace Plan2Ext.BlockTrans
             }
         }
 
+        private static List<string> GetFirstErrors(Engine engine, int maximumNrOfErrors)
+        {
+            var errors = new List<string>();
+            foreach (var engineError in engine.Errors)
+            {
+                errors.Add(engineError);
+                if (errors.Count > maximumNrOfErrors)
+                {
+                    errors.Add("...");
+                    break;
+                }
+            }
+            return errors;
+        }
     }
 }
