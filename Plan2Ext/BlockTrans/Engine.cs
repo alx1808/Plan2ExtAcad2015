@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Globalization;
+using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices.Core;
 using StringComparison = System.StringComparison;
 #if BRX_APP
@@ -191,9 +192,10 @@ namespace Plan2Ext.BlockTrans
 
             try
             {
-                myApp = new Excel.Application();
-
                 var blockInfos = GetBlockInfos();
+                if (blockInfos == null) return true;
+
+                myApp = new Excel.Application();
 
                 workBook = myApp.Workbooks.Add(Missing.Value);
                 sheet = workBook.ActiveSheet;
@@ -272,6 +274,9 @@ namespace Plan2Ext.BlockTrans
 
         private List<BlockInfo> GetBlockInfos()
         {
+            var blockNames = SelectBlocks();
+            if (blockNames == null) return null;
+
             List<BlockInfo> blockInfos = new List<BlockInfo>();
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
@@ -286,8 +291,9 @@ namespace Plan2Ext.BlockTrans
                         foreach (var ltrOid in blockTable)
                         {
                             _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-                            if (blockTableRecord.IsAnonymous || blockTableRecord.IsFromExternalReference || blockTableRecord.IsDependent || blockTableRecord.IsLayout) continue;
-                            blockInfos.Add(new BlockInfo(blockTableRecord));
+                            if (blockTableRecord.IsAnonymous || blockTableRecord.IsFromExternalReference || blockTableRecord.IsDependent || blockTableRecord.IsLayout || blockTableRecord.IsDynamicBlock) continue;
+                            if (blockNames.Contains(blockTableRecord.Name))
+                                blockInfos.Add(new BlockInfo(blockTableRecord));
                         }
                     }
                 }
@@ -349,10 +355,16 @@ namespace Plan2Ext.BlockTrans
                 OldBlockName = blockTableRecord.Name;
                 NewBlockName = blockTableRecord.Name;
                 Explodable2 = blockTableRecord.Explodable;
-                _explodable = Explodable2.ToString();
+                SetExplodableBez();
                 Units2 = blockTableRecord.Units;
                 _units = Units2.ToString();
             }
+
+            private void SetExplodableBez()
+            {
+                _explodable = Explodable2 ? "Ja" : "Nein";
+            }
+
             #endregion
 
             #region Internal
@@ -405,15 +417,15 @@ namespace Plan2Ext.BlockTrans
                 private get { return _explodable; }
                 set
                 {
-                    if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
+                    if (string.Compare(value, "nein", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         Explodable2 = false;
-                        _explodable = Explodable2.ToString();
+                        SetExplodableBez();
                     }
-                    else if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (string.Compare(value, "ja", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         Explodable2 = true;
-                        _explodable = Explodable2.ToString();
+                        SetExplodableBez();
                     }
                     else
                     {
@@ -457,6 +469,61 @@ namespace Plan2Ext.BlockTrans
 
             #endregion
         }
+
+        private List<string> SelectBlocks()
+        {
+            var blockNames = new List<string>();
+
+            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            _AcEd.SelectionFilter filter = new _AcEd.SelectionFilter(new _AcDb.TypedValue[] { 
+                new _AcDb.TypedValue((int)_AcDb.DxfCode.Start,"INSERT" ),
+            });
+
+            _AcEd.PromptSelectionResult res = ed.GetSelection(filter); // ed.SelectAll(filter);
+            if (res.Status != _AcEd.PromptStatus.OK) return null;
+
+            List<_AcDb.ObjectId> selectedBlocks = new List<_AcDb.ObjectId>();
+#if BRX_APP
+            _AcEd.SelectionSet ss = res.Value;
+#else
+            using (_AcEd.SelectionSet ss = res.Value)
+#endif
+            {
+                selectedBlocks.AddRange(ss.GetObjectIds());
+            }
+
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            using (var trans = doc.TransactionManager.StartTransaction())
+            {
+                var nonXrefs = selectedBlocks.Where(oid => !IsXRef(oid, trans)).ToList();
+                foreach (var oid in nonXrefs)
+                {
+                    var blockRef = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+                    if (blockRef != null && !blockRef.IsDynamicBlock)
+                    {
+                        if (!blockNames.Contains(blockRef.Name))
+                        {
+                            blockNames.Add(blockRef.Name);
+                        }
+                    }
+                }
+                
+                trans.Commit();
+            }
+
+            return blockNames;
+        }
+        private bool IsXRef(_AcDb.ObjectId oid, _AcDb.Transaction tr)
+        {
+            var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+            if (br != null)
+            {
+                var bd = (_AcDb.BlockTableRecord)tr.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
+                if (bd.IsFromExternalReference) return true;
+            }
+            return false;
+        }
+
     }
 }
 #endif
