@@ -80,6 +80,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaEngine.cs" />
+    <Compile Include="AttTrans\Commands.cs" />
+    <Compile Include="AttTrans\Engine.cs" />
     <Compile Include="Aufteilung.cs" />
     <Compile Include="AutoIdVergabe\AutoIdControl.cs">
       <SubType>UserControl</SubType>
