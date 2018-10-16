@@ -53,131 +53,156 @@ namespace Plan2Ext.AttTrans
         // ReSharper disable once StringLiteralTypo
         private readonly List<string> _header = new List<string>() { "Blockname", "Alter Name", "Neuer Name", "Alte Eingabe", "Neue Eingabe" };
 
-        internal bool AttTrans(string fileName)
+        private readonly List<AttInfo> _attInfos;
+
+        public Engine() { }
+
+        public Engine(string fileName)
         {
+            _attInfos = ExcelImport(fileName).Where(TagOrPromptChanges).ToList();
+            if (_attInfos == null) throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Fehler beim Auslesen der Exceldatei!"));
+
+        }
+
+        private bool TagOrPromptChanges(AttInfo attInfo)
+        {
+            return (string.Compare(attInfo.OldAttTag, attInfo.NewAttTag, StringComparison.OrdinalIgnoreCase) != 0) ||
+                   (string.Compare(attInfo.OldAttPrompt, attInfo.NewAttPrompt, StringComparison.OrdinalIgnoreCase) != 0);
+        }
+
+        internal bool AttTrans()
+        {
+            if (_attInfos == null) return false;
+
             Globs.UnlockAllLayers();
 
             Errors.Clear();
-            var attInfos = ExcelImport(fileName);
-            var blockInfos = attInfos.GroupBy(x => x.BlockName.ToUpperInvariant()).ToList();
-
+            var blockInfos = _attInfos.GroupBy(x => x.BlockName.ToUpperInvariant()).Where(IsValidBlockInfo).ToList();
             foreach (var err in Errors)
             {
                 Log.Warn(err);
             }
 
             var doc = Application.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
             foreach (var blockInfo in blockInfos)
             {
                 try
                 {
                     var blockName = blockInfo.Key;
-                    using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+                    if (ChangeAttsInBlockDefinition(blockName, doc, blockInfo))
                     {
-                        _AcDb.BlockTable blockTable = trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead) as _AcDb.BlockTable;
-                        if (blockTable != null && blockTable.Has(blockName))
-                        {
-                            ChangeAttsInBlockDefinition(blockTable, blockName, trans, blockInfo);
-                        }
-                        trans.Commit();
-                    }
-                    using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
-                    {
-                        _AcDb.BlockTable blockTable = trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead) as _AcDb.BlockTable;
-                        var oid = blockTable[blockName];
-                        _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForWrite);
-
-                        
-                        var references = GetBlockReferences(trans, blockTable, blockName);
-                        foreach (var blockReference in references)
-                        {
-                            foreach (var oid2 in blockTableRecord)
-                            {
-                                var attDef = trans.GetObject(oid2, _AcDb.OpenMode.ForRead) as _AcDb.AttributeDefinition;
-                                if (attDef != null)
-                                {
-                                    if (!attDef.Constant)
-                                    {
-                                        AttInfo theAttInfo = null;
-                                        foreach (var attInfo in blockInfo)
-                                        {
-                                            if (string.Compare(attInfo.NewAttTag, attDef.Tag,
-                                                    StringComparison.OrdinalIgnoreCase) == 0)
-                                            {
-                                                theAttInfo = attInfo;
-                                                break;
-                                            }
-                                        }
-
-                                        if (theAttInfo == null) continue;
-
-                                        _AcDb.AttributeReference theAttRef = null;
-                                        // todo: Attribute neu erzeugen, Eigenschaften von alten Attributen kopieren und alte Attribute löschen.
-                                        foreach (_AcDb.ObjectId attId in blockReference.AttributeCollection)
-                                        {
-                                            var anyAttRef = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
-                                            if (anyAttRef != null)
-                                            {
-                                                if (string.Compare(anyAttRef.Tag, theAttInfo.OldAttTag,
-                                                        StringComparison.OrdinalIgnoreCase) == 0)
-                                                {
-                                                    theAttRef = anyAttRef;
-                                                    break;
-                                                }
-                                            }
-                                        }
-
-                                        if (theAttRef == null) continue;
-
-
-                                        using (_AcDb.AttributeReference attRef = new _AcDb.AttributeReference())
-                                        {
-                                            blockReference.UpgradeOpen();
-
-                                            attRef.SetAttributeFromBlock(attDef, blockReference.BlockTransform);
-                                            attRef.Position = theAttRef.Position; //  attRef.Position.TransformBy(blockReference.BlockTransform);
-                                            attRef.Rotation = theAttRef.Rotation;
-
-                                            attRef.TextString = theAttRef.TextString; // attRef.TextString;
-
-                                            blockReference.AttributeCollection.AppendAttribute(attRef);
-
-                                            trans.AddNewlyCreatedDBObject(attRef, true);
-
-
-
-                                            blockReference.DowngradeOpen();
-
-                                            theAttRef.UpgradeOpen();
-                                            theAttRef.Erase(true);
-                                            theAttRef.DowngradeOpen();
-
-                                        }
-                                    }
-                                }
-                            }
-                            trans.Commit();
-                            
-                        }
-
-
-
-
-                    //    if (blockTable != null && blockTable.Has(blockName))
-                    //    {
-                    //        ChangeAttsInBlockRefecerences(trans, blockTable, blockName, attInfos);
-                    //    }
-                        trans.Commit();
+                        CheckAttsInBlockreferences(doc, blockName, blockInfo);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.WarnFormat(CultureInfo.CurrentCulture, "Fehler bei Block '{0}'! {1}", blockInfo.Key, ex.Message);
+                    var msg = string.Format(CultureInfo.CurrentCulture, "Fehler bei Block '{0}'! {1}", blockInfo.Key,
+                        ex.Message);
+                    Errors.Add(msg);
+                    Log.WarnFormat(msg);
                 }
             }
 
             return Errors.Count == 0;
+        }
+
+        private bool IsValidBlockInfo(IGrouping<string, AttInfo> attInfos)
+        {
+            var nrElements = attInfos.Count();
+            var nrNewTags = attInfos.Select(x => x.NewAttTag.ToUpperInvariant()).Distinct().Count();
+            if (nrElements != nrNewTags)
+            {
+                Errors.Add(string.Format(CultureInfo.CurrentCulture, "Gleiche neue Attributnamen in Definition für Block '{0}'.", attInfos.Key));
+                return false;
+            }
+            return true;
+        }
+
+        private static void CheckAttsInBlockreferences(_AcAp.Document doc, string blockName, IGrouping<string, AttInfo> blockInfo)
+        {
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                _AcDb.BlockTable blockTable = (_AcDb.BlockTable)trans.GetObject(doc.Database.BlockTableId, _AcDb.OpenMode.ForRead);
+                var oid = blockTable[blockName];
+                _AcDb.BlockTableRecord blockTableRecord =
+                    (_AcDb.BlockTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForWrite);
+
+
+                var references = GetBlockReferences(trans, blockTable, blockName);
+                foreach (var blockReference in references)
+                {
+                    foreach (var oid2 in blockTableRecord)
+                    {
+                        var attDef = trans.GetObject(oid2, _AcDb.OpenMode.ForRead) as _AcDb.AttributeDefinition;
+                        if (attDef != null)
+                        {
+                            if (!attDef.Constant)
+                            {
+                                AttInfo theAttInfo = null;
+                                foreach (var attInfo in blockInfo)
+                                {
+                                    if (string.Compare(attInfo.NewAttTag, attDef.Tag,
+                                            StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        theAttInfo = attInfo;
+                                        break;
+                                    }
+                                }
+
+                                if (theAttInfo == null) continue;
+
+                                _AcDb.AttributeReference theAttRef = null;
+                                // Attribute neu erzeugen, Eigenschaften von alten Attributen kopieren und alte Attribute löschen.
+                                foreach (_AcDb.ObjectId attId in blockReference.AttributeCollection)
+                                {
+                                    var anyAttRef = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
+                                    if (anyAttRef != null)
+                                    {
+                                        if (string.Compare(anyAttRef.Tag, theAttInfo.OldAttTag,
+                                                StringComparison.OrdinalIgnoreCase) == 0)
+                                        {
+                                            theAttRef = anyAttRef;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (theAttRef == null) continue;
+
+
+                                using (_AcDb.AttributeReference attRef = new _AcDb.AttributeReference())
+                                {
+                                    blockReference.UpgradeOpen();
+
+                                    attRef.SetAttributeFromBlock(attDef, blockReference.BlockTransform);
+                                    attRef.Position =
+                                        theAttRef.Position; //  attRef.Position.TransformBy(blockReference.BlockTransform);
+                                    attRef.Rotation = theAttRef.Rotation;
+                                    attRef.Height = theAttRef.Height;
+                                    attRef.HorizontalMode = theAttRef.HorizontalMode;
+                                    attRef.Justify = theAttRef.Justify;
+                                    attRef.VerticalMode = theAttRef.VerticalMode;
+
+
+                                    attRef.TextString = theAttRef.TextString; // attRef.TextString;
+
+                                    blockReference.AttributeCollection.AppendAttribute(attRef);
+
+                                    trans.AddNewlyCreatedDBObject(attRef, true);
+
+                                    blockReference.DowngradeOpen();
+
+                                    theAttRef.UpgradeOpen();
+                                    theAttRef.Erase(true);
+                                    theAttRef.DowngradeOpen();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                trans.Commit();
+            }
         }
 
 
@@ -191,7 +216,7 @@ namespace Plan2Ext.AttTrans
                 _AcDb.BlockReference br = trans.GetObject(objId, _AcDb.OpenMode.ForWrite) as _AcDb.BlockReference;
                 if (br != null)
                 {
-                    var bn = Plan2Ext.Globs.GetBlockname(br, trans);
+                    var bn = Globs.GetBlockname(br, trans);
                     if (string.Compare(bn, blockName, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         references.Add(br);
@@ -202,67 +227,67 @@ namespace Plan2Ext.AttTrans
             return references;
         }
 
-        private static void ChangeAttsInBlockRefecerences(_AcDb.Transaction trans, _AcDb.BlockTable blockTable, string blockName,
-            List<AttInfo> attInfos)
+        private bool ChangeAttsInBlockDefinition(string blockName, _AcAp.Document doc,
+            IGrouping<string, AttInfo> blockInfo)
         {
-            _AcDb.BlockTableRecord btr =
-                (_AcDb.BlockTableRecord) trans.GetObject(blockTable[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
-            foreach (_AcDb.ObjectId objId in btr)
-            {
-                _AcDb.BlockReference br = trans.GetObject(objId, _AcDb.OpenMode.ForWrite) as _AcDb.BlockReference;
-                if (br != null)
-                {
-                    var bn = Plan2Ext.Globs.GetBlockname(br, trans);
-                    if (string.Compare(bn, blockName, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        foreach (_AcDb.ObjectId attId in br.AttributeCollection)
-                        {
-                            var anyAttRef = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
-                            if (anyAttRef != null)
-                            {
-                                foreach (var attInfo in attInfos)
-                                {
-                                    if (string.Compare(anyAttRef.Tag, attInfo.OldAttTag,
-                                            StringComparison.OrdinalIgnoreCase) == 0)
-                                    {
 
-                                        anyAttRef.UpgradeOpen();
-                                        anyAttRef.Tag = attInfo.NewAttTag;
-                                        anyAttRef.DowngradeOpen();
-                                        break;
-                                    }
-                                }
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                _AcDb.BlockTable blockTable = (_AcDb.BlockTable)trans.GetObject(doc.Database.BlockTableId, _AcDb.OpenMode.ForRead);
+                if (!blockTable.Has(blockName))
+                {
+                    trans.Abort();
+                    return false;
+                }
+
+                var oid = blockTable[blockName];
+                _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+
+                // check if valid change of attributes
+                var origNames = new List<string>();
+                var newNames = new List<string>();
+                foreach (var attOid in blockTableRecord)
+                {
+                    _AcDb.AttributeDefinition attDef = attOid.GetObject(_AcDb.OpenMode.ForRead) as _AcDb.AttributeDefinition;
+                    if (attDef != null)
+                    {
+                        origNames.Add(attDef.Tag.ToUpperInvariant());
+                        var attInfo = blockInfo.FirstOrDefault(x =>
+                            string.Compare(x.OldAttTag, attDef.Tag, StringComparison.OrdinalIgnoreCase) == 0);
+                        if (attInfo != null) newNames.Add(attInfo.NewAttTag.ToUpperInvariant());
+                        else newNames.Add(attDef.Tag.ToUpperInvariant());
+                    }
+                }
+                if (origNames.Count != newNames.Distinct().Count())
+                {
+                    Errors.Add(String.Format(CultureInfo.CurrentCulture, "Ungültige Attributzuordnung für Block '{0}'!", blockName));
+                    trans.Abort();
+                    return false;
+                }
+
+
+                foreach (var attOid in blockTableRecord)
+                {
+                    _AcDb.AttributeDefinition attDef = attOid.GetObject(_AcDb.OpenMode.ForRead) as _AcDb.AttributeDefinition;
+                    if (attDef != null)
+                    {
+                        foreach (var attInfo in blockInfo)
+                        {
+                            if (string.Compare(attInfo.OldAttTag, attDef.Tag, StringComparison.OrdinalIgnoreCase) == 0)
+                            {
+                                attDef.UpgradeOpen();
+                                attDef.Tag = attInfo.NewAttTag;
+                                attDef.Prompt = attInfo.NewAttPrompt;
+                                attDef.DowngradeOpen();
+                                break;
                             }
                         }
                     }
                 }
+                trans.Commit();
             }
-        }
 
-        private static void ChangeAttsInBlockDefinition(_AcDb.BlockTable blockTable, string blockName, _AcDb.Transaction trans,
-            IGrouping<string, AttInfo> blockInfo)
-        {
-            var oid = blockTable[blockName];
-            _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord) trans.GetObject(oid, _AcDb.OpenMode.ForWrite);
-
-            foreach (var attOid in blockTableRecord)
-            {
-                _AcDb.AttributeDefinition attDef = attOid.GetObject(_AcDb.OpenMode.ForRead) as _AcDb.AttributeDefinition;
-                if (attDef != null)
-                {
-                    foreach (var attInfo in blockInfo)
-                    {
-                        if (string.Compare(attInfo.OldAttTag, attDef.Tag, StringComparison.OrdinalIgnoreCase) == 0)
-                        {
-                            attDef.UpgradeOpen();
-                            attDef.Tag = attInfo.NewAttTag;
-                            attDef.Prompt = attInfo.NewAttPrompt;
-                            attDef.DowngradeOpen();
-                            break;
-                        }
-                    }
-                }
-            }
+            return true;
         }
 
         private List<AttInfo> ExcelImport(string fileName)
@@ -294,14 +319,13 @@ namespace Plan2Ext.AttTrans
 
         private List<AttInfo> GetAttInfos(Excel.Worksheet sheet)
         {
-            Excel.Range range;
             // test import
             int nrRows;
             var nrCols = _header.Count;
             GetNrRows(sheet, out nrRows);
             var b1 = GetCellBez(0, 0);
             var b2 = GetCellBez(nrRows, nrCols);
-            range = sheet.Range[b1, b2];
+            var range = sheet.Range[b1, b2];
             // ReSharper disable once UseIndexedProperty
             object[,] impMatrix = range.get_Value(Excel.XlRangeValueDataType.xlRangeValueDefault);
 
@@ -456,16 +480,15 @@ namespace Plan2Ext.AttTrans
                         foreach (var blockOid in blockTable)
                         {
                             _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(blockOid, _AcDb.OpenMode.ForRead);
-                            if (blockTableRecord.IsAnonymous || blockTableRecord.IsFromExternalReference || blockTableRecord.IsDependent || blockTableRecord.IsLayout || blockTableRecord.IsDynamicBlock) continue;
+                            if (blockTableRecord.IsAnonymous || blockTableRecord.IsFromExternalReference || blockTableRecord.IsDependent || blockTableRecord.IsLayout) continue;
                             if (blockNames.Contains(blockTableRecord.Name) && blockTableRecord.HasAttributeDefinitions)
                             {
-                                _AcDb.AttributeDefinition att = null;
                                 foreach (var attOid in blockTableRecord)
                                 {
                                     _AcDb.AttributeDefinition attDef = attOid.GetObject(_AcDb.OpenMode.ForRead) as _AcDb.AttributeDefinition;
                                     if (attDef != null)
                                     {
-                                        attInfos.Add(new AttInfo(blockTableRecord,attDef));
+                                        attInfos.Add(new AttInfo(blockTableRecord, attDef));
                                     }
                                 }
                             }
@@ -532,7 +555,6 @@ namespace Plan2Ext.AttTrans
                 NewAttTag = attributeDefinition.Tag;
                 OldAttPrompt = attributeDefinition.Prompt;
                 NewAttPrompt = attributeDefinition.Prompt;
-
             }
 
             #endregion
@@ -540,7 +562,7 @@ namespace Plan2Ext.AttTrans
             #region Internal
             internal List<string> RowAsList()
             {
-                return new List<string>() {BlockName, OldAttTag, NewAttTag, OldAttPrompt, NewAttPrompt };
+                return new List<string>() { BlockName, OldAttTag, NewAttTag, OldAttPrompt, NewAttPrompt };
             }
 
             #endregion
@@ -590,12 +612,6 @@ namespace Plan2Ext.AttTrans
                 set
                 {
                     _oldAttPrompt = value;
-                    if (String.IsNullOrEmpty(_oldAttPrompt))
-                    {
-                        Ok = false;
-                        // ReSharper disable once StringLiteralTypo
-                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nKeine bestehende Eingabe für Attribut '{0}'", _oldAttTag);
-                    }
                 }
             }
             private string _newAttPrompt = string.Empty;
@@ -605,12 +621,6 @@ namespace Plan2Ext.AttTrans
                 set
                 {
                     _newAttPrompt = value;
-                    if (String.IsNullOrEmpty(_newAttPrompt))
-                    {
-                        Ok = false;
-                        // ReSharper disable once StringLiteralTypo
-                        _errors = _errors + string.Format(CultureInfo.CurrentCulture, "\nKeine neue Eingabe für Attribut '{0}'", OldAttTag);
-                    }
                 }
             }
 
@@ -623,8 +633,8 @@ namespace Plan2Ext.AttTrans
         {
             var blockNames = new List<string>();
 
-            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-            _AcEd.SelectionFilter filter = new _AcEd.SelectionFilter(new _AcDb.TypedValue[] { 
+            var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+            _AcEd.SelectionFilter filter = new _AcEd.SelectionFilter(new[] { 
                 new _AcDb.TypedValue((int)_AcDb.DxfCode.Start,"INSERT" ),
             });
 
@@ -641,18 +651,20 @@ namespace Plan2Ext.AttTrans
                 selectedBlocks.AddRange(ss.GetObjectIds());
             }
 
-            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var doc = Application.DocumentManager.MdiActiveDocument;
             using (var trans = doc.TransactionManager.StartTransaction())
             {
                 var nonXrefs = selectedBlocks.Where(oid => !IsXRef(oid, trans)).ToList();
                 foreach (var oid in nonXrefs)
                 {
                     var blockRef = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
-                    if (blockRef != null && !blockRef.IsDynamicBlock)
+                    if (blockRef != null)
+                    //if (blockRef != null && !blockRef.IsDynamicBlock)
                     {
-                        if (!blockNames.Contains(blockRef.Name))
+                        var name = Globs.GetBlockname(blockRef, trans);
+                        if (!blockNames.Contains(name))
                         {
-                            blockNames.Add(blockRef.Name);
+                            blockNames.Add(name);
                         }
                     }
                 }
