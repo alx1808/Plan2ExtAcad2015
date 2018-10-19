@@ -47,6 +47,60 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
+
+        //[_AcTrx.CommandMethod("CheckDimensions", _AcTrx.CommandFlags.UsePickSet)]
+        //public void CheckDimensions()
+        //{
+        //    _AcAp.Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+        //    _AcDb.Database db = doc.Database;
+        //    _AcEd.Editor ed = doc.Editor;
+
+        //    _AcDb.Transaction tr = doc.TransactionManager.StartTransaction();
+        //    using (tr)
+        //    {
+        //        _AcEd.PromptEntityOptions peo = new _AcEd.PromptEntityOptions("\nSelect dimension >>");
+        //        peo.SetRejectMessage("\nSelect dimension only >>");
+        //        peo.AddAllowedClass(typeof(_AcDb.Dimension), false);
+        //        _AcEd.PromptEntityResult res;
+        //        res = ed.GetEntity(peo);
+        //        if (res.Status != _AcEd.PromptStatus.OK)
+        //            return;
+
+        //        _AcDb.Entity ent = (_AcDb.Entity)tr.GetObject(res.ObjectId, _AcDb.OpenMode.ForRead);
+
+        //        if (ent == null)
+        //            return;
+
+        //        _AcDb.Dimension dim = (_AcDb.Dimension)ent as _AcDb.Dimension;
+
+        //        if (dim != null)
+        //        {
+
+        //            ed.WriteMessage("\nDim measurement:\t{0}", dim.Measurement);
+
+        //            if (dim.DimensionText != "") ed.WriteMessage("\nHas overriden dim text:\t{0}", dim.DimensionText);
+        //            var pos = dim.TextPosition;
+        //            var pos2 = pos + new _AcGe.Vector3d(1.0, 1.0, 0.0);
+
+        //            var textStyleId = dim.TextStyleId;
+        //            var textStyle = tr.GetObject(textStyleId, _AcDb.OpenMode.ForRead);
+        //            var textStyleTableRecord = (_AcDb.TextStyleTableRecord) textStyle;
+        //            var dimStyleOid = dim.DimensionStyle;
+        //            var dimStyle = (_AcDb.DimStyleTableRecord)tr.GetObject(dimStyleOid, _AcDb.OpenMode.ForRead);
+                    
+                    
+        //            dim.UpgradeOpen();
+        //            dim.UsingDefaultTextPosition = false;
+        //            dim.TextPosition = pos2;
+        //            dim.DowngradeOpen();
+
+
+        //        }
+
+        //        tr.Commit();
+        //    }//end using transaction
+        //}
+
         [_AcTrx.CommandMethod("Plan2Test")]
         static public void Plan2Test()
         {
