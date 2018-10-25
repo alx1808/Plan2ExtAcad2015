@@ -57,6 +57,18 @@ namespace Plan2Ext
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
 
+        internal static bool IsXref(_AcDb.ObjectId oid, _AcDb.Transaction tr)
+        {
+            var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+            if (br != null)
+            {
+                var bd = (_AcDb.BlockTableRecord)tr.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
+                if (bd.IsFromExternalReference) return true;
+            }
+            return false;
+        }
+
+
         public static bool GetMultipleFileNames(string fileTypeName, string ext, string folderBrowserTitle, string fileDialogTitle, ref string[] fileNames, ref string dirName, string defaultPath = null)
         {
             string[] fileNamesFromUser = null;
