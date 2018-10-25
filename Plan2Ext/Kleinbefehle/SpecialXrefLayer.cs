@@ -1,4 +1,8 @@
 ﻿// ReSharper disable CommentTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable UnusedMember.Global
+
+using System;
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
@@ -36,14 +40,13 @@ using System.Text.RegularExpressions;
 
 namespace Plan2Ext.Kleinbefehle
 {
-    // ReSharper disable once UnusedMember.Global
     public class SpecialXrefLayer
     {
-
+        private const double TextHeight = 3.0;
+        private const double TextDistance = 4.5;
         private readonly List<string> _gewerkBezForActive = new List<string>() { "Bestand", "Hochbau" };
 
         [_AcTrx.CommandMethod("Plan2SpecialXrefLayer")]
-        // ReSharper disable once UnusedMember.Global
         public void Plan2SpecialXrefLayer()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
@@ -51,7 +54,6 @@ namespace Plan2Ext.Kleinbefehle
 
             _AcEd.PromptSelectionResult res;
             if (!SelectXrefs(ed, out res)) return;
-
 
 #if BRX_APP
             _AcEd.SelectionSet ss = res.Value;
@@ -61,13 +63,35 @@ namespace Plan2Ext.Kleinbefehle
             {
                 _AcDb.ObjectId[] idArray = ss.GetObjectIds();
 
+                var promptPointOptions = new _AcEd.PromptPointOptions("\nEinfügepunkt für Texte: ") { AllowNone = false, };
+
+                var resPoint = ed.GetPoint(promptPointOptions);
+                if (resPoint.Status != _AcEd.PromptStatus.OK) return;
+                var textInsPointUcs = resPoint.Value;
+
                 using (var trans = doc.TransactionManager.StartTransaction())
                 {
+                    // textstyle
+                    var textStyleTable =
+                        (_AcDb.TextStyleTable)trans.GetObject(doc.Database.TextStyleTableId, _AcDb.OpenMode.ForRead);
+                    _AcDb.ObjectId textStyleId = _AcDb.ObjectId.Null;
+                    if (textStyleTable.Has("Standard"))
+                    {
+                        textStyleId = textStyleTable["Standard"];
+                    }
+
+                    // blocktable
+                    var blockTable = (_AcDb.BlockTable)trans.GetObject(doc.Database.BlockTableId,
+                        _AcDb.OpenMode.ForRead);
+                    // Open the Block table record Model space for write
+                    var modelSpace = (_AcDb.BlockTableRecord)trans.GetObject(blockTable[_AcDb.BlockTableRecord.ModelSpace],
+                        _AcDb.OpenMode.ForWrite);
+
                     var oidAndDwgNames = idArray.Where(x => Globs.IsXref(x, trans)).Select(x => new { oid = x, dwgName = GetXrefDwgName(x, trans) }).ToList();
                     foreach (var oidAndDwgName in oidAndDwgNames)
                     {
                         string gewerk;
-                        if (!GetGewerk(ed, string.Format(CultureInfo.CurrentCulture, "\nGewerk für {0}: ",oidAndDwgName.dwgName), out gewerk))
+                        if (!GetGewerk(ed, string.Format(CultureInfo.CurrentCulture, "\nGewerk für {0}: ", oidAndDwgName.dwgName), out gewerk))
                         {
                             trans.Abort();
                             return;
@@ -75,12 +99,27 @@ namespace Plan2Ext.Kleinbefehle
                         var activeGewerk = _gewerkBezForActive.FirstOrDefault(x => Regex.IsMatch(gewerk, x, RegexOptions.IgnoreCase));
                         var activePart = activeGewerk != null ? "Aktiv" : "Inaktiv";
                         var layerName = string.Format(CultureInfo.InvariantCulture,
-                            "XREF-$-{0}-$-{1}-$-{2}", oidAndDwgName.dwgName, gewerk,activePart);
+                            "XREF-$-{0}-$-{1}-$-{2}", oidAndDwgName.dwgName, gewerk, activePart);
                         Globs.CreateLayer(layerName);
-                        var xref = (_AcDb.Entity) trans.GetObject(oidAndDwgName.oid, _AcDb.OpenMode.ForRead);
+                        var xref = (_AcDb.Entity)trans.GetObject(oidAndDwgName.oid, _AcDb.OpenMode.ForRead);
                         xref.UpgradeOpen();
                         xref.Layer = layerName;
                         xref.DowngradeOpen();
+
+                        // Create a single-line text object
+                        using (var acText = new _AcDb.DBText())
+                        {
+                            acText.Position = Globs.TransUcsWcs(textInsPointUcs);
+                            acText.Height = TextHeight;
+                            acText.Rotation = Globs.GetUcsDirection();
+                            acText.TextString = gewerk;
+                            if (textStyleId != _AcDb.ObjectId.Null) acText.TextStyleId = textStyleId;
+                            acText.Layer = layerName;
+                            modelSpace.AppendEntity(acText);
+                            trans.AddNewlyCreatedDBObject(acText, true);
+                        }
+
+                        textInsPointUcs = Globs.PolarPoints(textInsPointUcs, Math.PI * 1.5, TextDistance);
                     }
                     trans.Commit();
                 }
@@ -94,7 +133,8 @@ namespace Plan2Ext.Kleinbefehle
                 new _AcDb.TypedValue((int) _AcDb.DxfCode.Start, "INSERT"),
             });
 
-            var promptSelectionOptions = new _AcEd.PromptSelectionOptions {RejectPaperspaceViewport = true};
+            var promptSelectionOptions = new _AcEd.PromptSelectionOptions { RejectPaperspaceViewport = true };
+            promptSelectionOptions.MessageForAdding = "\nXrefs auswählen: ";
 
             res = ed.GetSelection(promptSelectionOptions, filter);
             if (res.Status != _AcEd.PromptStatus.OK)
