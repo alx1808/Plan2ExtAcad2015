@@ -68,6 +68,11 @@ namespace Plan2Ext
             return false;
         }
 
+        internal static bool IsXref(_AcDb.BlockReference bref, _AcDb.Transaction tr)
+        {
+            var bd = (_AcDb.BlockTableRecord)tr.GetObject(bref.BlockTableRecord, _AcDb.OpenMode.ForRead);
+            return bd.IsFromExternalReference;
+        }
 
         public static bool GetMultipleFileNames(string fileTypeName, string ext, string folderBrowserTitle, string fileDialogTitle, ref string[] fileNames, ref string dirName, string defaultPath = null)
         {

@@ -603,24 +603,13 @@ namespace Plan2Ext.AutoIdVergabe
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             using (var trans = doc.TransactionManager.StartTransaction())
             {
-                _BlocksForExcelExport = selectedBlocks.Where(oid => !IsXRef(oid, trans)).ToList();
+                _BlocksForExcelExport = selectedBlocks.Where(oid => !Plan2Ext.Globs.IsXref(oid, trans)).ToList();
                 trans.Commit();
             }
 
             if (_BlocksForExcelExport.Count > 0) return true;
             else return false;
 
-        }
-
-        private bool IsXRef(_AcDb.ObjectId oid, _AcDb.Transaction tr)
-        {
-            var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
-            if (br != null)
-            {
-                var bd = (_AcDb.BlockTableRecord)tr.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
-                if (bd.IsFromExternalReference) return true;
-            }
-            return false;
         }
 
         #endregion

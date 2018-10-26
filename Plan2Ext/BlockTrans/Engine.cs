@@ -130,14 +130,13 @@ namespace Plan2Ext.BlockTrans
 
         private List<BlockInfo> GetBlockInfos(Excel.Worksheet sheet)
         {
-            Excel.Range range;
             // test import
             int nrRows;
             var nrCols = _header.Count;
             GetNrRows(sheet, out nrRows);
             var b1 = GetCellBez(0, 0);
             var b2 = GetCellBez(nrRows, nrCols);
-            range = sheet.Range[b1, b2];
+            var range = sheet.Range[b1, b2];
             // ReSharper disable once UseIndexedProperty
             object[,] impMatrix = range.get_Value(Excel.XlRangeValueDataType.xlRangeValueDefault);
 
@@ -474,8 +473,8 @@ namespace Plan2Ext.BlockTrans
         {
             var blockNames = new List<string>();
 
-            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-            _AcEd.SelectionFilter filter = new _AcEd.SelectionFilter(new _AcDb.TypedValue[] { 
+            var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+            _AcEd.SelectionFilter filter = new _AcEd.SelectionFilter(new[] { 
                 new _AcDb.TypedValue((int)_AcDb.DxfCode.Start,"INSERT" ),
             });
 
@@ -492,10 +491,10 @@ namespace Plan2Ext.BlockTrans
                 selectedBlocks.AddRange(ss.GetObjectIds());
             }
 
-            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var doc = Application.DocumentManager.MdiActiveDocument;
             using (var trans = doc.TransactionManager.StartTransaction())
             {
-                var nonXrefs = selectedBlocks.Where(oid => !IsXRef(oid, trans)).ToList();
+                var nonXrefs = selectedBlocks.Where(oid => !Globs.IsXref(oid, trans)).ToList();
                 foreach (var oid in nonXrefs)
                 {
                     var blockRef = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
@@ -513,17 +512,6 @@ namespace Plan2Ext.BlockTrans
 
             return blockNames;
         }
-        private bool IsXRef(_AcDb.ObjectId oid, _AcDb.Transaction tr)
-        {
-            var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
-            if (br != null)
-            {
-                var bd = (_AcDb.BlockTableRecord)tr.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
-                if (bd.IsFromExternalReference) return true;
-            }
-            return false;
-        }
-
     }
 }
 #endif

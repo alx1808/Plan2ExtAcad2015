@@ -366,7 +366,7 @@ namespace Plan2Ext.Massenbefehle
 
         private static void SetAttValues(_AcDb.BlockReference bref, _AcDb.Transaction tr)
         {
-            if (IsXref(bref, tr)) return;
+            if (Globs.IsXref(bref, tr)) return;
 
             var atts = GetAttributEntities(bref, tr);
             foreach (var att in atts)
@@ -394,21 +394,6 @@ namespace Plan2Ext.Massenbefehle
                 }
             }
             return atts;
-        }
-
-        private static bool IsXref(_AcDb.BlockReference bref, _AcDb.Transaction tr)
-        {
-            try
-            {
-                var bd = (_AcDb.BlockTableRecord)tr.GetObject(bref.BlockTableRecord, _AcDb.OpenMode.ForRead);
-                if (bd.IsFromExternalReference) return true;
-            }
-            catch (Exception)
-            {
-                log.WarnFormat("Invalid block with handle {0}!", bref.Handle);
-
-            }
-            return false;
         }
 
         /// <summary>

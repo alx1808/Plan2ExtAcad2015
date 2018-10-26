@@ -323,7 +323,7 @@ namespace Plan2Ext.Massenbefehle
 
         private static void ReplaceTexts(BlockReference bref, Transaction tr)
         {
-            if (IsXref(bref, tr)) return;
+            if (Globs.IsXref(bref, tr)) return;
 
             var atts = GetAttributEntities(bref, tr);
             foreach (var att in atts)
@@ -379,20 +379,6 @@ namespace Plan2Ext.Massenbefehle
                 mtext.Contents = newT;
                 _NrOfReplacedTexts++;
             }
-        }
-
-        private static bool IsXref(BlockReference bref, Transaction tr)
-        {
-            try
-            {
-                var bd = (BlockTableRecord)tr.GetObject(bref.BlockTableRecord, OpenMode.ForRead);
-                if (bd.IsFromExternalReference) return true;
-            }
-            catch (System.Exception)
-            {
-                log.WarnFormat("Invalid block with handle {0}!", bref.Handle);
-            }
-            return false;
         }
 
         private static string ReplaceTexts(string txt, out bool changed)
