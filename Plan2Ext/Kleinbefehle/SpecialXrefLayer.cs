@@ -155,7 +155,8 @@ namespace Plan2Ext.Kleinbefehle
         private bool GetGewerk(_AcEd.Editor ed, string question, out string gewerk)
         {
             gewerk = "";
-            var promptResult = ed.GetString(question);
+            var promptStringOptions = new _AcEd.PromptStringOptions(question) {AllowSpaces = true};
+            var promptResult = ed.GetString(promptStringOptions);
             if (promptResult.Status != _AcEd.PromptStatus.OK) return false;
             gewerk = promptResult.StringResult;
             return true;
