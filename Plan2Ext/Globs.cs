@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -56,6 +57,56 @@ namespace Plan2Ext
         #region Constants
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
+
+        internal static int FinalReleaseComObject(object o)
+        {
+            if (o != null)
+            {
+                return Marshal.FinalReleaseComObject(o);
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Sets the read only attribute.
+        /// </summary>
+        /// <param name="fullName">The full name.</param>
+        /// <param name="readOnly">if set to <c>true</c> [read only].</param>
+        internal static void SetReadOnlyAttribute(string fullName, bool readOnly)
+        {
+            System.IO.FileInfo filePath = new System.IO.FileInfo(fullName);
+            System.IO.FileAttributes attribute;
+            if (readOnly)
+                attribute = filePath.Attributes | System.IO.FileAttributes.ReadOnly;
+            else
+            {
+                attribute = filePath.Attributes;
+                attribute &= ~System.IO.FileAttributes.ReadOnly;
+                //attribute = (System.IO.FileAttributes)(filePath.Attributes - System.IO.FileAttributes.ReadOnly);
+            }
+
+            System.IO.File.SetAttributes(filePath.FullName, attribute);
+        }
+
+        internal static string GetCellBez(int rowIndex, int colIndex)
+        {
+            return TranslateColumnIndexToName(colIndex) + (rowIndex + 1).ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static String TranslateColumnIndexToName(int index)
+        {
+            int quotient = (index) / 26;
+
+            if (quotient > 0)
+            {
+                return TranslateColumnIndexToName(quotient - 1) + (char)((index % 26) + 65);
+            }
+            else
+            {
+                return "" + (char)((index % 26) + 65);
+            }
+        }
 
         internal static bool IsXref(_AcDb.ObjectId oid, _AcDb.Transaction tr)
         {
