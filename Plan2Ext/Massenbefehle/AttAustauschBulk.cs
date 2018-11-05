@@ -165,7 +165,7 @@ namespace Plan2Ext.Massenbefehle
                     _CurInfo = new Info() { DwgName = fileName };
                     log.InfoFormat(CultureInfo.CurrentCulture, "Tausche Attribute '{0}'-'{1}' in Block '{2}' in Zeichnung '{3}'.", attributeName1, attributeName2, blockName, fileName);
                     infos.Add(_CurInfo);
-                    SetReadOnlyAttribute(fileName, false);
+                    Globs.SetReadOnlyAttribute(fileName, false);
 
                     bool ok = true;
 
@@ -250,27 +250,6 @@ namespace Plan2Ext.Massenbefehle
                 log.Error(ex.Message, ex);
                 _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2AttAustauschBulk aufgetreten! {0}", ex.Message));
             }
-        }
-
-        /// <summary>
-        /// Sets the read only attribute.
-        /// </summary>
-        /// <param name="fullName">The full name.</param>
-        /// <param name="readOnly">if set to <c>true</c> [read only].</param>
-        private static void SetReadOnlyAttribute(string fullName, bool readOnly)
-        {
-            System.IO.FileInfo filePath = new System.IO.FileInfo(fullName);
-            System.IO.FileAttributes attribute;
-            if (readOnly)
-                attribute = filePath.Attributes | System.IO.FileAttributes.ReadOnly;
-            else
-            {
-                attribute = filePath.Attributes;
-                attribute &= ~System.IO.FileAttributes.ReadOnly;
-                //attribute = (System.IO.FileAttributes)(filePath.Attributes - System.IO.FileAttributes.ReadOnly);
-            }
-
-            System.IO.File.SetAttributes(filePath.FullName, attribute);
         }
 
         private class Info

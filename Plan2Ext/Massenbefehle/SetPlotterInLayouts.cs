@@ -120,7 +120,7 @@ namespace Plan2Ext.Massenbefehle
                 }
                 foreach (var fileName in dwgFileNames)
                 {
-                    SetReadOnlyAttribute(fileName, false);
+                    Globs.SetReadOnlyAttribute(fileName, false);
 
                     bool ok = false;
 
@@ -258,28 +258,6 @@ namespace Plan2Ext.Massenbefehle
             string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter Plotters: {0}\n{1}", _NrPlotters.ToString(), errorsWithDwgsMsg);
             log.Info(resultMsg);
             System.Windows.Forms.MessageBox.Show(resultMsg, "Plan2SetPlotter");
-        }
-
-
-        /// <summary>
-        /// Sets the read only attribute.
-        /// </summary>
-        /// <param name="fullName">The full name.</param>
-        /// <param name="readOnly">if set to <c>true</c> [read only].</param>
-        private static void SetReadOnlyAttribute(string fullName, bool readOnly)
-        {
-            System.IO.FileInfo filePath = new System.IO.FileInfo(fullName);
-            System.IO.FileAttributes attribute;
-            if (readOnly)
-                attribute = filePath.Attributes | System.IO.FileAttributes.ReadOnly;
-            else
-            {
-                attribute = filePath.Attributes;
-                attribute &= ~System.IO.FileAttributes.ReadOnly;
-                //attribute = (System.IO.FileAttributes)(filePath.Attributes - System.IO.FileAttributes.ReadOnly);
-            }
-
-            System.IO.File.SetAttributes(filePath.FullName, attribute);
         }
 
         private static bool GetPlotter(_AcEd.Editor ed)

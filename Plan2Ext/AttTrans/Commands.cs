@@ -135,7 +135,7 @@ namespace Plan2Ext.AttTrans
                     var errDwgs = new List<string>();
                     foreach (var fileName in dwgFileNames)
                     {
-                        SetReadOnlyAttribute(fileName, false);
+                        Globs.SetReadOnlyAttribute(fileName, false);
 
                         Application.DocumentManager.Open(fileName, false);
                         Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -225,29 +225,6 @@ namespace Plan2Ext.AttTrans
 
             System.IO.File.WriteAllText(logFileName,msg);
         }
-
-
-        /// <summary>
-        /// Sets the read only attribute.
-        /// </summary>
-        /// <param name="fullName">The full name.</param>
-        /// <param name="readOnly">if set to <c>true</c> [read only].</param>
-        private static void SetReadOnlyAttribute(string fullName, bool readOnly)
-        {
-            System.IO.FileInfo filePath = new System.IO.FileInfo(fullName);
-            System.IO.FileAttributes attribute;
-            if (readOnly)
-                attribute = filePath.Attributes | System.IO.FileAttributes.ReadOnly;
-            else
-            {
-                attribute = filePath.Attributes;
-                attribute &= ~System.IO.FileAttributes.ReadOnly;
-                //attribute = (System.IO.FileAttributes)(filePath.Attributes - System.IO.FileAttributes.ReadOnly);
-            }
-
-            System.IO.File.SetAttributes(filePath.FullName, attribute);
-        }
-
 
         private static List<string> GetFirstErrors(Engine engine, int maximumNrOfErrors)
         {
