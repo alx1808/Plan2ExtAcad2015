@@ -50,7 +50,7 @@ namespace Plan2Ext.XrefToExcel
         public readonly List<string> Errors = new List<string>();
 
         // ReSharper disable once StringLiteralTypo
-        private readonly List<string> _header = new List<string>() { "DwgName", "XREf-Name alt", "XRef-Name neu", "Pfad", "Typ" };
+        private readonly List<string> _header = new List<string>() { "DwgName", "XRef-Name alt", "XRef-Name neu", "Pfad", "Typ" };
 
         private readonly List<XrefInfo> _xrefInfos;
 
