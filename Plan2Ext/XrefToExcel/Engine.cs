@@ -396,6 +396,10 @@ namespace Plan2Ext.XrefToExcel
             #endregion
         }
 
+        public bool KnowsDwg(string fileName)
+        {
+            return _xrefInfos.Any(x => string.Compare(x.DwgName, fileName, StringComparison.OrdinalIgnoreCase) == 0);
+        }
     }
 }
 #endif

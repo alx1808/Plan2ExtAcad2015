@@ -135,10 +135,13 @@ namespace Plan2Ext.XrefToExcel
                 if (dwgFileNames != null)
                 {
                     var errDwgs = new List<string>();
+                    var nrLoadedDwgs = 0;
                     foreach (var fileName in dwgFileNames)
                     {
+                        if (!engine.KnowsDwg(fileName)) continue;
                         Globs.SetReadOnlyAttribute(fileName, false);
 
+                        nrLoadedDwgs++;
                         Application.DocumentManager.Open(fileName, false);
                         Document doc = Application.DocumentManager.MdiActiveDocument;
                         // ReSharper disable once UnusedVariable
@@ -182,7 +185,7 @@ namespace Plan2Ext.XrefToExcel
                     {
                         MessageBox.Show(string.Format(CultureInfo.CurrentCulture,
                             // ReSharper disable once LocalizableElement
-                            "Vorgang für {0} Zeichnung(en) abgeschlossen.", dwgFileNames.Length - errDwgs.Count), "Plan2AttTrans", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            "Vorgang für {0} Zeichnung(en) abgeschlossen.", nrLoadedDwgs - errDwgs.Count), "Plan2AttTrans", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
