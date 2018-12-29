@@ -1,4 +1,5 @@
-﻿#if BRX_APP
+﻿// ReSharper disable CommentTypo
+#if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
@@ -33,9 +34,8 @@ using Autodesk.AutoCAD.Windows;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext.Vorauswahl
 {
@@ -43,47 +43,47 @@ namespace Plan2Ext.Vorauswahl
     {
         // We cannot derive from PaletteSet
         // so we contain it
-        static PaletteSet ps;
+        static PaletteSet _ps;
 
         // We need to make the textbox available
         // via a static member
-        static VorauswahlControl userControl;
+        static VorauswahlControl _userControl;
 
         public VorauswahlPalette()
         {
-            userControl = new VorauswahlControl();
+            _userControl = new VorauswahlControl();
         }
 
         public bool Show()
         {
 
-            if (ps == null)
+            if (_ps == null)
             {
-                ps = new PaletteSet("Vorauswahl");
-                ps.Style =
-                  PaletteSetStyles.NameEditable |
-                  PaletteSetStyles.ShowPropertiesMenu |
-                  PaletteSetStyles.ShowAutoHideButton |
-                  PaletteSetStyles.ShowCloseButton;
-                ps.MinimumSize =
-                  new System.Drawing.Size(140, 235);
+                _ps = new PaletteSet("Vorauswahl")
+                {
+                    Style = PaletteSetStyles.NameEditable |
+                            PaletteSetStyles.ShowPropertiesMenu |
+                            PaletteSetStyles.ShowAutoHideButton |
+                            PaletteSetStyles.ShowCloseButton,
+                    MinimumSize = new System.Drawing.Size(140, 235)
+                };
 #if ACAD2013_OR_NEWER
 #if ARX_APP
-                ps.SetSize(new System.Drawing.Size(154, 235));
+                _ps.SetSize(new System.Drawing.Size(154, 235));
 #endif
 #endif
-                ps.Add("Vorauswahl", userControl);
-                if (!ps.Visible)
+                _ps.Add("Vorauswahl", _userControl);
+                if (!_ps.Visible)
                 {
-                    ps.Visible = true;
+                    _ps.Visible = true;
                 }
                 return false;
             }
             else
             {
-                if (!ps.Visible)
+                if (!_ps.Visible)
                 {
-                    ps.Visible = true;
+                    _ps.Visible = true;
                     return false;
                 }
                 return true;
@@ -93,7 +93,7 @@ namespace Plan2Ext.Vorauswahl
         public List<string> BlocknamesInList()
         {
             var blockNames = new List<string>();
-            foreach (var item in userControl.lstBlocknamen.Items)
+            foreach (var item in _userControl.lstBlocknamen.Items)
             {
                 blockNames.Add(item.ToString());
             }
@@ -105,30 +105,30 @@ namespace Plan2Ext.Vorauswahl
             if (blockNames == null) return;
             foreach (var blockName in blockNames)
             {
-                userControl.lstBlocknamen.Items.Add(blockName);
+                _userControl.lstBlocknamen.Items.Add(blockName);
             }
         }
 
         public void AddBlockNameToList(string blockName)
         {
             if (string.IsNullOrEmpty(blockName)) return;
-            userControl.lstBlocknamen.Items.Add(blockName);
+            _userControl.lstBlocknamen.Items.Add(blockName);
         }
 
         public List<string> LayernamesInList()
         {
-            var LayerNames = new List<string>();
-            foreach (var item in userControl.lstLayer.Items)
+            var layerNames = new List<string>();
+            foreach (var item in _userControl.lstLayer.Items)
             {
-                LayerNames.Add(item.ToString());
+                layerNames.Add(item.ToString());
             }
-            return LayerNames;
+            return layerNames;
         }
 
         public IEnumerable<Type> EntityTypesInList()
         {
             var entityTypes = new List<Type>();
-            foreach (var item in userControl.lstEntityTypes.Items)
+            foreach (var item in _userControl.lstEntityTypes.Items)
             {
                 var entityItem = (VorauswahlControl.EntityItem) item;
                 entityTypes.Add(entityItem.Type);
@@ -140,12 +140,12 @@ namespace Plan2Ext.Vorauswahl
         public void AddLayerNameToList(string layerName)
         {
             if (string.IsNullOrEmpty(layerName)) return;
-            userControl.lstLayer.Items.Add(layerName);
+            _userControl.lstLayer.Items.Add(layerName);
         }
 
         public void SetResultTextTo(string s)
         {
-            userControl.lblResult.Text = s;
+            _userControl.lblResult.Text = s;
         }
     }
 }

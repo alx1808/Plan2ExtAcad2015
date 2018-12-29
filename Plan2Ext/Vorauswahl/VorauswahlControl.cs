@@ -1,4 +1,5 @@
-﻿#if BRX_APP
+﻿// ReSharper disable CommentTypo
+#if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
@@ -28,18 +29,16 @@ using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcIntCom = Autodesk.AutoCAD.Interop.Common;
 using _AcInt = Autodesk.AutoCAD.Interop;
-using Autodesk.AutoCAD.Windows;
 #endif
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+// ReSharper disable StringLiteralTypo
+
+// ReSharper disable IdentifierTypo
 
 namespace Plan2Ext.Vorauswahl
 {
@@ -71,74 +70,73 @@ namespace Plan2Ext.Vorauswahl
 
         private IEnumerable<Type> GetAllEntityTypes()
         {
-            AppDomain currentDomain = AppDomain.CurrentDomain;
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Entity));
             return assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(_AcDb.Entity))).OrderBy(x => x.Name);
         }
 
-        private bool _SelBlocknamenShield = false;
+        private bool _selBlocknamenShield;
         private void btnSelBlocknamen_Click(object sender, EventArgs e)
         {
-            if (_SelBlocknamenShield) return;
+            if (_selBlocknamenShield) return;
             try
             {
-                _SelBlocknamenShield = true;
+                _selBlocknamenShield = true;
 
                 Globs.CancelCommand();
 
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelBlocknamen ", true, false, false);
+                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelBlocknamen ", true, false, false);
             }
             catch (Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(ex.Message);
+                Application.ShowAlertDialog(ex.Message);
             }
             finally
             {
-                _SelBlocknamenShield = false;
+                _selBlocknamenShield = false;
             }
         }
 
-        private bool _SelLayerShield = false;
+        private bool _selLayerShield;
         private void btnSelLayer_Click(object sender, EventArgs e)
         {
-            if (_SelLayerShield) return;
+            if (_selLayerShield) return;
             try
             {
-                _SelLayerShield = true;
+                _selLayerShield = true;
 
                 Globs.CancelCommand();
 
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelLayer ", true, false, false);
+                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelLayer ", true, false, false);
             }
             catch (Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(ex.Message);
+                Application.ShowAlertDialog(ex.Message);
             }
             finally
             {
-                _SelLayerShield = false;
+                _selLayerShield = false;
             }
         }
 
-        private bool _SelectShield = false;
+        private bool _selectShield;
         private void btnSelect_Click(object sender, EventArgs e)
         {
-            if (_SelectShield) return;
+            if (_selectShield) return;
             try
             {
-                _SelectShield = true;
+                _selectShield = true;
 
                 Globs.CancelCommand();
 
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelect ", true, false, false);
+                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelect ", true, false, false);
             }
             catch (Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(ex.Message);
+                Application.ShowAlertDialog(ex.Message);
             }
             finally
             {
-                _SelectShield = false;
+                _selectShield = false;
             }
         }
 
@@ -155,6 +153,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception)
             {
+                // ignored
             }
         }
 
@@ -171,6 +170,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception)
             {
+                // ignored
             }
         }
 
@@ -196,6 +196,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception)
             {
+                // ignored
             }
         }
     }
