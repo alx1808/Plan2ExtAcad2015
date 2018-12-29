@@ -79,25 +79,28 @@ namespace Plan2Ext.Vorauswahl
 
                 var layerNames = _Palette.LayernamesInList();
                 var blockNames = _Palette.BlocknamesInList();
+                var entityTypes = _Palette.EntityTypesInList().ToArray();
 
                 // todo: check new list
                 var layerNamesForLayerSchalt = layerNames.Select(x => x).ToList();
                 AddLayersFromBlockNames(blockNames, layerNamesForLayerSchalt);
                 foreach (var lay in layerNamesForLayerSchalt)
                 {
-                    Plan2Ext.Globs.LayerOnAndThaw(lay,unlock: true);
+                    Plan2Ext.Globs.LayerOnAndThaw(lay, unlock: true);
                 }
 
                 var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                 var editor = doc.Editor;
                 editor.SetImpliedSelection(new _AcDb.ObjectId[0]);
 
-                List<_AcDb.ObjectId> oids = Select(blockNames, layerNames);
-                if (oids.Count == 0) return;
-
-                _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
-                oids.CopyTo(ids, 0);
-                editor.SetImpliedSelection(ids);
+                List<_AcDb.ObjectId> oids = Select(blockNames, layerNames, entityTypes);
+                if (oids.Count > 0)
+                {
+                    _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
+                    oids.CopyTo(ids, 0);
+                    editor.SetImpliedSelection(ids);
+                }
+                _Palette.SetResultTextTo("Anzahl: " + oids.Count);
             }
             catch (System.Exception ex)
             {
@@ -105,9 +108,10 @@ namespace Plan2Ext.Vorauswahl
             }
         }
 
-        private static List<_AcDb.ObjectId> Select(List<string> blockNames, List<string> layerNames)
+        private static List<_AcDb.ObjectId> Select(List<string> blockNames, List<string> layerNames, Type[] entityTypes)
         {
             var oids = new List<_AcDb.ObjectId>();
+            if (blockNames.Count == 0 && layerNames.Count == 0 && entityTypes.Length == 0) return oids;
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
@@ -119,24 +123,33 @@ namespace Plan2Ext.Vorauswahl
                 foreach (_AcDb.ObjectId oid in btr)
                 {
                     _AcDb.Entity ent = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
-                    if (ent != null)
+                    if (ent == null) continue;
+
+                    if (layerNames.Contains(ent.Layer))
                     {
-                        if (layerNames.Contains(ent.Layer))
+                        oids.Add(oid);
+                        continue;
+                    }
+
+                    if (blockNames.Count > 0)
+                    {
+                        var br = ent as _AcDb.BlockReference;
+                        if (br != null)
                         {
-                            oids.Add(oid);
-                        }
-                        else
-                        {
-                            var br = ent as _AcDb.BlockReference;
-                            if (br != null)
+                            var blockName = Plan2Ext.Globs.GetBlockname(br, trans);
+                            if (blockNames.Contains(blockName))
                             {
-                                var blockName = Plan2Ext.Globs.GetBlockname(br, trans);
-                                if (blockNames.Contains(blockName))
-                                {
-                                    oids.Add(oid);
-                                }
+                                oids.Add(oid);
+                                continue;
                             }
                         }
+                    }
+
+                    if (entityTypes.Length <= 0) continue;
+                    var type = ent.GetType();
+                    if (entityTypes.Any(x => x == type))
+                    {
+                        oids.Add(oid);
                     }
                 }
                 trans.Commit();

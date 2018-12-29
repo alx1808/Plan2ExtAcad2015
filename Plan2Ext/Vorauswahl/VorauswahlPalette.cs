@@ -66,7 +66,7 @@ namespace Plan2Ext.Vorauswahl
                   PaletteSetStyles.ShowAutoHideButton |
                   PaletteSetStyles.ShowCloseButton;
                 ps.MinimumSize =
-                  new System.Drawing.Size(93, 235);
+                  new System.Drawing.Size(140, 235);
 #if ACAD2013_OR_NEWER
 #if ARX_APP
                 ps.SetSize(new System.Drawing.Size(154, 235));
@@ -125,10 +125,27 @@ namespace Plan2Ext.Vorauswahl
             return LayerNames;
         }
 
+        public IEnumerable<Type> EntityTypesInList()
+        {
+            var entityTypes = new List<Type>();
+            foreach (var item in userControl.lstEntityTypes.Items)
+            {
+                var entityItem = (VorauswahlControl.EntityItem) item;
+                entityTypes.Add(entityItem.Type);
+            }
+
+            return entityTypes;
+        }
+
         public void AddLayerNameToList(string layerName)
         {
             if (string.IsNullOrEmpty(layerName)) return;
             userControl.lstLayer.Items.Add(layerName);
+        }
+
+        public void SetResultTextTo(string s)
+        {
+            userControl.lblResult.Text = s;
         }
     }
 }

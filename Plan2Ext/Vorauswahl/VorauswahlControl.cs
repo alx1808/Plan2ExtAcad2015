@@ -48,6 +48,32 @@ namespace Plan2Ext.Vorauswahl
         public VorauswahlControl()
         {
             InitializeComponent();
+
+            FillEntityTypesCombobox();
+        }
+
+        internal class EntityItem
+        {
+            public Type Type { get; set; }
+            public override string ToString()
+            {
+                return Type != null ? Type.Name : "";
+            }
+        }
+
+        private void FillEntityTypesCombobox()
+        {
+            foreach (var entityType in GetAllEntityTypes())
+            {
+                cmbEntityTypes.Items.Add(new EntityItem(){Type = entityType});
+            }
+        }
+
+        private IEnumerable<Type> GetAllEntityTypes()
+        {
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            var assembly = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Entity));
+            return assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(_AcDb.Entity))).OrderBy(x => x.Name);
         }
 
         private bool _SelBlocknamenShield = false;
@@ -141,6 +167,31 @@ namespace Plan2Ext.Vorauswahl
                     var selItem = lstLayer.SelectedItem;
                     if (selItem == null) return;
                     lstLayer.Items.Remove(selItem);
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private void cmbEntityTypes_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var entityItem = (EntityItem)cmbEntityTypes.SelectedItem;
+            if (entityItem == null) return;
+            if (lstEntityTypes.Items.Contains(entityItem)) return;
+            lstEntityTypes.Items.Add(entityItem);
+            cmbEntityTypes.SelectedItem = null;
+        }
+
+        private void lstEntityTypes_KeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (e.KeyCode == Keys.Delete)
+                {
+                    var selItem = lstEntityTypes.SelectedItem;
+                    if (selItem == null) return;
+                    lstEntityTypes.Items.Remove(selItem);
                 }
             }
             catch (Exception)

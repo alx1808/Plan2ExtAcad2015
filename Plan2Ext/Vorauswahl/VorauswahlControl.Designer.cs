@@ -35,8 +35,13 @@
             this.btnSelLayer = new System.Windows.Forms.Button();
             this.lstLayer = new System.Windows.Forms.ListBox();
             this.btnSelect = new System.Windows.Forms.Button();
+            this.grpEntities = new System.Windows.Forms.GroupBox();
+            this.cmbEntityTypes = new System.Windows.Forms.ComboBox();
+            this.lstEntityTypes = new System.Windows.Forms.ListBox();
+            this.lblResult = new System.Windows.Forms.Label();
             this.grpBlocknamen.SuspendLayout();
             this.grpLayer.SuspendLayout();
+            this.grpEntities.SuspendLayout();
             this.SuspendLayout();
             // 
             // grpBlocknamen
@@ -47,7 +52,7 @@
             this.grpBlocknamen.Controls.Add(this.lstBlocknamen);
             this.grpBlocknamen.Location = new System.Drawing.Point(0, 0);
             this.grpBlocknamen.Name = "grpBlocknamen";
-            this.grpBlocknamen.Size = new System.Drawing.Size(151, 111);
+            this.grpBlocknamen.Size = new System.Drawing.Size(226, 111);
             this.grpBlocknamen.TabIndex = 0;
             this.grpBlocknamen.TabStop = false;
             this.grpBlocknamen.Text = "Blocknamen";
@@ -55,7 +60,7 @@
             // btnSelBlocknamen
             // 
             this.btnSelBlocknamen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelBlocknamen.Location = new System.Drawing.Point(70, 81);
+            this.btnSelBlocknamen.Location = new System.Drawing.Point(145, 81);
             this.btnSelBlocknamen.Name = "btnSelBlocknamen";
             this.btnSelBlocknamen.Size = new System.Drawing.Size(75, 23);
             this.btnSelBlocknamen.TabIndex = 1;
@@ -70,7 +75,7 @@
             this.lstBlocknamen.FormattingEnabled = true;
             this.lstBlocknamen.Location = new System.Drawing.Point(6, 19);
             this.lstBlocknamen.Name = "lstBlocknamen";
-            this.lstBlocknamen.Size = new System.Drawing.Size(139, 56);
+            this.lstBlocknamen.Size = new System.Drawing.Size(214, 56);
             this.lstBlocknamen.TabIndex = 0;
             this.lstBlocknamen.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lstBlocknamen_KeyDown);
             // 
@@ -82,7 +87,7 @@
             this.grpLayer.Controls.Add(this.lstLayer);
             this.grpLayer.Location = new System.Drawing.Point(0, 117);
             this.grpLayer.Name = "grpLayer";
-            this.grpLayer.Size = new System.Drawing.Size(151, 111);
+            this.grpLayer.Size = new System.Drawing.Size(226, 111);
             this.grpLayer.TabIndex = 2;
             this.grpLayer.TabStop = false;
             this.grpLayer.Text = "Layer";
@@ -90,7 +95,7 @@
             // btnSelLayer
             // 
             this.btnSelLayer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelLayer.Location = new System.Drawing.Point(70, 81);
+            this.btnSelLayer.Location = new System.Drawing.Point(145, 81);
             this.btnSelLayer.Name = "btnSelLayer";
             this.btnSelLayer.Size = new System.Drawing.Size(75, 23);
             this.btnSelLayer.TabIndex = 1;
@@ -105,14 +110,14 @@
             this.lstLayer.FormattingEnabled = true;
             this.lstLayer.Location = new System.Drawing.Point(6, 19);
             this.lstLayer.Name = "lstLayer";
-            this.lstLayer.Size = new System.Drawing.Size(139, 56);
+            this.lstLayer.Size = new System.Drawing.Size(214, 56);
             this.lstLayer.TabIndex = 0;
             this.lstLayer.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lstLayer_KeyDown);
             // 
             // btnSelect
             // 
             this.btnSelect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelect.Location = new System.Drawing.Point(76, 234);
+            this.btnSelect.Location = new System.Drawing.Point(151, 351);
             this.btnSelect.Name = "btnSelect";
             this.btnSelect.Size = new System.Drawing.Size(75, 23);
             this.btnSelect.TabIndex = 3;
@@ -120,17 +125,66 @@
             this.btnSelect.UseVisualStyleBackColor = true;
             this.btnSelect.Click += new System.EventHandler(this.btnSelect_Click);
             // 
+            // grpEntities
+            // 
+            this.grpEntities.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpEntities.Controls.Add(this.cmbEntityTypes);
+            this.grpEntities.Controls.Add(this.lstEntityTypes);
+            this.grpEntities.Location = new System.Drawing.Point(0, 234);
+            this.grpEntities.Name = "grpEntities";
+            this.grpEntities.Size = new System.Drawing.Size(226, 111);
+            this.grpEntities.TabIndex = 4;
+            this.grpEntities.TabStop = false;
+            this.grpEntities.Text = "Elementtypen";
+            // 
+            // cmbEntityTypes
+            // 
+            this.cmbEntityTypes.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.cmbEntityTypes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbEntityTypes.FormattingEnabled = true;
+            this.cmbEntityTypes.Location = new System.Drawing.Point(6, 81);
+            this.cmbEntityTypes.Name = "cmbEntityTypes";
+            this.cmbEntityTypes.Size = new System.Drawing.Size(214, 21);
+            this.cmbEntityTypes.TabIndex = 1;
+            this.cmbEntityTypes.SelectedIndexChanged += new System.EventHandler(this.cmbEntityTypes_SelectedIndexChanged);
+            // 
+            // lstEntityTypes
+            // 
+            this.lstEntityTypes.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lstEntityTypes.FormattingEnabled = true;
+            this.lstEntityTypes.Location = new System.Drawing.Point(6, 19);
+            this.lstEntityTypes.Name = "lstEntityTypes";
+            this.lstEntityTypes.Size = new System.Drawing.Size(214, 56);
+            this.lstEntityTypes.TabIndex = 0;
+            this.lstEntityTypes.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lstEntityTypes_KeyDown);
+            // 
+            // lblResult
+            // 
+            this.lblResult.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblResult.Location = new System.Drawing.Point(6, 352);
+            this.lblResult.Name = "lblResult";
+            this.lblResult.Size = new System.Drawing.Size(139, 21);
+            this.lblResult.TabIndex = 5;
+            this.lblResult.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // VorauswahlControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lblResult);
+            this.Controls.Add(this.grpEntities);
             this.Controls.Add(this.btnSelect);
             this.Controls.Add(this.grpLayer);
             this.Controls.Add(this.grpBlocknamen);
             this.Name = "VorauswahlControl";
-            this.Size = new System.Drawing.Size(154, 268);
+            this.Size = new System.Drawing.Size(229, 384);
             this.grpBlocknamen.ResumeLayout(false);
             this.grpLayer.ResumeLayout(false);
+            this.grpEntities.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -144,5 +198,9 @@
         internal System.Windows.Forms.ListBox lstBlocknamen;
         internal System.Windows.Forms.ListBox lstLayer;
         private System.Windows.Forms.Button btnSelect;
+        private System.Windows.Forms.GroupBox grpEntities;
+        private System.Windows.Forms.ComboBox cmbEntityTypes;
+        internal System.Windows.Forms.ListBox lstEntityTypes;
+        internal System.Windows.Forms.Label lblResult;
     }
 }
