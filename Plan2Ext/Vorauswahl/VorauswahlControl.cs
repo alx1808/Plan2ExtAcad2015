@@ -47,27 +47,84 @@ namespace Plan2Ext.Vorauswahl
         public VorauswahlControl()
         {
             InitializeComponent();
-
-            FillEntityTypesCombobox();
         }
 
         internal class EntityItem
         {
+            private static Dictionary<string, string> _GermanNameForTypeName = new Dictionary<string, string>()
+            {
+                {"Arc", "Bogen"},
+                {"BlockReference", "Blockreferenz"},
+                {"Circle", "Kreis"},
+                {"DBPoint", "Punkt"},
+                {"DBText", "Text"},
+                {"Hatch", "Schraffur"},
+                {"Line", "Linie"},
+                {"MText", "M-Text"},
+                {"MLine", "M-Linie"},
+                {"Polyline", "Polylinie"},
+                {"Polyline2d", "2D-Polylinie"},
+                {"Polyline3d", "3D-Polylinie"},
+                {"RotatedDimension", "Gedrehte Bemaßung"},
+                {"AlignedDimension", "Ausgerichtete Bemaßung"},
+            };
+
             public Type Type { get; set; }
             public override string ToString()
             {
-                return Type != null ? Type.Name : "";
+                return Type != null ? TypeName() : "";
+            }
+
+            private string TypeName()
+            {
+                string name;
+                return _GermanNameForTypeName.TryGetValue(Type.Name, out name) ? name : Type.Name;
             }
         }
 
         private void FillEntityTypesCombobox()
         {
-            foreach (var entityType in GetAllEntityTypes())
+            cmbEntityTypes.Items.Clear();
+            foreach (var entityType in GetAllEntityTypesInModelSpace())
             {
-                cmbEntityTypes.Items.Add(new EntityItem(){Type = entityType});
+                cmbEntityTypes.Items.Add(new EntityItem() { Type = entityType });
             }
         }
 
+        private IEnumerable<Type> GetAllEntityTypesInModelSpace()
+        {
+            var entityTypes = new HashSet<Type>();
+            _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var frozenLayerIds = new List<_AcDb.ObjectId>();
+                _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    if (ltr.IsFrozen) frozenLayerIds.Add(ltrOid);
+                }
+
+                _AcDb.BlockTable bt = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+
+                // Iterate through it, dumping objects
+                foreach (_AcDb.ObjectId oid in btr)
+                {
+                    var dbObject = trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+                    var ent = dbObject as _AcDb.Entity;
+                    if (ent == null) continue;
+                    if (frozenLayerIds.Contains(ent.LayerId)) continue;
+                    entityTypes.Add(dbObject.GetType());
+                }
+                trans.Commit();
+            }
+
+            return entityTypes;
+        }
+
+        // ReSharper disable once UnusedMember.Local
         private IEnumerable<Type> GetAllEntityTypes()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Entity));
@@ -198,6 +255,11 @@ namespace Plan2Ext.Vorauswahl
             {
                 // ignored
             }
+        }
+
+        private void cmbEntityTypes_DropDown(object sender, EventArgs e)
+        {
+            FillEntityTypesCombobox();
         }
     }
 }

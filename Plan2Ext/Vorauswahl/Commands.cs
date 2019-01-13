@@ -112,6 +112,14 @@ namespace Plan2Ext.Vorauswahl
             _AcDb.Database db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
             {
+                var frozenLayerIds = new List<_AcDb.ObjectId>();
+                _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    if (ltr.IsFrozen) frozenLayerIds.Add(ltrOid);
+                }
+
                 _AcDb.BlockTable bt = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
                 _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
 
@@ -120,7 +128,8 @@ namespace Plan2Ext.Vorauswahl
                 {
                     _AcDb.Entity ent = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
                     if (ent == null) continue;
-
+                    if (frozenLayerIds.Contains(ent.LayerId)) continue;
+                    
                     if (layerNames.Contains(ent.Layer))
                     {
                         oids.Add(oid);

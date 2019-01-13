@@ -148,6 +148,7 @@
             this.cmbEntityTypes.Name = "cmbEntityTypes";
             this.cmbEntityTypes.Size = new System.Drawing.Size(214, 21);
             this.cmbEntityTypes.TabIndex = 1;
+            this.cmbEntityTypes.DropDown += new System.EventHandler(this.cmbEntityTypes_DropDown);
             this.cmbEntityTypes.SelectedIndexChanged += new System.EventHandler(this.cmbEntityTypes_SelectedIndexChanged);
             // 
             // lstEntityTypes
