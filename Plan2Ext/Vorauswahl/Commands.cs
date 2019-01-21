@@ -65,7 +65,11 @@ namespace Plan2Ext.Vorauswahl
             }
         }
 
-        [_AcTrx.CommandMethod("Plan2VorauswahlSelect")]
+        [_AcTrx.CommandMethod("Plan2VorauswahlSelect", _AcBrx.CommandFlags.Modal |
+                                                       _AcBrx.CommandFlags.UsePickSet |
+                                                       _AcBrx.CommandFlags.Redraw)
+
+        ]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2VorauswahlSelect()
         {
@@ -87,15 +91,11 @@ namespace Plan2Ext.Vorauswahl
 
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 var editor = doc.Editor;
-                editor.SetImpliedSelection(new _AcDb.ObjectId[0]);
 
                 List<_AcDb.ObjectId> oids = Select(blockNames, layerNames, entityTypes);
-                if (oids.Count > 0)
-                {
-                    _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
-                    oids.CopyTo(ids, 0);
-                    editor.SetImpliedSelection(ids);
-                }
+                _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
+                oids.CopyTo(ids, 0);
+                editor.SetImpliedSelection(ids);
                 Palette.SetResultTextTo("Anzahl: " + oids.Count);
             }
             catch (Exception ex)
@@ -104,32 +104,24 @@ namespace Plan2Ext.Vorauswahl
             }
         }
 
-        private static List<_AcDb.ObjectId> Select(List<string> blockNames, List<string> layerNames, Type[] entityTypes)
+        private static List<_AcDb.ObjectId> Select(ICollection<string> blockNames, ICollection<string> layerNames, IReadOnlyCollection<Type> entityTypes)
         {
             var oids = new List<_AcDb.ObjectId>();
-            if (blockNames.Count == 0 && layerNames.Count == 0 && entityTypes.Length == 0) return oids;
-            _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
-            _AcDb.Database db = doc.Database;
+            if (blockNames.Count == 0 && layerNames.Count == 0 && entityTypes.Count == 0) return oids;
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
             {
-                var frozenLayerIds = new List<_AcDb.ObjectId>();
-                _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
-                foreach (var ltrOid in layTb)
+                var objectsToSelectFrom = GetSelectedObjects();
+                if (objectsToSelectFrom == null || objectsToSelectFrom.Length == 0)
                 {
-                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-                    if (ltr.IsFrozen) frozenLayerIds.Add(ltrOid);
+                    objectsToSelectFrom = GetAllSelectableObjectsInModelspace();
                 }
 
-                _AcDb.BlockTable bt = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
-
-                // Iterate through it, dumping objects
-                foreach (_AcDb.ObjectId oid in btr)
+                foreach (var oid in objectsToSelectFrom)
                 {
-                    _AcDb.Entity ent = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
-                    if (ent == null) continue;
-                    if (frozenLayerIds.Contains(ent.LayerId)) continue;
-                    
+                    _AcDb.Entity ent = (_AcDb.Entity)trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+
                     if (layerNames.Contains(ent.Layer))
                     {
                         oids.Add(oid);
@@ -150,7 +142,7 @@ namespace Plan2Ext.Vorauswahl
                         }
                     }
 
-                    if (entityTypes.Length <= 0) continue;
+                    if (entityTypes.Count <= 0) continue;
                     var type = ent.GetType();
                     if (entityTypes.Any(x => x == type))
                     {
@@ -160,6 +152,56 @@ namespace Plan2Ext.Vorauswahl
                 trans.Commit();
             }
             return oids;
+        }
+
+        private static _AcDb.ObjectId[] GetAllSelectableObjectsInModelspace()
+        {
+
+            var objectIds = new List<_AcDb.ObjectId>();
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var frozenLayerIds = new List<_AcDb.ObjectId>();
+                _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr =
+                        (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    if (ltr.IsFrozen) frozenLayerIds.Add(ltrOid);
+                }
+
+                _AcDb.BlockTable bt = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+
+                foreach (_AcDb.ObjectId oid in btr)
+                {
+                    _AcDb.Entity ent = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+                    if (ent == null) continue;
+                    if (frozenLayerIds.Contains(ent.LayerId)) continue;
+                    objectIds.Add(oid);
+                }
+
+                trans.Commit();
+            }
+
+            return objectIds.ToArray();
+        }
+
+        private static _AcDb.ObjectId[] GetSelectedObjects()
+        {
+            _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+            _AcEd.Editor editor = doc.Editor;
+            var selectionSet = editor.SelectImplied().Value;
+            if (selectionSet == null) return null;
+
+            var objectIds = new List<_AcDb.ObjectId>();
+            foreach (_AcEd.SelectedObject selectedObject in selectionSet)
+            {
+                objectIds.Add(selectedObject.ObjectId);
+            }
+
+            return objectIds.ToArray();
         }
 
         private static void AddLayersFromBlockNames(List<string> blockNames, List<string> layerNames)

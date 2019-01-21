@@ -19,7 +19,6 @@ using Bricscad.Windows;
 using _AcAp = Autodesk.AutoCAD.ApplicationServices;
 using _AcCm = Autodesk.AutoCAD.Colors;
 using _AcDb = Autodesk.AutoCAD.DatabaseServices;
-using _AcEd = Autodesk.AutoCAD.EditorInput;
 using _AcGe = Autodesk.AutoCAD.Geometry;
 using _AcGi = Autodesk.AutoCAD.GraphicsInterface;
 using _AcGs = Autodesk.AutoCAD.GraphicsSystem;
@@ -183,7 +182,7 @@ namespace Plan2Ext.Vorauswahl
             {
                 _selectShield = true;
 
-                Globs.CancelCommand();
+                //Globs.CancelCommand(); removes pickfirst selection, so disabled
 
                 Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2VorauswahlSelect ", true, false, false);
             }
