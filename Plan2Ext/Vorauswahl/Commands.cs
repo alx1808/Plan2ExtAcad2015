@@ -104,10 +104,10 @@ namespace Plan2Ext.Vorauswahl
             }
         }
 
-        private static List<_AcDb.ObjectId> Select(ICollection<string> blockNames, ICollection<string> layerNames, IReadOnlyCollection<Type> entityTypes)
+        private static List<_AcDb.ObjectId> Select(ICollection<string> blockNames, ICollection<string> layerNames, Type[] entityTypes)
         {
             var oids = new List<_AcDb.ObjectId>();
-            if (blockNames.Count == 0 && layerNames.Count == 0 && entityTypes.Count == 0) return oids;
+            if (blockNames.Count == 0 && layerNames.Count == 0 && entityTypes.Length == 0) return oids;
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
@@ -142,7 +142,7 @@ namespace Plan2Ext.Vorauswahl
                         }
                     }
 
-                    if (entityTypes.Count <= 0) continue;
+                    if (entityTypes.Length <= 0) continue;
                     var type = ent.GetType();
                     if (entityTypes.Any(x => x == type))
                     {
