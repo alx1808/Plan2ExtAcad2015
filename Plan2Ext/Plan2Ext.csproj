@@ -187,6 +187,7 @@
     </Compile>
     <Compile Include="Nummerierung\NrOptions.cs" />
     <Compile Include="Nummerierung\NrPalette.cs" />
+    <Compile Include="PaperSpaceHelper.cs" />
     <Compile Include="Plot\LayoutCreation.cs" />
     <Compile Include="Plot\PlotSettingsForLayout.cs" />
     <Compile Include="RaumHoePruefung\Commands.cs" />
