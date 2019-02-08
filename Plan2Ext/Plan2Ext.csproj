@@ -96,6 +96,7 @@
     <Compile Include="AutoIdVergabe\ExcelExport.cs" />
     <Compile Include="AutoIdVergabe\Globs.cs" />
     <Compile Include="AutoIdVergabe\ZuweisungsInfo.cs" />
+    <Compile Include="BlockInfo\Commands.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
     <Compile Include="BlockToExcel\Excelizer.cs" />
     <Compile Include="BlockTrans\Commands.cs" />

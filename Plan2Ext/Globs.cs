@@ -58,6 +58,23 @@ namespace Plan2Ext
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
         #endregion
 
+        public static void SwitchToModelSpace()
+        {
+            _AcAp.Application.SetSystemVariable("TILEMODE",1);
+        }
+        public static void SwitchToPaperSpace()
+        {
+            _AcAp.Application.SetSystemVariable("TILEMODE", 0);
+        }
+
+        public static bool IsPaperspace
+        {
+            get
+            {
+                return Convert.ToInt32(_AcAp.Application.GetSystemVariable("TILEMODE")) == 0;
+            }
+        }
+
         internal static int FinalReleaseComObject(object o)
         {
             if (o != null)
@@ -2623,6 +2640,14 @@ namespace Plan2Ext
                 ang += inc;
             }
         }
+
+        internal static string GetBlockname(_AcDb.ObjectId oid, _AcDb.Transaction tr)
+        {
+            var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+            if (br == null) return null;
+            return GetBlockname(br, tr);
+        }
+
 
         internal static string GetBlockname(_AcDb.BlockReference br, _AcDb.Transaction tr)
         {
