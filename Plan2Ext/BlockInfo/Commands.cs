@@ -68,13 +68,22 @@ namespace Plan2Ext.BlockInfo
 
                         //DrawPolyline(transaction, doc, point3dCollectionWcs);
 
-                        // todo: export to excel
-                        
-
                         Globs.SwitchToPaperSpace();
 
                         transaction.Commit();
+
+                        if (blockNames.Count == 0)
+                        {
+                            ed.WriteMessage("\nKeine Blöcke gefunden.");
+                        }
+                        else
+                        {
+                            var rows = blockNames.Select(x => new SingleBlockNameRowProvider() { Blockname = x });
+                            var excelizer = new Excelizer();
+                            excelizer.ExcelExport(new[] { "Blöcke" }, rows);
+                        }
                     }
+                    // todo: export to excel
                 }
             }
             catch (System.Exception ex)
