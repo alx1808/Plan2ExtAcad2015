@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -18,18 +15,82 @@ namespace Plan2Ext.BlockInfo
     public class Commands
     {
         #region log4net Initialization
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
+
+        [CommandMethod("Plan2BlockinfoLayoutAll")]
+        public static void Plan2BlockinfoLayoutAll()
+        {
+            try
+            {
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                var ed = doc.Editor;
+
+                Application.SetSystemVariable("OSMODE", 0);
+
+                using (doc.LockDocument())
+                {
+                    Globs.SwitchToModelSpace();
+                    Globs.ZoomExtents();
+
+                    using (var transaction = doc.TransactionManager.StartTransaction())
+                    {
+                        var layoutNames = Layouts.GetOrderedLayoutNames();
+
+                        var rowProviders = new List<IRowProvider>();
+
+                        foreach (var layoutName in layoutNames)
+                        {
+                            if (layoutName == "Model") continue;
+                            var viewport = SetLayoutActiveAndGetViewport(layoutName, transaction);
+                            if (viewport == null) continue;
+
+                            Point3dCollection point3DCollectionWcs = GetWcsViewportFrame(viewport);
+                            Globs.SwitchToModelSpace();
+                            Point3dCollection point3DCollectionUcs = WcsToUcs(point3DCollectionWcs);
+                            SelectionFilter filter = new SelectionFilter(new[]
+                            {
+                                new TypedValue((int)DxfCode.Start,"INSERT" ),
+                            });
+                            var promptSelectionResult = ed.SelectCrossingPolygon(point3DCollectionUcs, filter);
+                            List<ObjectId> selectedBlocks = new List<ObjectId>();
+                            using (SelectionSet ss = promptSelectionResult.Value)
+                            {
+                                if (ss != null)
+                                    selectedBlocks.AddRange(ss.GetObjectIds().ToList());
+                            }
+
+                            var blockNames = selectedBlocks.Where(x => !Globs.IsXref(x, transaction))
+                                .Select(x => Globs.GetBlockname(x, transaction)).Distinct().ToList();
+
+                            rowProviders.AddRange(LayoutBlockNameFactory.CreateRowProviders(layoutName, blockNames));
+
+                        }
+
+                        transaction.Commit();
+
+                        var excelizer = new Excelizer();
+                        excelizer.ExcelExport(new[] { "LAYOUTNAME", "BLÖCKE" }, rowProviders);
+
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockinfoLayoutAll aufgetreten! {0}", ex.Message));
+            }
+        }
 
         [CommandMethod("Plan2BlockinfoLayout")]
         public static void Plan2BlockinfoLayout()
         {
             try
             {
-                var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
+                var doc = Application.DocumentManager.MdiActiveDocument;
                 var ed = doc.Editor;
 
-                Application.SetSystemVariable("OSMODE",0);
+                Application.SetSystemVariable("OSMODE", 0);
 
                 using (doc.LockDocument())
                 {
@@ -44,18 +105,18 @@ namespace Plan2Ext.BlockInfo
                         var viewport = SelectViewport(transaction);
                         if (viewport == null) return;
 
-                        Point3dCollection point3dCollectionWcs = GetWcsViewportFrame(viewport, transaction);
+                        Point3dCollection point3DCollectionWcs = GetWcsViewportFrame(viewport);
 
                         Globs.SwitchToModelSpace();
                         Globs.ZoomExtents();
 
-                        Point3dCollection point3dCollectionUcs = WcsToUcs(point3dCollectionWcs);
+                        Point3dCollection point3DCollectionUcs = WcsToUcs(point3DCollectionWcs);
 
                         SelectionFilter filter = new SelectionFilter(new[]
                         {
                             new TypedValue((int)DxfCode.Start,"INSERT" ),
                         });
-                        var promptSelectionResult = ed.SelectCrossingPolygon(point3dCollectionUcs, filter);
+                        var promptSelectionResult = ed.SelectCrossingPolygon(point3DCollectionUcs, filter);
                         List<ObjectId> selectedBlocks = new List<ObjectId>();
                         using (SelectionSet ss = promptSelectionResult.Value)
                         {
@@ -80,7 +141,7 @@ namespace Plan2Ext.BlockInfo
                         {
                             var rows = blockNames.Select(x => new SingleBlockNameRowProvider() { Blockname = x });
                             var excelizer = new Excelizer();
-                            excelizer.ExcelExport(new[] { "Blöcke" }, rows);
+                            excelizer.ExcelExport(new[] { "BLÖCKE" }, rows);
                         }
                     }
                     // todo: export to excel
@@ -88,7 +149,7 @@ namespace Plan2Ext.BlockInfo
             }
             catch (System.Exception ex)
             {
-                log.Error(ex.Message, ex);
+                Log.Error(ex.Message, ex);
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockinfoLayout aufgetreten! {0}", ex.Message));
             }
         }
@@ -105,18 +166,42 @@ namespace Plan2Ext.BlockInfo
             return point3DCollectionUcs;
         }
 
-        private static void DrawPolyline(Transaction transaction, Document doc, Point3dCollection point3dCollection)
+        private static Viewport SetLayoutActiveAndGetViewport(string name, Transaction transaction)
+        {
+            // Reference the Layout Manager
+            LayoutManager acLayoutMgr = LayoutManager.Current;
+
+            // Open the layout
+            Layout layout = transaction.GetObject(acLayoutMgr.GetLayoutId(name), OpenMode.ForRead) as Layout;
+            // Set the layout current if it is not already
+            // ReSharper disable once PossibleNullReferenceException
+            if (layout.TabSelected == false)
+            {
+                acLayoutMgr.CurrentLayout = layout.LayoutName;
+            }
+            var viewPorts = layout.GetViewports();
+            if (viewPorts.Count <= 1) return null;
+
+
+            return transaction.GetObject(viewPorts[1], OpenMode.ForRead) as Viewport;
+        }
+
+
+        // ReSharper disable once UnusedMember.Local
+        private static void DrawPolyline(Transaction transaction, Document doc, Point3dCollection point3DCollection)
         {
             var blockTable = transaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead) as BlockTable;
             var blockTableRecord =
+                // ReSharper disable once PossibleNullReferenceException
                 transaction.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
             using (var polyline = new Polyline())
             {
-                for (int i = 0; i < point3dCollection.Count; i++)
+                for (int i = 0; i < point3DCollection.Count; i++)
                 {
-                    polyline.AddVertexAt(i, To2D(point3dCollection[i]), 0, 0, 0);
+                    polyline.AddVertexAt(i, To2D(point3DCollection[i]), 0, 0, 0);
                 }
 
+                // ReSharper disable once PossibleNullReferenceException
                 blockTableRecord.AppendEntity(polyline);
                 transaction.AddNewlyCreatedDBObject(polyline, true);
             }
@@ -127,7 +212,7 @@ namespace Plan2Ext.BlockInfo
             return new Point2d(point3D.X, point3D.Y);
         }
 
-        private static Point3dCollection GetWcsViewportFrame(Viewport viewport, Transaction transaction)
+        private static Point3dCollection GetWcsViewportFrame(Viewport viewport)
         {
             var cp = viewport.CenterPoint;
             var halfHeight = viewport.Height / 2.0;
@@ -147,7 +232,7 @@ namespace Plan2Ext.BlockInfo
 
         private static Viewport SelectViewport(Transaction transaction)
         {
-            var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
+            var doc = Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
             ed.SwitchToPaperSpace();
 

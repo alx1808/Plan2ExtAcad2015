@@ -99,6 +99,8 @@
     <Compile Include="BlockInfo\Commands.cs" />
     <Compile Include="BlockInfo\Excelizer.cs" />
     <Compile Include="BlockInfo\IRowProvider.cs" />
+    <Compile Include="BlockInfo\LayoutBlockNameFactory.cs" />
+    <Compile Include="BlockInfo\LayoutBlockRowProvider.cs" />
     <Compile Include="BlockInfo\SingleBlockNameRowProvider.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
     <Compile Include="BlockToExcel\Excelizer.cs" />
