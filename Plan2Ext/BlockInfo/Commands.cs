@@ -18,7 +18,54 @@ namespace Plan2Ext.BlockInfo
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
-        [CommandMethod("Plan2BlockinfoLayoutAll")]
+        [CommandMethod("Plan2Blockinfo")]
+        public static void Plan2Blockinfo()
+        {
+            try
+            {
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                var ed = doc.Editor;
+
+                Application.SetSystemVariable("OSMODE", 0);
+
+                var pKeyOpts = new PromptKeywordOptions("") { Message = "\nOption eingeben Model/Layout/<All>: " };
+                if (Globs.IsModelspace)
+                {
+                    pKeyOpts.Keywords.Add("Model");
+                }
+                else
+                {
+                    pKeyOpts.Keywords.Add("Layout");
+                }
+                pKeyOpts.Keywords.Add("All");
+                pKeyOpts.AllowNone = true;
+
+                PromptResult pKeyRes = ed.GetKeywords(pKeyOpts);
+                if (pKeyRes.Status == PromptStatus.None || pKeyRes.StringResult == "All")
+                {
+                    Plan2BlockinfoLayoutAll();
+                }
+                else if (pKeyRes.Status == PromptStatus.OK)
+                {
+                    if (pKeyRes.StringResult == "Layout")
+                    {
+                        Plan2BlockinfoLayout();
+                    }
+                    else
+                    {
+                        Plan2BlockinfoModell();
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Blockinfo aufgetreten! {0}", ex.Message));
+            }
+        }
+
+
+        //[CommandMethod("Plan2BlockinfoLayoutAll")]
         public static void Plan2BlockinfoLayoutAll()
         {
             try
@@ -82,7 +129,7 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-        [CommandMethod("Plan2BlockinfoModell")]
+        //[CommandMethod("Plan2BlockinfoModell")]
         public static void Plan2BlockinfoModell()
         {
             try
@@ -144,7 +191,7 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-        [CommandMethod("Plan2BlockinfoLayout")]
+        //[CommandMethod("Plan2BlockinfoLayout")]
         public static void Plan2BlockinfoLayout()
         {
             try

@@ -48,42 +48,88 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
-        [_AcTrx.CommandMethod("ps2ms", _AcTrx.CommandFlags.NoTileMode)]
-        public static void ps2ms()
-        {
-            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-            _AcEd.Editor ed = doc.Editor;
-            _AcDb.Database db = doc.Database;
 
-            var vpResult = ed.GetEntity("Viewport");
-            if (vpResult.Status != _AcEd.PromptStatus.OK) return;
-            var vpOid = vpResult.ObjectId;
+        //[_AcTrx.CommandMethod("alxinsert", _AcTrx.CommandFlags.NoTileMode)]
+        //public static void alxinsert()
+        //{
+        //    _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+        //    _AcEd.Editor ed = doc.Editor;
+        //    _AcDb.Database db = doc.Database;
 
-            var points = new List<_AcGe.Point3d>();
-            _AcEd.PromptPointResult resultPoint = null;
-            do
-            {
-                resultPoint = ed.GetPoint("Pick Model Space Point");
-                if (resultPoint.Status == _AcEd.PromptStatus.OK)
-                {
-                    points.Add(resultPoint.Value);
-                }
-               
-            } while (resultPoint.Status == _AcEd.PromptStatus.OK);
+        //    string blockName = "PLK_FW_BA_STANDORT";
+        //    string protoTypeDwg = "FW_Legende.dwg";
 
-            //SetActivePaperspaceViewport(vpOid, true);
-            var wcsPoints = new List<_AcGe.Point3d>();
-            PaperSpaceHelper.ConvertPaperSpaceCoordinatesToModelSpaceWcs(vpOid,points, wcsPoints);
+        //    if (Globs.BlockExists(blockName) || Globs.InsertFromPrototype(blockName, protoTypeDwg))
+        //    {
+        //        using (var transaction = doc.TransactionManager.StartTransaction())
+        //        {
+        //            var blockTable = (_AcDb.BlockTable)transaction.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+        //            var oid = blockTable[blockName];
+        //            using (var bref = new _AcDb.BlockReference(new _AcGe.Point3d(-200, 0, 0), oid))
+        //            {
+        //                var acCurSpaceBlkTblRec = (_AcDb.BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForWrite);
+        //                acCurSpaceBlkTblRec.AppendEntity(bref);
+        //                transaction.AddNewlyCreatedDBObject(bref, true);
 
-            // create a new DBPoint and add to model space to show where we picked
-            foreach (var wcsPoint in wcsPoints)
-            {
-                using (var pnt = new _AcDb.DBPoint(new _AcGe.Point3d(wcsPoint.ToArray())))
-                using (var bt = ed.Document.Database.BlockTableId.Open(_AcDb.OpenMode.ForRead) as _AcDb.BlockTable)
-                using (var ms = bt[_AcDb.BlockTableRecord.ModelSpace].Open(_AcDb.OpenMode.ForWrite) as _AcDb.BlockTableRecord)
-                    ms.AppendEntity(pnt);
-            }
-        }
+        //                _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
+        //                bref.Explode(objs);
+        //                _AcDb.ObjectId blockRefTableId = bref.BlockTableRecord;
+        //                foreach (_AcDb.DBObject obj in objs)
+        //                {
+        //                    _AcDb.Entity ent = (_AcDb.Entity)obj;
+        //                    acCurSpaceBlkTblRec.AppendEntity(ent);
+        //                    transaction.AddNewlyCreatedDBObject(ent, true);
+        //                }
+
+        //                bref.UpgradeOpen();
+        //                bref.Erase();
+        //            }
+
+        //            transaction.Commit();
+        //        }
+        //    }
+        //}
+
+
+        ///// <summary>
+        ///// Paperspace coords to Modelspace (siehe: PaperSpaceHelper.cs)
+        ///// </summary>
+        //[_AcTrx.CommandMethod("ps2ms", _AcTrx.CommandFlags.NoTileMode)]
+        //public static void ps2ms()
+        //{
+        //    _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+        //    _AcEd.Editor ed = doc.Editor;
+        //    _AcDb.Database db = doc.Database;
+
+        //    var vpResult = ed.GetEntity("Viewport");
+        //    if (vpResult.Status != _AcEd.PromptStatus.OK) return;
+        //    var vpOid = vpResult.ObjectId;
+
+        //    var points = new List<_AcGe.Point3d>();
+        //    _AcEd.PromptPointResult resultPoint = null;
+        //    do
+        //    {
+        //        resultPoint = ed.GetPoint("Pick Model Space Point");
+        //        if (resultPoint.Status == _AcEd.PromptStatus.OK)
+        //        {
+        //            points.Add(resultPoint.Value);
+        //        }
+
+        //    } while (resultPoint.Status == _AcEd.PromptStatus.OK);
+
+        //    //SetActivePaperspaceViewport(vpOid, true);
+        //    var wcsPoints = new List<_AcGe.Point3d>();
+        //    PaperSpaceHelper.ConvertPaperSpaceCoordinatesToModelSpaceWcs(vpOid,points, wcsPoints);
+
+        //    // create a new DBPoint and add to model space to show where we picked
+        //    foreach (var wcsPoint in wcsPoints)
+        //    {
+        //        using (var pnt = new _AcDb.DBPoint(new _AcGe.Point3d(wcsPoint.ToArray())))
+        //        using (var bt = ed.Document.Database.BlockTableId.Open(_AcDb.OpenMode.ForRead) as _AcDb.BlockTable)
+        //        using (var ms = bt[_AcDb.BlockTableRecord.ModelSpace].Open(_AcDb.OpenMode.ForWrite) as _AcDb.BlockTableRecord)
+        //            ms.AppendEntity(pnt);
+        //    }
+        //}
 
         //[_AcTrx.CommandMethod("CheckDimensions", _AcTrx.CommandFlags.UsePickSet)]
         //public void CheckDimensions()
