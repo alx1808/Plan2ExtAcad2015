@@ -82,6 +82,68 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
+        [CommandMethod("Plan2BlockinfoModell")]
+        public static void Plan2BlockinfoModell()
+        {
+            try
+            {
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                var ed = doc.Editor;
+
+                Application.SetSystemVariable("OSMODE", 0);
+
+                using (doc.LockDocument())
+                {
+                    if (!Globs.IsModelspace)
+                    {
+                        ed.WriteMessage("\nDieser Befehl kann nur im Modellbereich ausgeführt werden");
+                        return;
+                    }
+
+                    using (var transaction = doc.TransactionManager.StartTransaction())
+                    {
+                        SelectionFilter filter = new SelectionFilter(new[]
+                        {
+                            new TypedValue((int)DxfCode.Start,"INSERT" ),
+                        });
+                        var promptSelectionOptions = new PromptSelectionOptions();
+                        promptSelectionOptions.RejectObjectsFromNonCurrentSpace = true;
+                        promptSelectionOptions.AllowDuplicates = false;
+
+
+                        var promptSelectionResult = ed.GetSelection(promptSelectionOptions, filter);
+                        var selectedBlocks = new List<ObjectId>();
+                        using (SelectionSet ss = promptSelectionResult.Value)
+                        {
+                            if (ss != null)
+                                selectedBlocks.AddRange(ss.GetObjectIds().ToList());
+                        }
+
+                        var blockNames = selectedBlocks.Where(x => !Globs.IsXref(x, transaction))
+                            .Select(x => Globs.GetBlockname(x, transaction)).Distinct().ToList();
+
+                        transaction.Commit();
+
+                        if (blockNames.Count == 0)
+                        {
+                            ed.WriteMessage("\nKeine Blöcke gefunden.");
+                        }
+                        else
+                        {
+                            var rows = blockNames.Select(x => new SingleBlockNameRowProvider() { Blockname = x });
+                            var excelizer = new Excelizer();
+                            excelizer.ExcelExport(new[] { "BLÖCKE" }, rows);
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2BlockinfoModell aufgetreten! {0}", ex.Message));
+            }
+        }
+
         [CommandMethod("Plan2BlockinfoLayout")]
         public static void Plan2BlockinfoLayout()
         {
@@ -144,7 +206,6 @@ namespace Plan2Ext.BlockInfo
                             excelizer.ExcelExport(new[] { "BLÖCKE" }, rows);
                         }
                     }
-                    // todo: export to excel
                 }
             }
             catch (System.Exception ex)

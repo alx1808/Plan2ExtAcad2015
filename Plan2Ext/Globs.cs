@@ -37,6 +37,8 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext
 {
@@ -65,6 +67,14 @@ namespace Plan2Ext
         public static void SwitchToPaperSpace()
         {
             _AcAp.Application.SetSystemVariable("TILEMODE", 0);
+        }
+
+        public static bool IsModelspace
+        {
+            get
+            {
+                return Convert.ToInt32(_AcAp.Application.GetSystemVariable("TILEMODE")) == 1;
+            }
         }
 
         public static bool IsPaperspace
