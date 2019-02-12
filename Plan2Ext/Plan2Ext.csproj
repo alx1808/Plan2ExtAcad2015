@@ -98,6 +98,7 @@
     <Compile Include="AutoIdVergabe\ZuweisungsInfo.cs" />
     <Compile Include="BlockInfo\Commands.cs" />
     <Compile Include="BlockInfo\Excelizer.cs" />
+    <Compile Include="BlockInfo\FwLegende.cs" />
     <Compile Include="BlockInfo\IRowProvider.cs" />
     <Compile Include="BlockInfo\LayoutBlockNameFactory.cs" />
     <Compile Include="BlockInfo\LayoutBlockRowProvider.cs" />

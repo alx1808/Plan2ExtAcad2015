@@ -49,46 +49,46 @@ namespace Plan2Ext
         #endregion
 
 
-        //[_AcTrx.CommandMethod("alxinsert", _AcTrx.CommandFlags.NoTileMode)]
-        //public static void alxinsert()
-        //{
-        //    _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-        //    _AcEd.Editor ed = doc.Editor;
-        //    _AcDb.Database db = doc.Database;
+        [_AcTrx.CommandMethod("alxinsert", _AcTrx.CommandFlags.NoTileMode)]
+        public static void alxinsert()
+        {
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcEd.Editor ed = doc.Editor;
+            _AcDb.Database db = doc.Database;
 
-        //    string blockName = "PLK_FW_BA_STANDORT";
-        //    string protoTypeDwg = "FW_Legende.dwg";
+            string blockName = "PLK_FW_BA_STANDORT";
+            string protoTypeDwg = "FW_Legende.dwg";
 
-        //    if (Globs.BlockExists(blockName) || Globs.InsertFromPrototype(blockName, protoTypeDwg))
-        //    {
-        //        using (var transaction = doc.TransactionManager.StartTransaction())
-        //        {
-        //            var blockTable = (_AcDb.BlockTable)transaction.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-        //            var oid = blockTable[blockName];
-        //            using (var bref = new _AcDb.BlockReference(new _AcGe.Point3d(-200, 0, 0), oid))
-        //            {
-        //                var acCurSpaceBlkTblRec = (_AcDb.BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForWrite);
-        //                acCurSpaceBlkTblRec.AppendEntity(bref);
-        //                transaction.AddNewlyCreatedDBObject(bref, true);
+            if (Globs.BlockExists(blockName) || Globs.InsertFromPrototype(blockName, protoTypeDwg))
+            {
+                using (var transaction = doc.TransactionManager.StartTransaction())
+                {
+                    var blockTable = (_AcDb.BlockTable)transaction.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                    var oid = blockTable[blockName];
+                    using (var bref = new _AcDb.BlockReference(new _AcGe.Point3d(-200, 0, 0), oid))
+                    {
+                        var acCurSpaceBlkTblRec = (_AcDb.BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForWrite);
+                        acCurSpaceBlkTblRec.AppendEntity(bref);
+                        transaction.AddNewlyCreatedDBObject(bref, true);
 
-        //                _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
-        //                bref.Explode(objs);
-        //                _AcDb.ObjectId blockRefTableId = bref.BlockTableRecord;
-        //                foreach (_AcDb.DBObject obj in objs)
-        //                {
-        //                    _AcDb.Entity ent = (_AcDb.Entity)obj;
-        //                    acCurSpaceBlkTblRec.AppendEntity(ent);
-        //                    transaction.AddNewlyCreatedDBObject(ent, true);
-        //                }
+                        _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
+                        bref.Explode(objs);
+                        _AcDb.ObjectId blockRefTableId = bref.BlockTableRecord;
+                        foreach (_AcDb.DBObject obj in objs)
+                        {
+                            _AcDb.Entity ent = (_AcDb.Entity)obj;
+                            acCurSpaceBlkTblRec.AppendEntity(ent);
+                            transaction.AddNewlyCreatedDBObject(ent, true);
+                        }
 
-        //                bref.UpgradeOpen();
-        //                bref.Erase();
-        //            }
+                        bref.UpgradeOpen();
+                        bref.Erase();
+                    }
 
-        //            transaction.Commit();
-        //        }
-        //    }
-        //}
+                    transaction.Commit();
+                }
+            }
+        }
 
 
         ///// <summary>

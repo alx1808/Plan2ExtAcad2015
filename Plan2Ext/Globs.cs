@@ -1210,6 +1210,49 @@ namespace Plan2Ext
             }
         }
 
+        public static void PurgeBlocks(List<string> blockNames)
+        {
+            // Get the current document and database
+            var acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var acCurDb = acDoc.Database;
+
+            // Start a transaction
+            using (_AcDb.Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                // Open the Layer table for read
+                var blockTable = (_AcDb.BlockTable)acTrans.GetObject(acCurDb.BlockTableId,
+                    _AcDb.OpenMode.ForRead);
+                var acObjIdColl = new _AcDb.ObjectIdCollection();
+                foreach (var blockName in blockNames)
+                {
+                    if (blockTable.Has(blockName))
+                    {
+                        acObjIdColl.Add(blockTable[blockName]);
+                    }
+                }
+
+                if (acObjIdColl.Count > 0)
+                {
+                    // Check to see if it is safe to erase layer
+                    acCurDb.Purge(acObjIdColl);
+
+                    if (acObjIdColl.Count > 0)
+                    {
+                        _AcDb.BlockTableRecord blockTableRecord;
+
+                        foreach (_AcDb.ObjectId oidLayer in acObjIdColl)
+                        {
+                            blockTableRecord = (_AcDb.BlockTableRecord)acTrans.GetObject(oidLayer, _AcDb.OpenMode.ForWrite);
+                            blockTableRecord.Erase(true);
+                        }
+                    }
+                }
+
+                // Save the changes and dispose of the transaction
+                acTrans.Commit();
+            }
+        }
+
         public static Dictionary<string, string> GetAttributes(_AcDb.BlockReference blockRef)
         {
             Dictionary<string, string> valuePerTag = new Dictionary<string, string>();

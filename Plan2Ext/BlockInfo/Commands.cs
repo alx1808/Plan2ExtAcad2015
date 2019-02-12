@@ -64,7 +64,6 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-
         //[CommandMethod("Plan2BlockinfoLayoutAll")]
         public static void Plan2BlockinfoLayoutAll()
         {
@@ -214,31 +213,7 @@ namespace Plan2Ext.BlockInfo
                         var viewport = SelectViewport(transaction);
                         if (viewport == null) return;
 
-                        Point3dCollection point3DCollectionWcs = GetWcsViewportFrame(viewport);
-
-                        Globs.SwitchToModelSpace();
-                        Globs.ZoomExtents();
-
-                        Point3dCollection point3DCollectionUcs = WcsToUcs(point3DCollectionWcs);
-
-                        SelectionFilter filter = new SelectionFilter(new[]
-                        {
-                            new TypedValue((int)DxfCode.Start,"INSERT" ),
-                        });
-                        var promptSelectionResult = ed.SelectCrossingPolygon(point3DCollectionUcs, filter);
-                        List<ObjectId> selectedBlocks = new List<ObjectId>();
-                        using (SelectionSet ss = promptSelectionResult.Value)
-                        {
-                            if (ss != null)
-                                selectedBlocks.AddRange(ss.GetObjectIds().ToList());
-                        }
-
-                        var blockNames = selectedBlocks.Where(x => !Globs.IsXref(x, transaction))
-                            .Select(x => Globs.GetBlockname(x, transaction)).Distinct().ToList();
-
-                        //DrawPolyline(transaction, doc, point3dCollectionWcs);
-
-                        Globs.SwitchToPaperSpace();
+                        var blockNames = GetBlocknames(viewport, ed, transaction);
 
                         transaction.Commit();
 
@@ -262,19 +237,48 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-        private static Point3dCollection WcsToUcs(Point3dCollection point3DCollectionWcs)
+        internal static List<string> GetBlocknames(Viewport viewport, Editor ed, Transaction transaction)
         {
-            var point3DCollectionUcs = new Point3dCollection();
-            foreach (Point3d point3D in point3DCollectionWcs)
-            {
-                point3DCollectionUcs.Add(Globs.TransWcsUcs(point3D));
+            Point3dCollection point3DCollectionWcs = GetWcsViewportFrame(viewport);
 
+            Globs.SwitchToModelSpace();
+            Globs.ZoomExtents();
+
+            Point3dCollection point3DCollectionUcs = WcsToUcs(point3DCollectionWcs);
+
+            SelectionFilter filter = new SelectionFilter(new[]
+            {
+                new TypedValue((int) DxfCode.Start, "INSERT"),
+            });
+            var promptSelectionResult = ed.SelectCrossingPolygon(point3DCollectionUcs, filter);
+            List<ObjectId> selectedBlocks = new List<ObjectId>();
+            using (SelectionSet ss = promptSelectionResult.Value)
+            {
+                if (ss != null)
+                    selectedBlocks.AddRange(ss.GetObjectIds().ToList());
             }
 
-            return point3DCollectionUcs;
+            var blockNames = selectedBlocks.Where(x => !Globs.IsXref(x, transaction))
+                .Select(x => Globs.GetBlockname(x, transaction)).Distinct().ToList();
+
+            //DrawPolyline(transaction, doc, point3dCollectionWcs);
+
+            Globs.SwitchToPaperSpace();
+            return blockNames;
         }
 
-        private static Viewport SetLayoutActiveAndGetViewport(string name, Transaction transaction)
+        internal static Viewport SelectViewport(Transaction transaction)
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+            ed.SwitchToPaperSpace();
+
+            var promptEntityResult = ed.GetEntity("\nViewport auswählen: ");
+            if (promptEntityResult.Status != PromptStatus.OK) return null;
+            return transaction.GetObject(promptEntityResult.ObjectId, OpenMode.ForRead) as Viewport;
+        }
+
+        internal static Viewport SetLayoutActiveAndGetViewport(string name, Transaction transaction)
         {
             // Reference the Layout Manager
             LayoutManager acLayoutMgr = LayoutManager.Current;
@@ -294,6 +298,35 @@ namespace Plan2Ext.BlockInfo
             return transaction.GetObject(viewPorts[1], OpenMode.ForRead) as Viewport;
         }
 
+        internal static Point3dCollection GetWcsViewportFrame(Viewport viewport)
+        {
+            var cp = viewport.CenterPoint;
+            var halfHeight = viewport.Height / 2.0;
+            var halfWidth = viewport.Width / 2.0;
+
+            var lu = new Point3d(cp.X - halfWidth, cp.Y - halfHeight, cp.Z);
+            var lo = new Point3d(cp.X - halfWidth, cp.Y + halfHeight, cp.Z);
+            var ro = new Point3d(cp.X + halfWidth, cp.Y + halfHeight, cp.Z);
+            var ru = new Point3d(cp.X + halfWidth, cp.Y - halfHeight, cp.Z);
+
+            var points = new List<Point3d>() { lu, lo, ro, ru };
+            var wcsPoints = new List<Point3d>();
+            PaperSpaceHelper.ConvertPaperSpaceCoordinatesToModelSpaceWcs(viewport.ObjectId, points, wcsPoints);
+
+            return new Point3dCollection(wcsPoints.ToArray());
+        }
+
+        internal static Point3dCollection WcsToUcs(Point3dCollection point3DCollectionWcs)
+        {
+            var point3DCollectionUcs = new Point3dCollection();
+            foreach (Point3d point3D in point3DCollectionWcs)
+            {
+                point3DCollectionUcs.Add(Globs.TransWcsUcs(point3D));
+
+            }
+
+            return point3DCollectionUcs;
+        }
 
         // ReSharper disable once UnusedMember.Local
         private static void DrawPolyline(Transaction transaction, Document doc, Point3dCollection point3DCollection)
@@ -320,33 +353,5 @@ namespace Plan2Ext.BlockInfo
             return new Point2d(point3D.X, point3D.Y);
         }
 
-        private static Point3dCollection GetWcsViewportFrame(Viewport viewport)
-        {
-            var cp = viewport.CenterPoint;
-            var halfHeight = viewport.Height / 2.0;
-            var halfWidth = viewport.Width / 2.0;
-
-            var lu = new Point3d(cp.X - halfWidth, cp.Y - halfHeight, cp.Z);
-            var lo = new Point3d(cp.X - halfWidth, cp.Y + halfHeight, cp.Z);
-            var ro = new Point3d(cp.X + halfWidth, cp.Y + halfHeight, cp.Z);
-            var ru = new Point3d(cp.X + halfWidth, cp.Y - halfHeight, cp.Z);
-
-            var points = new List<Point3d>() { lu, lo, ro, ru };
-            var wcsPoints = new List<Point3d>();
-            PaperSpaceHelper.ConvertPaperSpaceCoordinatesToModelSpaceWcs(viewport.ObjectId, points, wcsPoints);
-
-            return new Point3dCollection(wcsPoints.ToArray());
-        }
-
-        private static Viewport SelectViewport(Transaction transaction)
-        {
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-            ed.SwitchToPaperSpace();
-
-            var promptEntityResult = ed.GetEntity("\nViewport auswählen: ");
-            if (promptEntityResult.Status != PromptStatus.OK) return null;
-            return transaction.GetObject(promptEntityResult.ObjectId, OpenMode.ForRead) as Viewport;
-        }
     }
 }
