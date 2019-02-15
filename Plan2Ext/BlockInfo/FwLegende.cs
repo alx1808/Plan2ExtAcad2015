@@ -22,7 +22,6 @@ namespace Plan2Ext.BlockInfo
         private static readonly List<string> BlocksIgnored = new List<string>() { "FW_RA_RAUMBLOCK", "FW_BA_STIEGENÜBERSICHT", "FW_BA_AUFZUG" };
         private static readonly List<string> BlocksAlwaysInLegend = new List<string>() { "PLK_FW_BA_STANDORT", "PLK_FW_BA_SAMMELPLATZ" };
         private const string LegendBlockPrefix = "PLK_";
-        private const string LegendBlockDwg = "FW_Legende.dwg";
         private const double VerticalDistance = -7.8104;
 
         [CommandMethod("Plan2FwLegende")]
@@ -36,6 +35,9 @@ namespace Plan2Ext.BlockInfo
 
                 Application.SetSystemVariable("OSMODE", 0);
 
+                var prototypedwgName = GetPrototypedwgName(ed);
+                if (prototypedwgName == null) return;
+
                 var pKeyOpts = new PromptKeywordOptions("") { Message = "\nOption eingeben Model/Layout/<All>: " };
                 pKeyOpts.Keywords.Add(Globs.IsModelspace ? "Model" : "Layout");
                 pKeyOpts.Keywords.Add("All");
@@ -44,17 +46,17 @@ namespace Plan2Ext.BlockInfo
                 PromptResult pKeyRes = ed.GetKeywords(pKeyOpts);
                 if (pKeyRes.Status == PromptStatus.None || pKeyRes.StringResult == "All")
                 {
-                    Plan2FwLegendeAll();
+                    Plan2FwLegendeAll(prototypedwgName);
                 }
                 else if (pKeyRes.Status == PromptStatus.OK)
                 {
                     if (pKeyRes.StringResult == "Layout")
                     {
-                        Plan2FwLegendeLayout();
+                        Plan2FwLegendeLayout(prototypedwgName);
                     }
                     else
                     {
-                        Plan2FwLegendeModell();
+                        Plan2FwLegendeModell(prototypedwgName);
                     }
                 }
             }
@@ -65,7 +67,35 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-        private static void Plan2FwLegendeAll()
+        private static string GetPrototypedwgName(Editor ed)
+        {
+            var pKeyOpts = new PromptKeywordOptions("") { Message = "\nPrototyp für Legende eingeben Kav/Norm/<Carlo>: " };
+            pKeyOpts.Keywords.Add("Kav");
+            pKeyOpts.Keywords.Add("Norm");
+            pKeyOpts.Keywords.Add("Carlo");
+            pKeyOpts.AllowNone = true;
+
+            PromptResult pKeyRes = ed.GetKeywords(pKeyOpts);
+            if (pKeyRes.Status == PromptStatus.None || pKeyRes.StringResult == "Carlo")
+            {
+                return "FW_LEGENDE_CARLO.dwg";
+            }
+            if (pKeyRes.Status == PromptStatus.OK)
+            {
+                if (pKeyRes.StringResult == "Norm")
+                {
+                    return "FW_LEGENDE_NORM.dwg";
+                }
+                else
+                {
+                    return "FW_LEGENDE_KAV.dwg";
+                }
+            }
+
+            return null;
+        }
+
+        private static void Plan2FwLegendeAll(string prototypedwgName)
         {
             try
             {
@@ -76,7 +106,7 @@ namespace Plan2Ext.BlockInfo
 
                 using (doc.LockDocument())
                 {
-                    var orderedBlocksInProtodwg = GetOrderedBlocknames(LegendBlockDwg);
+                    var orderedBlocksInProtodwg = GetOrderedBlocknames(prototypedwgName);
                     if (orderedBlocksInProtodwg == null) return;
 
 
@@ -114,7 +144,7 @@ namespace Plan2Ext.BlockInfo
 
                             var positionWcs = Globs.TransUcsWcs(new Point3d(-200, 0, 0));
                             var legendBlockNames = GetLegendBlockNames(blockNames);
-                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames, positionWcs, transaction);
+                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames, prototypedwgName, positionWcs, transaction);
                             Globs.PurgeBlocks(legendBlockNames.ToList());
 
                         }
@@ -130,7 +160,7 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-        private static void Plan2FwLegendeModell()
+        private static void Plan2FwLegendeModell(string prototypedwgName)
         {
             try
             {
@@ -147,7 +177,7 @@ namespace Plan2Ext.BlockInfo
                         return;
                     }
 
-                    var orderedBlocksInProtodwg = GetOrderedBlocknames(LegendBlockDwg);
+                    var orderedBlocksInProtodwg = GetOrderedBlocknames(prototypedwgName);
                     if (orderedBlocksInProtodwg == null) return;
 
                     using (var transaction = doc.TransactionManager.StartTransaction())
@@ -178,7 +208,7 @@ namespace Plan2Ext.BlockInfo
                         {
                             var positionWcs = Globs.TransUcsWcs(result.Value);
                             var legendBlockNames = GetLegendBlockNames(blockNames);
-                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames, positionWcs, transaction);
+                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames,prototypedwgName, positionWcs, transaction);
                             Globs.PurgeBlocks(legendBlockNames.ToList());
                         }
                         transaction.Commit();
@@ -193,7 +223,7 @@ namespace Plan2Ext.BlockInfo
         }
 
 
-        private static void Plan2FwLegendeLayout()
+        private static void Plan2FwLegendeLayout(string prototypedwgName)
         {
             try
             {
@@ -210,7 +240,7 @@ namespace Plan2Ext.BlockInfo
                         return;
                     }
 
-                    var orderedBlocksInProtodwg = GetOrderedBlocknames(LegendBlockDwg);
+                    var orderedBlocksInProtodwg = GetOrderedBlocknames(prototypedwgName);
                     if (orderedBlocksInProtodwg == null) return;
 
                     using (var transaction = doc.TransactionManager.StartTransaction())
@@ -225,7 +255,7 @@ namespace Plan2Ext.BlockInfo
                         {
                             var positionWcs = Globs.TransUcsWcs(result.Value);
                             var legendBlockNames = GetLegendBlockNames(blockNames);
-                            InsertLegend(orderedBlocksInProtodwg,legendBlockNames, positionWcs, transaction);
+                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames, prototypedwgName, positionWcs, transaction);
                             Globs.PurgeBlocks(legendBlockNames.ToList());
                         }
 
@@ -249,13 +279,14 @@ namespace Plan2Ext.BlockInfo
             return legendBlockNames;
         }
 
-        private static void InsertLegend(List<string> blocksInProtodwg, HashSet<string> legendBlockNames, Point3d positionWcs, Transaction transaction)
+        private static void InsertLegend(List<string> blocksInProtodwg, HashSet<string> legendBlockNames,
+            string prototypedwgName, Point3d positionWcs, Transaction transaction)
         {
             foreach (var legendBlockname in blocksInProtodwg)
             {
                 if (legendBlockNames.Contains(legendBlockname))
                 {
-                    InsertLocalOrFromProto(legendBlockname, positionWcs, LegendBlockDwg, explode: true, transaction: transaction);
+                    InsertLocalOrFromProto(legendBlockname, positionWcs, prototypedwgName, explode: true, transaction: transaction);
                     positionWcs += new Vector3d(0, VerticalDistance, 0);
                 }
             }
