@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext
 {
     public class Boundings
     {
 
-        [CommandMethod("MERTEXT", CommandFlags.UsePickSet)]
+        //[CommandMethod("MERTEXT", CommandFlags.UsePickSet)]
         public void Mertext()
         {
             Document doc =
@@ -22,12 +22,12 @@ namespace Plan2Ext
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            var res =ed.GetEntity("Textent: ");
+            var res = ed.GetEntity("Textent: ");
             if (res.Status != PromptStatus.OK) return;
 
-            
 
-            
+
+
             Transaction tr =
                 db.TransactionManager.StartTransaction();
 
@@ -47,17 +47,116 @@ namespace Plan2Ext
         }
 
 
-        [CommandMethod("MER", CommandFlags.UsePickSet)]
+        //[CommandMethod("MER", CommandFlags.UsePickSet)]
         public void MinimumEnclosingRectangle()
         {
-            MinimumEnclosingBoundary(false);
+            //MinimumEnclosingBoundary(false);
+            MinimumEnclosingRectangular(forUcs: true, oneBoundPerEnt: false, buffer: 0.0);
         }
 
-        [CommandMethod("MEC", CommandFlags.UsePickSet)]
+        //[CommandMethod("MEC", CommandFlags.UsePickSet)]
         public void MinimumEnclosingCircle()
         {
             MinimumEnclosingBoundary();
         }
+
+        public void MinimumEnclosingRectangular(bool forUcs, bool oneBoundPerEnt, double buffer)
+        {
+            Document doc =
+                Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Ask user to select entities
+
+            PromptSelectionOptions pso =
+              new PromptSelectionOptions();
+            pso.MessageForAdding = "\nSelect objects to enclose: ";
+            pso.AllowDuplicates = false;
+            pso.AllowSubSelections = true;
+            pso.RejectObjectsFromNonCurrentSpace = true;
+            pso.RejectObjectsOnLockedLayers = false;
+
+            PromptSelectionResult psr = ed.GetSelection(pso);
+            if (psr.Status != PromptStatus.OK)
+                return;
+
+
+            // Get the current UCS
+
+            CoordinateSystem3d ucs =
+              ed.CurrentUserCoordinateSystem.CoordinateSystem3d;
+
+            // Collect points on the component entities
+
+            var pts = new Point3dCollection();
+
+            Transaction tr =
+              db.TransactionManager.StartTransaction();
+            using (tr)
+            {
+                BlockTableRecord btr =
+                  (BlockTableRecord)tr.GetObject(
+                    db.CurrentSpaceId,
+                    OpenMode.ForWrite
+                  );
+
+                for (int i = 0; i < psr.Value.Count; i++)
+                {
+                    Entity ent =
+                      (Entity)tr.GetObject(
+                        psr.Value[i].ObjectId,
+                        OpenMode.ForRead
+                      );
+
+                    // Collect the points for each selected entity
+
+                    Point3dCollection entPts = CollectPointsWcs(tr, ent);
+                    foreach (Point3d pt in entPts)
+                    {
+                        /*
+                         * Create a DBPoint, for testing purposes
+                         *
+                        DBPoint dbp = new DBPoint(pt);
+                        btr.AppendEntity(dbp);
+                        tr.AddNewlyCreatedDBObject(dbp, true);
+                         */
+
+                        pts.Add(pt);
+                    }
+
+                    // Create a boundary for each entity (if so chosen) or
+                    // just once after collecting all the points
+
+                    if (oneBoundPerEnt || i == psr.Value.Count - 1)
+                    {
+                        try
+                        {
+                            var wcsPointList = forUcs ? BoundingPointsForCurrentUcs(pts, buffer) : BoundingPointsForWcs(pts, buffer);
+
+                            var wcs2DPointList = wcsPointList.ToList2D();
+
+                            var bnd = CreatePolyline(wcs2DPointList, closed: true);
+
+                            btr.AppendEntity(bnd);
+                            tr.AddNewlyCreatedDBObject(bnd, true);
+                        }
+                        catch
+                        {
+                            ed.WriteMessage(
+                              "\nUnable to calculate enclosing boundary."
+                            );
+                        }
+
+                        pts.Clear();
+                    }
+                }
+
+                tr.Commit();
+            }
+        }
+
+
 
         public void MinimumEnclosingBoundary(bool circularBoundary = true)
         {
@@ -157,7 +256,7 @@ namespace Plan2Ext
 
                     // Collect the points for each selected entity
 
-                    Point3dCollection entPts = CollectPoints(tr, ent);
+                    Point3dCollection entPts = CollectPointsWcs(tr, ent);
                     foreach (Point3d pt in entPts)
                     {
                         /*
@@ -201,7 +300,7 @@ namespace Plan2Ext
             }
         }
 
-        private Point3dCollection CollectPoints(
+        private Point3dCollection CollectPointsWcs(
           Transaction tr, Entity ent
         )
         {
@@ -327,7 +426,7 @@ namespace Plan2Ext
                             Entity ent2 = obj as Entity;
                             if (ent2 != null && ent2.Visible)
                             {
-                                foreach (Point3d pt in CollectPoints(tr, ent2))
+                                foreach (Point3d pt in CollectPointsWcs(tr, ent2))
                                 {
                                     pts.Add(pt);
                                 }
@@ -391,12 +490,7 @@ namespace Plan2Ext
                     // in an array
 
                     Point2d[] bounds =
-                      new Point2d[] {
-              Point2d.Origin,
-              new Point2d(0.0, maxPt.Y),
-              new Point2d(maxPt.X, maxPt.Y),
-              new Point2d(maxPt.X, 0.0)
-            };
+                      new Point2d[] {Point2d.Origin,new Point2d(0.0, maxPt.Y),new Point2d(maxPt.X, maxPt.Y),new Point2d(maxPt.X, 0.0)};
 
                     // We're going to get each point's WCS coordinates
                     // using the plane the text is on
@@ -422,89 +516,84 @@ namespace Plan2Ext
           Point3dCollection pts, CoordinateSystem3d ucs, double buffer
         )
         {
-            // Get the plane of the UCS
+            if (pts.Count == 0) return null;
 
-            Plane pl = new Plane(ucs.Origin, ucs.Zaxis);
+            var wcsPointList = BoundingPointsForCurrentUcs(pts, buffer);
 
-            // We will project these (possibly 3D) points onto
-            // the plane of the current UCS, as that's where
-            // we will create our circle
+            var wcs2DPointList = wcsPointList.ToList2D();
 
-            // Project the points onto it
+            var p = CreatePolyline(wcs2DPointList, closed: true);
 
-            List<Point2d> pts2d = new List<Point2d>(pts.Count);
-            for (int i = 0; i < pts.Count; i++)
-            {
-                pts2d.Add(pl.ParameterOf(pts[i]));
-            }
-
-            // Assuming we have some points in our list...
-
-            if (pts.Count > 0)
-            {
-                // Set the initial min and max values from the first entry
-
-                double minX = pts2d[0].X,
-                       maxX = minX,
-                       minY = pts2d[0].Y,
-                       maxY = minY;
-
-                // Perform a single iteration to extract the min/max X and Y
-
-                for (int i = 1; i < pts2d.Count; i++)
-                {
-                    Point2d pt = pts2d[i];
-                    if (pt.X < minX) minX = pt.X;
-                    if (pt.X > maxX) maxX = pt.X;
-                    if (pt.Y < minY) minY = pt.Y;
-                    if (pt.Y > maxY) maxY = pt.Y;
-                }
-
-                // Our final buffer amount will be the percentage of the
-                // smallest of the dimensions
-
-                double buf =
-                  Math.Min(maxX - minX, maxY - minY) * buffer;
-
-                // Apply the buffer to our point ordinates
-
-                minX -= buf;
-                minY -= buf;
-                maxX += buf;
-                maxY += buf;
-
-                // Create the boundary points
-
-                var ptA0 = Globs.TransUcsWcs(new Point3d(minX, minY, 0.0));
-                var ptA1 = Globs.TransUcsWcs(new Point3d(minX, maxY, 0.0));
-                var ptA2 = Globs.TransUcsWcs(new Point3d(maxX, maxY, 0.0));
-                var ptA3 = Globs.TransUcsWcs(new Point3d(maxX, minY, 0.0));
-
-                Point2d pt0 = new Point2d(ptA0.X, ptA0.Y);
-                Point2d pt1 = new Point2d(ptA1.X, ptA1.Y);
-                Point2d pt2 = new Point2d(ptA2.X, ptA2.Y);
-                Point2d pt3 = new Point2d(ptA3.X, ptA3.Y);
-
-                //Point2d pt0 = new Point2d(minX, minY),
-                //        pt1 = new Point2d(minX, maxY),
-                //        pt2 = new Point2d(maxX, maxY),
-                //        pt3 = new Point2d(maxX, minY);
-
-                // Finally we create the polyline
-
-                var p = new Polyline(4);
-                p.Normal = pl.Normal;
-                p.AddVertexAt(0, pt0, 0, 0, 0);
-                p.AddVertexAt(1, pt1, 0, 0, 0);
-                p.AddVertexAt(2, pt2, 0, 0, 0);
-                p.AddVertexAt(3, pt3, 0, 0, 0);
-                p.Closed = true;
-
-                return p;
-            }
-            return null;
+            return p;
         }
 
+        private static List<Point3d> BoundingPointsForCurrentUcs(Point3dCollection pts, double buffer)
+        {
+            var ptsUcs = pts.ToList().Select(Globs.TransWcsUcs).ToList();
+
+            var ucsPointList = GetRectanglePointsFromBounding(buffer, ptsUcs);
+
+            var wcsPointList = ucsPointList.Select(Globs.TransUcsWcs).ToList();
+            return wcsPointList;
+        }
+
+        private static List<Point3d> BoundingPointsForWcs(Point3dCollection pts, double buffer)
+        {
+
+            return GetRectanglePointsFromBounding(buffer, pts.ToList());
+        }
+
+
+        private static Polyline CreatePolyline(List<Point2d> wcs2DPointList, bool closed)
+        {
+            var p = new Polyline(4);
+            //p.Normal = pl.Normal;
+            for (int i = 0; i < wcs2DPointList.Count; i++)
+            {
+                p.AddVertexAt(i, wcs2DPointList[i], 0, 0, 0);
+            }
+
+            p.Closed = closed;
+            return p;
+        }
+
+        private static List<Point3d> GetRectanglePointsFromBounding(double buffer, List<Point3d> pts)
+        {
+            double minX = pts[0].X,
+                maxX = minX,
+                minY = pts[0].Y,
+                maxY = minY;
+
+
+            for (int i = 1; i < pts.Count; i++)
+            {
+                var pt = pts[i];
+                if (pt.X < minX) minX = pt.X;
+                if (pt.X > maxX) maxX = pt.X;
+                if (pt.Y < minY) minY = pt.Y;
+                if (pt.Y > maxY) maxY = pt.Y;
+            }
+
+            double buf =
+                Math.Min(maxX - minX, maxY - minY) * buffer;
+
+            minX -= buf;
+            minY -= buf;
+            maxX += buf;
+            maxY += buf;
+
+            var ucsPointList = new List<Point3d>
+            {
+                new Point3d(minX, minY, 0.0),
+                new Point3d(minX, maxY, 0.0),
+                new Point3d(maxX, maxY, 0.0),
+                new Point3d(maxX, minY, 0.0),
+            };
+            return ucsPointList;
+        }
+
+
+        // todo: not tested yet
         private Entity CircleFromPoints(
           Point3dCollection pts, CoordinateSystem3d ucs, double buffer
         )

@@ -41,6 +41,23 @@ namespace Plan2Ext
     internal static class Extensions
     {
 
+        public static List<_AcGe.Point2d> ToList2D(this List<_AcGe.Point3d> point3DList)
+        {
+            if (point3DList == null) return null;
+            return point3DList.Select(x => new _AcGe.Point2d(x.X, x.Y)).ToList();
+        }
+
+        public static List<_AcGe.Point3d> ToList(this _AcGe.Point3dCollection collection)
+        {
+            if (collection == null) return null;
+            var lst = new List<_AcGe.Point3d>();
+            for (var i = 0; i < collection.Count; i++)
+            {
+                lst.Add(collection[i]);
+            }
+
+            return lst;
+        }
         // Entity extension
         public static _AcGe.Point3d? GetCenter(this _AcDb.Entity ent)
         {
@@ -306,12 +323,15 @@ namespace Plan2Ext
         public static void CreateBoundingBox(this _AcDb.Transaction tr, _AcDb.DBText txt)
         {
 
-            var ms =
-              tr.GetObject(
-                _AcDb.SymbolUtilityServices.GetBlockModelSpaceId(txt.Database),
-                _AcDb.OpenMode.ForWrite
+            var ms = tr.GetObject(txt.BlockId, _AcDb.OpenMode.ForWrite) as _AcDb.BlockTableRecord;
 
-              ) as _AcDb.BlockTableRecord;
+
+            //var ms =
+            //  tr.GetObject(
+            //    _AcDb.SymbolUtilityServices.GetBlockModelSpaceId(txt.Database),
+            //    _AcDb.OpenMode.ForWrite
+
+            //  ) as _AcDb.BlockTableRecord;
 
             if (ms != null)
             {
@@ -321,19 +341,22 @@ namespace Plan2Ext
                     var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                     if (doc == null) return;
                     var ed = doc.Editor;
+                    
                     var ucs = ed.CurrentUserCoordinateSystem;
                     var cs = ucs.CoordinateSystem3d;
                     var pl = new _AcDb.Polyline(4);
 
                     for (int i = 0; i < 4; i++)
                     {
-
-                        pl.AddVertexAt(i, corners[i].ProjectToUcs(cs), 0, 0, 0);
+                        var p3d = corners[i];
+                        var p2d = new _AcGe.Point2d(p3d.X, p3d.Y);
+                        pl.AddVertexAt(i, p2d, 0, 0, 0);
+                        //pl.AddVertexAt(i, corners[i].ProjectToUcs(cs), 0, 0, 0);
 
                     }
 
                     pl.Closed = true;
-                    pl.TransformBy(ucs);
+                    //pl.TransformBy(ucs);
                     ms.AppendEntity(pl);
                     tr.AddNewlyCreatedDBObject(pl, true);
                 }
