@@ -22,7 +22,11 @@ namespace Plan2Ext.BlockInfo
         private static readonly List<string> BlocksIgnored = new List<string>() { "FW_RA_RAUMBLOCK", "FW_BA_STIEGENÜBERSICHT", "FW_BA_AUFZUG" };
         private static readonly List<string> BlocksAlwaysInLegend = new List<string>() { "PLK_FW_BA_STANDORT", "PLK_FW_BA_SAMMELPLATZ" };
         private const string LegendBlockPrefix = "PLK_";
-        private const double VerticalDistance = -7.8104;
+        private const double VerticalDistance = 7.8104;
+        private const double HorizontalDistance = 10.0;
+        private static int _nrOfVerticalBlockElements = 5;
+        private static double _scaleFactor = 1.0;
+        private static double _frameOffset = 3.0;
 
         [CommandMethod("Plan2FwLegende")]
         // ReSharper disable once UnusedMember.Global
@@ -37,6 +41,9 @@ namespace Plan2Ext.BlockInfo
 
                 var prototypedwgName = GetPrototypedwgName(ed);
                 if (prototypedwgName == null) return;
+
+                GetNrOfVerticalBlockElements(ed);
+                GetScaleFactor(ed);
 
                 var pKeyOpts = new PromptKeywordOptions("") { Message = "\nOption eingeben Model/Layout/<All>: " };
                 pKeyOpts.Keywords.Add(Globs.IsModelspace ? "Model" : "Layout");
@@ -65,6 +72,32 @@ namespace Plan2Ext.BlockInfo
                 Log.Error(ex.Message, ex);
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2FwLegende aufgetreten! {0}", ex.Message));
             }
+        }
+
+        private static void GetNrOfVerticalBlockElements(Editor ed)
+        {
+            var resultInteger = ed.GetInteger(new PromptIntegerOptions(string.Format(CultureInfo.CurrentCulture,
+                "\nAnzahl vertikaler Blockelemente in Legende <{0}>:", _nrOfVerticalBlockElements))
+            {
+                AllowNegative = false,
+                AllowArbitraryInput = false,
+                AllowZero = false,
+                AllowNone = true,
+            });
+            if (resultInteger.Status == PromptStatus.OK) _nrOfVerticalBlockElements = resultInteger.Value;
+        }
+
+        private static void GetScaleFactor(Editor ed)
+        {
+            var resultDouble = ed.GetDouble(new PromptDoubleOptions(string.Format(CultureInfo.CurrentCulture,
+                "\nSkalierfaktor <{0}>:", _scaleFactor))
+            {
+                AllowNegative = false,
+                AllowZero = false,
+                AllowArbitraryInput = false,
+                AllowNone = true,
+            });
+            if (resultDouble.Status == PromptStatus.OK) _scaleFactor = resultDouble.Value;
         }
 
         private static string GetPrototypedwgName(Editor ed)
@@ -188,7 +221,8 @@ namespace Plan2Ext.BlockInfo
                         });
                         var promptSelectionOptions = new PromptSelectionOptions
                         {
-                            RejectObjectsFromNonCurrentSpace = true, AllowDuplicates = false
+                            RejectObjectsFromNonCurrentSpace = true,
+                            AllowDuplicates = false
                         };
 
 
@@ -208,7 +242,7 @@ namespace Plan2Ext.BlockInfo
                         {
                             var positionWcs = Globs.TransUcsWcs(result.Value);
                             var legendBlockNames = GetLegendBlockNames(blockNames);
-                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames,prototypedwgName, positionWcs, transaction);
+                            InsertLegend(orderedBlocksInProtodwg, legendBlockNames, prototypedwgName, positionWcs, transaction);
                             Globs.PurgeBlocks(legendBlockNames.ToList());
                         }
                         transaction.Commit();
@@ -282,14 +316,48 @@ namespace Plan2Ext.BlockInfo
         private static void InsertLegend(List<string> blocksInProtodwg, HashSet<string> legendBlockNames,
             string prototypedwgName, Point3d positionWcs, Transaction transaction)
         {
+
+            var scaleFactor = _scaleFactor;
+            var positionUcs = Globs.TransWcsUcs(positionWcs);
+            var origPositionY = positionUcs.Y;
+
+            var verticalIncrement = VerticalDistance * -1.0 * scaleFactor;
+            var horizontalAddition = HorizontalDistance * scaleFactor;
+
+            var positionUcsX = positionUcs.X;
+            var verticalNr = 0;
+
+            var ucsPointList = new List<Point3d>();
+
             foreach (var legendBlockname in blocksInProtodwg)
             {
                 if (legendBlockNames.Contains(legendBlockname))
                 {
-                    InsertLocalOrFromProto(legendBlockname, positionWcs, prototypedwgName, explode: true, transaction: transaction);
-                    positionWcs += new Vector3d(0, VerticalDistance, 0);
+                    double newOPositionUcsX;
+                    if (!InsertLocalOrFromProto(legendBlockname, positionUcs, prototypedwgName, explode: true,
+                        transaction: transaction, scaleFactor: scaleFactor, ucsPointList: ucsPointList,  newPositionX: out newOPositionUcsX)) continue;
+                    if (newOPositionUcsX > positionUcsX) positionUcsX = newOPositionUcsX;
+                    verticalNr += 1;
+                    // insertpoint up and right
+                    if (verticalNr >= _nrOfVerticalBlockElements)
+                    {
+                        verticalNr = 0;
+                        positionUcs = new Point3d(positionUcsX + horizontalAddition, origPositionY, 0);
+                    }
+                    // insertpoint down
+                    else positionUcs += new Vector3d(0, verticalIncrement, 0);
                 }
             }
+
+            // frame
+            var framePointsUcs = Boundings.GetRectanglePointsFromBounding(buffer: _frameOffset * scaleFactor, pts: ucsPointList);
+            var wcsPointList = framePointsUcs.Select(Globs.TransUcsWcs).ToList();
+            var wcs2DPointList = wcsPointList.ToList2D();
+            var bnd = Boundings.CreatePolyline(wcs2DPointList, closed: true);
+            bnd.Layer = "0";
+            var btr = (BlockTableRecord)transaction.GetObject(Application.DocumentManager.MdiActiveDocument.Database.CurrentSpaceId, OpenMode.ForWrite);
+            btr.AppendEntity(bnd);
+            transaction.AddNewlyCreatedDBObject(bnd, true);
 
             Document doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
@@ -311,23 +379,43 @@ namespace Plan2Ext.BlockInfo
 
                 positionWcs += new Vector3d(0, VerticalDistance, 0);
             }
-
-
         }
 
-        private static void InsertLocalOrFromProto(string blockName, Point3d position, string dwgName, bool explode, Transaction transaction)
+        /// <summary>
+        /// Inserts block local or from proto
+        /// </summary>
+        /// <param name="blockName"></param>
+        /// <param name="positionUcs"></param>
+        /// <param name="dwgName"></param>
+        /// <param name="explode"></param>
+        /// <param name="transaction"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="ucsPointList"></param>
+        /// <param name="newPositionX"></param>
+        /// <returns>X-Value of boundary on the right side in UCS</returns>
+        private static bool InsertLocalOrFromProto(string blockName, Point3d positionUcs, string dwgName, bool explode, Transaction transaction, double scaleFactor, List<Point3d> ucsPointList,  out double newPositionX)
         {
+            newPositionX = 0.0;
+
             Document doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
 
-            if (!Globs.BlockExists(blockName) && !Globs.InsertFromPrototype(blockName, dwgName)) return;
+            if (!Globs.BlockExists(blockName) && !Globs.InsertFromPrototype(blockName, dwgName)) return false;
             var blockTable = (BlockTable)transaction.GetObject(db.BlockTableId, OpenMode.ForRead);
             var oid = blockTable[blockName];
-            using (var bref = new BlockReference(position, oid))
+            using (var bref = new BlockReference(Globs.TransUcsWcs(positionUcs), oid))
             {
+                bref.ScaleFactors = new Scale3d(scaleFactor);
+                bref.Rotation = Globs.GetUcsDirection();
                 var acCurSpaceBlkTblRec = (BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
                 acCurSpaceBlkTblRec.AppendEntity(bref);
                 transaction.AddNewlyCreatedDBObject(bref, true);
+
+                var boundingPointsWcs = Boundings.CollectPointsWcs(transaction, bref);
+                var ptsUcs = boundingPointsWcs.ToList().Select(Globs.TransWcsUcs).ToList();
+                var recPointsUcs = Boundings.GetRectanglePointsFromBounding(buffer: 0.0, pts: ptsUcs);
+                ucsPointList.AddRange(recPointsUcs);
+                newPositionX = recPointsUcs.Select(x => x.X).Max();
 
                 if (explode)
                 {
@@ -343,6 +431,8 @@ namespace Plan2Ext.BlockInfo
                     bref.Erase();
                 }
             }
+
+            return true;
         }
 
 

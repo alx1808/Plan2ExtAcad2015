@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable CommentTypo
+
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
 
@@ -14,7 +17,9 @@ namespace Plan2Ext
     public class Boundings
     {
 
+        #region Testcommands
         //[CommandMethod("MERTEXT", CommandFlags.UsePickSet)]
+        // ReSharper disable once UnusedMember.Global
         public void Mertext()
         {
             Document doc =
@@ -46,8 +51,8 @@ namespace Plan2Ext
 
         }
 
-
         //[CommandMethod("MER", CommandFlags.UsePickSet)]
+        // ReSharper disable once UnusedMember.Global
         public void MinimumEnclosingRectangle()
         {
             //MinimumEnclosingBoundary(false);
@@ -55,12 +60,16 @@ namespace Plan2Ext
         }
 
         //[CommandMethod("MEC", CommandFlags.UsePickSet)]
+        // ReSharper disable once UnusedMember.Global
         public void MinimumEnclosingCircle()
         {
             MinimumEnclosingBoundary();
         }
+        #endregion
 
-        public void MinimumEnclosingRectangular(bool forUcs, bool oneBoundPerEnt, double buffer)
+        #region internal
+
+        private void MinimumEnclosingRectangular(bool forUcs, bool oneBoundPerEnt, double buffer)
         {
             Document doc =
                 Application.DocumentManager.MdiActiveDocument;
@@ -70,22 +79,18 @@ namespace Plan2Ext
             // Ask user to select entities
 
             PromptSelectionOptions pso =
-              new PromptSelectionOptions();
-            pso.MessageForAdding = "\nSelect objects to enclose: ";
-            pso.AllowDuplicates = false;
-            pso.AllowSubSelections = true;
-            pso.RejectObjectsFromNonCurrentSpace = true;
-            pso.RejectObjectsOnLockedLayers = false;
+                new PromptSelectionOptions
+                {
+                    MessageForAdding = "\nSelect objects to enclose: ",
+                    AllowDuplicates = false,
+                    AllowSubSelections = true,
+                    RejectObjectsFromNonCurrentSpace = true,
+                    RejectObjectsOnLockedLayers = false
+                };
 
             PromptSelectionResult psr = ed.GetSelection(pso);
             if (psr.Status != PromptStatus.OK)
                 return;
-
-
-            // Get the current UCS
-
-            CoordinateSystem3d ucs =
-              ed.CurrentUserCoordinateSystem.CoordinateSystem3d;
 
             // Collect points on the component entities
 
@@ -156,9 +161,7 @@ namespace Plan2Ext
             }
         }
 
-
-
-        public void MinimumEnclosingBoundary(bool circularBoundary = true)
+        private void MinimumEnclosingBoundary(bool circularBoundary = true)
         {
             Document doc =
                 Application.DocumentManager.MdiActiveDocument;
@@ -168,12 +171,14 @@ namespace Plan2Ext
             // Ask user to select entities
 
             PromptSelectionOptions pso =
-              new PromptSelectionOptions();
-            pso.MessageForAdding = "\nSelect objects to enclose: ";
-            pso.AllowDuplicates = false;
-            pso.AllowSubSelections = true;
-            pso.RejectObjectsFromNonCurrentSpace = true;
-            pso.RejectObjectsOnLockedLayers = false;
+                new PromptSelectionOptions
+                {
+                    MessageForAdding = "\nSelect objects to enclose: ",
+                    AllowDuplicates = false,
+                    AllowSubSelections = true,
+                    RejectObjectsFromNonCurrentSpace = true,
+                    RejectObjectsOnLockedLayers = false
+                };
 
             PromptSelectionResult psr = ed.GetSelection(pso);
             if (psr.Status != PromptStatus.OK)
@@ -184,11 +189,10 @@ namespace Plan2Ext
             if (psr.Value.Count > 1)
             {
                 PromptKeywordOptions pko =
-                  new PromptKeywordOptions(
-                    "\nMultiple objects selected: create " +
-                    "individual boundaries around each one?"
-                  );
-                pko.AllowNone = true;
+                    new PromptKeywordOptions(
+                        "\nMultiple objects selected: create " +
+                        "individual boundaries around each one?"
+                    ) {AllowNone = true};
                 pko.Keywords.Add("Yes");
                 pko.Keywords.Add("No");
                 pko.Keywords.Default = "No";
@@ -280,7 +284,7 @@ namespace Plan2Ext
                             Entity bnd =
                               (circularBoundary ?
                                 CircleFromPoints(pts, ucs, buffer) :
-                                RectangleFromPoints(pts, ucs, buffer)
+                                RectangleFromPoints(pts, buffer)
                               );
                             btr.AppendEntity(bnd);
                             tr.AddNewlyCreatedDBObject(bnd, true);
@@ -300,7 +304,8 @@ namespace Plan2Ext
             }
         }
 
-        private Point3dCollection CollectPointsWcs(
+        // ReSharper disable once CyclomaticComplexity
+        internal static Point3dCollection CollectPointsWcs(
           Transaction tr, Entity ent
         )
         {
@@ -322,9 +327,9 @@ namespace Plan2Ext
                 foreach (ObjectId arId in br.AttributeCollection)
                 {
                     DBObject obj = tr.GetObject(arId, OpenMode.ForRead);
-                    if (obj is AttributeReference)
+                    var ar = obj as AttributeReference;
+                    if (ar != null)
                     {
-                        AttributeReference ar = (AttributeReference)obj;
                         ExtractBounds(ar, pts);
                     }
                 }
@@ -356,7 +361,10 @@ namespace Plan2Ext
                           );
                         pts.Add(pt);
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
             else if (ent is DBPoint)
@@ -396,7 +404,10 @@ namespace Plan2Ext
                         pts.Add(f.GetVertexAt(i));
                     }
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
             else if (ent is Solid)
             {
@@ -408,13 +419,15 @@ namespace Plan2Ext
                         pts.Add(sol.GetPointAt(i));
                     }
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
             else
             {
                 // Here's where we attempt to explode other types
                 // of object
-
                 DBObjectCollection oc = new DBObjectCollection();
                 try
                 {
@@ -435,12 +448,67 @@ namespace Plan2Ext
                         }
                     }
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
             return pts;
         }
 
-        private void ExtractBounds(
+        internal static Polyline CreatePolyline(List<Point2d> wcs2DPointList, bool closed)
+        {
+            var p = new Polyline(4);
+            //p.Normal = pl.Normal;
+            for (int i = 0; i < wcs2DPointList.Count; i++)
+            {
+                p.AddVertexAt(i, wcs2DPointList[i], 0, 0, 0);
+            }
+
+            p.Closed = closed;
+            return p;
+        }
+
+        internal static List<Point3d> GetRectanglePointsFromBounding(double buffer, List<Point3d> pts)
+        {
+            double minX = pts[0].X,
+                maxX = minX,
+                minY = pts[0].Y,
+                maxY = minY;
+
+
+            for (int i = 1; i < pts.Count; i++)
+            {
+                var pt = pts[i];
+                if (pt.X < minX) minX = pt.X;
+                if (pt.X > maxX) maxX = pt.X;
+                if (pt.Y < minY) minY = pt.Y;
+                if (pt.Y > maxY) maxY = pt.Y;
+            }
+
+            double buf = buffer;
+                //Math.Min(maxX - minX, maxY - minY) * buffer;
+
+            minX -= buf;
+            minY -= buf;
+            maxX += buf;
+            maxY += buf;
+
+            var ucsPointList = new List<Point3d>
+            {
+                new Point3d(minX, minY, 0.0),
+                new Point3d(minX, maxY, 0.0),
+                new Point3d(maxX, maxY, 0.0),
+                new Point3d(maxX, minY, 0.0),
+            };
+            return ucsPointList;
+        }
+        
+        #endregion
+
+        #region private
+
+        private static void ExtractBounds(
           DBText txt, Point3dCollection pts
         )
         {
@@ -461,15 +529,17 @@ namespace Plan2Ext
                 // with no rotation, so it's easier to use its
                 // extents
 
-                DBText txt2 = new DBText();
-                txt2.Normal = Vector3d.ZAxis;
-                txt2.Position = Point3d.Origin;
+                DBText txt2 = new DBText
+                {
+                    Normal = Vector3d.ZAxis,
+                    Position = Point3d.Origin,
+                    TextString = txt.TextString,
+                    TextStyleId = txt.TextStyleId,
+                    LineWeight = txt.LineWeight
+                };
 
                 // Other properties are copied from the original
 
-                txt2.TextString = txt.TextString;
-                txt2.TextStyleId = txt.TextStyleId;
-                txt2.LineWeight = txt.LineWeight;
                 txt2.Thickness = txt2.Thickness;
                 txt2.HorizontalMode = txt.HorizontalMode;
                 txt2.VerticalMode = txt.VerticalMode;
@@ -490,7 +560,7 @@ namespace Plan2Ext
                     // in an array
 
                     Point2d[] bounds =
-                      new Point2d[] {Point2d.Origin,new Point2d(0.0, maxPt.Y),new Point2d(maxPt.X, maxPt.Y),new Point2d(maxPt.X, 0.0)};
+                      new[] {Point2d.Origin,new Point2d(0.0, maxPt.Y),new Point2d(maxPt.X, maxPt.Y),new Point2d(maxPt.X, 0.0)};
 
                     // We're going to get each point's WCS coordinates
                     // using the plane the text is on
@@ -513,7 +583,7 @@ namespace Plan2Ext
         }
 
         private Entity RectangleFromPoints(
-          Point3dCollection pts, CoordinateSystem3d ucs, double buffer
+          Point3dCollection pts, double buffer
         )
         {
             if (pts.Count == 0) return null;
@@ -543,55 +613,9 @@ namespace Plan2Ext
             return GetRectanglePointsFromBounding(buffer, pts.ToList());
         }
 
+        #endregion
 
-        private static Polyline CreatePolyline(List<Point2d> wcs2DPointList, bool closed)
-        {
-            var p = new Polyline(4);
-            //p.Normal = pl.Normal;
-            for (int i = 0; i < wcs2DPointList.Count; i++)
-            {
-                p.AddVertexAt(i, wcs2DPointList[i], 0, 0, 0);
-            }
-
-            p.Closed = closed;
-            return p;
-        }
-
-        private static List<Point3d> GetRectanglePointsFromBounding(double buffer, List<Point3d> pts)
-        {
-            double minX = pts[0].X,
-                maxX = minX,
-                minY = pts[0].Y,
-                maxY = minY;
-
-
-            for (int i = 1; i < pts.Count; i++)
-            {
-                var pt = pts[i];
-                if (pt.X < minX) minX = pt.X;
-                if (pt.X > maxX) maxX = pt.X;
-                if (pt.Y < minY) minY = pt.Y;
-                if (pt.Y > maxY) maxY = pt.Y;
-            }
-
-            double buf =
-                Math.Min(maxX - minX, maxY - minY) * buffer;
-
-            minX -= buf;
-            minY -= buf;
-            maxX += buf;
-            maxY += buf;
-
-            var ucsPointList = new List<Point3d>
-            {
-                new Point3d(minX, minY, 0.0),
-                new Point3d(minX, maxY, 0.0),
-                new Point3d(maxX, maxY, 0.0),
-                new Point3d(maxX, minY, 0.0),
-            };
-            return ucsPointList;
-        }
-
+        #region todo circlepoints
 
         // todo: not tested yet
         private Entity CircleFromPoints(
@@ -608,10 +632,10 @@ namespace Plan2Ext
 
             // Project the points onto it
 
-            List<Point2d> pts2d = new List<Point2d>(pts.Count);
+            List<Point2d> pts2D = new List<Point2d>(pts.Count);
             for (int i = 0; i < pts.Count; i++)
             {
-                pts2d.Add(pl.ParameterOf(pts[i]));
+                pts2D.Add(pl.ParameterOf(pts[i]));
             }
 
             // Assuming we have some points in our list...
@@ -621,7 +645,7 @@ namespace Plan2Ext
                 // We need the center and radius of our circle
 
                 Point2d center;
-                double radius = 0;
+                double radius;
 
                 // Use our fast approximation algorithm to
                 // calculate the center and radius of our
@@ -630,18 +654,18 @@ namespace Plan2Ext
                 // with 10K gives 1%)
 
                 BadoiuClarksonIteration(
-                  pts2d, 10000, out center, out radius
+                  pts2D, 10000, out center, out radius
                 );
 
                 // Get our center point in WCS (on the plane
                 // of our UCS)
 
-                Point3d cen3d = pl.EvaluatePoint(center);
+                Point3d cen3D = pl.EvaluatePoint(center);
 
                 // Create the circle and add it to the drawing
 
                 return new Circle(
-                  cen3d, ucs.Zaxis, radius * (1.0 + buffer)
+                  cen3D, ucs.Zaxis, radius * (1.0 + buffer)
                 );
             }
             return null;
@@ -650,7 +674,7 @@ namespace Plan2Ext
         // Algorithm courtesy (and copyright of) Frank Nielsen
         // http://blog.informationgeometry.org/article.php?id=164
 
-        public void BadoiuClarksonIteration(
+        private void BadoiuClarksonIteration(
           List<Point2d> set, int iter,
           out Point2d cen, out double rad
         )
@@ -688,6 +712,10 @@ namespace Plan2Ext
                   );
             }
         }
+        
+
+        #endregion
+
     }
 
 }
