@@ -48,7 +48,6 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
-
         [_AcTrx.CommandMethod("alxinsert", _AcTrx.CommandFlags.NoTileMode)]
         public static void alxinsert()
         {
