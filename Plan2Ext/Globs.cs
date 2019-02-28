@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Globalization;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -62,7 +63,7 @@ namespace Plan2Ext
 
         public static void SwitchToModelSpace()
         {
-            _AcAp.Application.SetSystemVariable("TILEMODE",1);
+            _AcAp.Application.SetSystemVariable("TILEMODE", 1);
         }
         public static void SwitchToPaperSpace()
         {
@@ -1465,6 +1466,61 @@ namespace Plan2Ext
             return ret;
         }
 
+        public static void Wblock(string fileName, IEnumerable<_AcDb.ObjectId> objectIds)
+        {
+            if (System.IO.File.Exists(fileName)) throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "File already exists: {0}!", fileName));
+
+            var currentDatabase = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            var objectIdCollection = new _AcDb.ObjectIdCollection(objectIds.ToArray());
+            using (var database = new _AcDb.Database(true, false))
+            {
+                currentDatabase.Wblock(database, objectIdCollection, _AcGe.Point3d.Origin,
+                    _AcDb.DuplicateRecordCloning.Ignore);
+                database.SaveAs(fileName, _AcDb.DwgVersion.Newest);
+            }
+        }
+
+        /// <summary>
+        /// Explode block in current document
+        /// </summary>
+        /// <param name="blockOid"></param>
+        public static void Explode(_AcDb.ObjectId blockOid, bool deleteRef = false, bool purge = false)
+        {
+            var newlyCreatedObjects = new List<_AcDb.ObjectId>();
+            var db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                //_AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockReference block = (_AcDb.BlockReference)tr.GetObject(blockOid, _AcDb.OpenMode.ForRead);
+                _AcDb.ObjectId blockRefTableId = block.BlockTableRecord;
+                _AcDb.BlockTableRecord targetSpace = (_AcDb.BlockTableRecord)tr.GetObject(block.BlockId, _AcDb.OpenMode.ForWrite);
+                //_AcDb.BlockTableRecord targetSpace = (_AcDb.BlockTableRecord)tr.GetObject(_AcDb.SymbolUtilityServices.GetBlockModelSpaceId(db), _AcDb.OpenMode.ForWrite);
+                _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
+                block.Explode(objs);
+                foreach (_AcDb.DBObject obj in objs)
+                {
+                    _AcDb.Entity ent = (_AcDb.Entity)obj;
+                    targetSpace.AppendEntity(ent);
+                    tr.AddNewlyCreatedDBObject(ent, true);
+                    newlyCreatedObjects.Add(ent.ObjectId);
+                }
+
+                if (deleteRef)
+                {
+                    block.UpgradeOpen();
+                    block.Erase();
+                }
+
+                if (purge)
+                {
+                    var bd = (_AcDb.BlockTableRecord)tr.GetObject(blockRefTableId, _AcDb.OpenMode.ForWrite);
+                    bd.Erase();
+                }
+                tr.Commit();
+            }
+        }
+
+
         public static _AcDb.BlockReference GetBlockFromItsSubentity(_AcDb.Transaction tr, _AcEd.PromptNestedEntityResult nres)
         {
             _AcDb.ObjectId selId = nres.ObjectId;
@@ -2736,6 +2792,14 @@ namespace Plan2Ext
             if (tv.TypeCode == (int)_AcBrx.LispDataType.T_atom) return true;
             if (tv.TypeCode == (int)_AcBrx.LispDataType.Nil) return false;
             throw new ArgumentException("Typed value is not a boolean", paramName: "tv");
+        }
+
+        internal static string RemoveInvalidCharacters(string fileName)
+        {
+            var regexSearch = new string(System.IO.Path.GetInvalidFileNameChars()) + new string(System.IO.Path.GetInvalidPathChars());
+            var r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            fileName = r.Replace(fileName, "_");
+            return fileName;
         }
     }
 }

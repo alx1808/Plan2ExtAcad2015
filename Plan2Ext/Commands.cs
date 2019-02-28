@@ -48,46 +48,162 @@ namespace Plan2Ext
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
-        [_AcTrx.CommandMethod("alxinsert", _AcTrx.CommandFlags.NoTileMode)]
-        public static void alxinsert()
+
+
+
+        [_AcTrx.CommandMethod("AlxExportLayout")]
+        public static async void AlxExportLayout()
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcEd.Editor ed = doc.Editor;
             _AcDb.Database db = doc.Database;
 
-            string blockName = "PLK_FW_BA_STANDORT";
-            string protoTypeDwg = "FW_Legende.dwg";
 
-            if (Globs.BlockExists(blockName) || Globs.InsertFromPrototype(blockName, protoTypeDwg))
+            //var dwgName1 = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\Hugo";
+            //bool userBreak = await Globs.CallCommandAsync("_.ExportLayout", dwgName1);
+
+            //var dwgName = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\Abdeck.dwg";
+            ////ImportDrawing(dwgName);
+            //Globs.InsertDwg(dwgName, _AcGe.Point3d.Origin,0.0,"hugo");
+
+            var res = ed.GetSelection();
+            if (res.Status != _AcEd.PromptStatus.OK) return;
+            var objIdArray = res.Value.GetObjectIds();
+            var objectIds = new List<_AcDb.ObjectId>();
+            foreach (var objectId in objIdArray)
             {
-                using (var transaction = doc.TransactionManager.StartTransaction())
+                objectIds.Add(objectId);
+            }
+
+            var fileName = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\output.dwg";
+            if (System.IO.File.Exists(fileName)) System.IO.File.Delete(fileName);
+            Globs.Wblock(fileName, objectIds);
+            var blockOid = Globs.InsertDwg(fileName, _AcGe.Point3d.Origin,0.0,"hugo");
+            Globs.Explode(blockOid, false,false);
+
+
+            ed.WriteMessage("\nfertig.\n");
+
+
+
+        }
+
+        public static void ImportDrawing(string drawingPath)
+        {
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                try
                 {
-                    var blockTable = (_AcDb.BlockTable)transaction.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-                    var oid = blockTable[blockName];
-                    using (var bref = new _AcDb.BlockReference(new _AcGe.Point3d(-200, 0, 0), oid))
+                    var objectIds = new _AcDb.ObjectIdCollection();
+                    var blockTable = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                    var extDb = new _AcDb.Database();
+                    extDb.ReadDwgFile(drawingPath, System.IO.FileShare.Read, false, null);
+                    using (var extTrans = extDb.TransactionManager.StartTransaction())
                     {
-                        var acCurSpaceBlkTblRec = (_AcDb.BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForWrite);
-                        acCurSpaceBlkTblRec.AppendEntity(bref);
-                        transaction.AddNewlyCreatedDBObject(bref, true);
-
-                        _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
-                        bref.Explode(objs);
-                        _AcDb.ObjectId blockRefTableId = bref.BlockTableRecord;
-                        foreach (_AcDb.DBObject obj in objs)
+                        var extBlockTable =
+                            (_AcDb.BlockTable)extTrans.GetObject(
+                                extDb.BlockTableId, _AcDb.OpenMode.ForRead);
+                        var extModelSpace =
+                            (_AcDb.BlockTableRecord)extTrans.GetObject(
+                                extBlockTable[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+                        foreach (var id in extModelSpace)
                         {
-                            _AcDb.Entity ent = (_AcDb.Entity)obj;
-                            acCurSpaceBlkTblRec.AppendEntity(ent);
-                            transaction.AddNewlyCreatedDBObject(ent, true);
+                            var ent = extTrans.GetObject(id, _AcDb.OpenMode.ForRead, true);
+                            if (!ent.IsErased) objectIds.Add(id);
                         }
-
-                        bref.UpgradeOpen();
-                        bref.Erase();
                     }
-
-                    transaction.Commit();
+                    extDb.CloseInput(true);
+                    var idMapping = new _AcDb.IdMapping();
+                    db.WblockCloneObjects(
+                        objectIds,
+                        blockTable[_AcDb.BlockTableRecord.ModelSpace],
+                        idMapping,
+                        _AcDb.DuplicateRecordCloning.Replace,
+                        false);
+                    trans.Commit();
+                }
+                catch (System.Exception ex)
+                {
                 }
             }
+            //string drawingPath = @"C:\Temp\StandardTemplate.dwg";
+            //var destDb = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            //using (var sourceDb = new _AcDb.Database(buildDefaultDrawing: false, noDocument: true))
+            //{
+            //    sourceDb.ReadDwgFile(drawingPath, System.IO.FileShare.Read, false, null);
+            //    var SourceObjectIds = new _AcDb.ObjectIdCollection();
+            //    Autodesk.AutoCAD.DatabaseServices.TransactionManager SourceTM = sourceDb.TransactionManager;
+            //    using (var trans = destDb.TransactionManager.StartTransaction())
+            //    {
+            //        try
+            //        {
+            //            using (var extTrans = sourceDb.TransactionManager.StartTransaction())
+            //            {
+            //                var extBlockTable = (_AcDb.BlockTable)extTrans.GetObject(sourceDb.BlockTableId, _AcDb.OpenMode.ForRead);
+            //                var extModelSpace = (_AcDb.BlockTableRecord)extTrans.GetObject(extBlockTable[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+            //                foreach (var id in extModelSpace)
+            //                {
+            //                    SourceObjectIds.Add(id);
+            //                }
+            //            }
+            //            sourceDb.CloseInput(true);
+            //            var idMapping = new _AcDb.IdMapping();
+            //            destDb.WblockCloneObjects(SourceObjectIds, destDb.BlockTableId, idMapping, _AcDb.DuplicateRecordCloning.Replace, false);
+            //            trans.Commit();
+            //        }
+            //        catch (System.Exception ex)
+            //        {
+            //            _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage("\nError " + ex.Message);
+            //        }
+            //    }
+            //}
         }
+
+
+
+
+        //[_AcTrx.CommandMethod("alxinsert", _AcTrx.CommandFlags.NoTileMode)]
+        //public static void alxinsert()
+        //{
+        //    _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+        //    _AcEd.Editor ed = doc.Editor;
+        //    _AcDb.Database db = doc.Database;
+
+        //    string blockName = "PLK_FW_BA_STANDORT";
+        //    string protoTypeDwg = "FW_Legende.dwg";
+
+        //    if (Globs.BlockExists(blockName) || Globs.InsertFromPrototype(blockName, protoTypeDwg))
+        //    {
+        //        using (var transaction = doc.TransactionManager.StartTransaction())
+        //        {
+        //            var blockTable = (_AcDb.BlockTable)transaction.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+        //            var oid = blockTable[blockName];
+        //            using (var bref = new _AcDb.BlockReference(new _AcGe.Point3d(-200, 0, 0), oid))
+        //            {
+        //                var acCurSpaceBlkTblRec = (_AcDb.BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForWrite);
+        //                acCurSpaceBlkTblRec.AppendEntity(bref);
+        //                transaction.AddNewlyCreatedDBObject(bref, true);
+
+        //                _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
+        //                bref.Explode(objs);
+        //                _AcDb.ObjectId blockRefTableId = bref.BlockTableRecord;
+        //                foreach (_AcDb.DBObject obj in objs)
+        //                {
+        //                    _AcDb.Entity ent = (_AcDb.Entity)obj;
+        //                    acCurSpaceBlkTblRec.AppendEntity(ent);
+        //                    transaction.AddNewlyCreatedDBObject(ent, true);
+        //                }
+
+        //                bref.UpgradeOpen();
+        //                bref.Erase();
+        //            }
+
+        //            transaction.Commit();
+        //        }
+        //    }
+        //}
 
 
         ///// <summary>

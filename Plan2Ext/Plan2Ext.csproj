@@ -167,6 +167,7 @@
     </Compile>
     <Compile Include="LayerNummerierung\NrOptions.cs" />
     <Compile Include="LayerNummerierung\NrPalette.cs" />
+    <Compile Include="LayoutExport\Commands.cs" />
     <Compile Include="Layouts.cs" />
     <Compile Include="LayTrans\Commands.cs" />
     <Compile Include="LayTrans\Engine.cs" />
@@ -198,6 +199,11 @@
     <Compile Include="PaperSpaceHelper.cs" />
     <Compile Include="Plot\LayoutCreation.cs" />
     <Compile Include="Plot\PlotSettingsForLayout.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="RaumHoePruefung\Commands.cs" />
     <Compile Include="RaumHoePruefung\Engine.cs" />
     <Compile Include="RaumHoePruefung\Globs.cs" />
@@ -213,6 +219,7 @@
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
     <Compile Include="Raumnummern\Summarizer.cs" />
     <Compile Include="Searcher.cs" />
+    <Compile Include="TestCommands.cs" />
     <Compile Include="TestExplode.cs" />
     <Compile Include="TheConfiguration.cs" />
     <Compile Include="Commands.cs" />
@@ -346,6 +353,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Nummerierung\NrControl.resx">
       <DependentUpon>NrControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="RaumHoePruefung\HoePrControl.resx">
       <DependentUpon>HoePrControl.cs</DependentUpon>

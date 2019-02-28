@@ -710,7 +710,6 @@ namespace Plan2Ext.AutoIdVergabe
                         // funkt nicht -> xref würde gelöscht
                         var bd = (_AcDb.BlockTableRecord)tr.GetObject(blockRefTableId, _AcDb.OpenMode.ForWrite);
                         bd.Erase();
-
                     }
                 }
                 tr.Commit();
