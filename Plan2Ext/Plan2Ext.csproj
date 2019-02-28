@@ -28,7 +28,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\..\..\bin2015\</OutputPath>
-    <DefineConstants>TRACE;NEWSETFOCUS;ACAD2013_OR_NEWER;ARX_APP</DefineConstants>
+    <DefineConstants>TRACE;NEWSETFOCUS;ACAD2013_OR_NEWER;ARX_APP;ACAD2015_OR_NEWER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>

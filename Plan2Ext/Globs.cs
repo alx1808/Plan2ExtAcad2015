@@ -1048,12 +1048,18 @@ namespace Plan2Ext
             if (ids.Count == 0) return;
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
-            using (_AcDb.Transaction tr = doc.TransactionManager.StartTransaction())
-            {
-                _AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+            DrawOrderBottom(ids, db);
+        }
 
-                var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+        public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.Database db)
+        {
+            using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                _AcDb.BlockTable bt = (_AcDb.BlockTable) tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr =
+                    (_AcDb.BlockTableRecord) tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+
+                var dot = (_AcDb.DrawOrderTable) tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
                 dot.MoveToBottom(ids);
 
                 tr.Commit();
@@ -1424,7 +1430,7 @@ namespace Plan2Ext
 
 
 
-        public static _AcDb.ObjectId InsertDwg(string fname, _AcGe.Point3d insertPt, double rotation, string blockName)
+        public static _AcDb.ObjectId InsertDwg(string fname, _AcGe.Point3d insertPt, double rotation, double scale, string blockName)
         {
 
             log.Debug("InsertDwg");
@@ -1432,7 +1438,52 @@ namespace Plan2Ext
             _AcDb.Database db = doc.Database;
             _AcEd.Editor ed = doc.Editor;
 
-            _AcDb.ObjectId objId;
+            _AcDb.ObjectId ret;
+            ret = InsertDwgToDb(fname, insertPt, rotation, scale, blockName, db);
+
+            log.Debug("Return InsertDwg");
+            return ret;
+        }
+
+        public static void InsertDwgToDwg(string targetFileName, string sourceFileName, _AcGe.Point3d insertPt,
+            double rotation, double scale)
+        {
+            _AcDb.ObjectId blockOid;
+            var newFileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(targetFileName),
+                System.IO.Path.GetFileNameWithoutExtension(targetFileName) + "_X.dwg");
+            using (var dbTarget = new _AcDb.Database(false, true))
+            {
+                dbTarget.ReadDwgFile(targetFileName, System.IO.FileShare.Read, true, "");
+                string newBlockName = GetNewBlockname(dbTarget, "Dummy");
+                blockOid = InsertDwgToDb(sourceFileName, insertPt, rotation, scale,newBlockName, dbTarget);
+                Explode(blockOid,dbTarget,true,true);
+                dbTarget.SaveAs(newFileName, _AcDb.DwgVersion.Newest);
+            }
+
+            BakAndMove(newFileName, targetFileName);
+        }
+
+        internal static string GetNewBlockname(_AcDb.Database dbTarget, string prefix)
+        {
+            var inc = 1;
+            while (BlockExists(prefix + inc, dbTarget))
+            {
+                inc++;
+            }
+
+            return prefix + inc;
+        }
+
+        internal static void BakAndMove(string newFileName, string targetFileName)
+        {
+            var bakFileName = targetFileName.Remove(targetFileName.Length - 3, 3) + "Bak";
+            if (System.IO.File.Exists(bakFileName)) System.IO.File.Delete(bakFileName);
+            System.IO.File.Move(targetFileName, bakFileName);
+            System.IO.File.Move(newFileName, targetFileName);
+        }
+
+        private static _AcDb.ObjectId InsertDwgToDb(string fname, _AcGe.Point3d insertPt, double rotation, double scale, string blockName, _AcDb.Database db)
+        {
             _AcDb.ObjectId ret;
             using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -1441,17 +1492,19 @@ namespace Plan2Ext
                 log.Debug("Get Modelspace");
                 _AcDb.BlockTableRecord btrMs = db.CurrentSpaceId.GetObject(_AcDb.OpenMode.ForWrite) as _AcDb.BlockTableRecord;
                 log.Debug("Create new Database");
+                _AcDb.ObjectId objId;
                 using (_AcDb.Database dbInsert = new _AcDb.Database(false, true))
                 {
                     log.Debug("ReadDwgFile");
                     dbInsert.ReadDwgFile(fname, System.IO.FileShare.Read, true, "");
                     log.Debug("Insert to Db");
                     objId = db.Insert(blockName, dbInsert, true);
-
                 }
+
                 log.Debug("New Blockreference");
                 _AcDb.BlockReference bref = new _AcDb.BlockReference(insertPt, objId);
                 bref.Rotation = rotation;
+                bref.ScaleFactors = new _AcGe.Scale3d(scale);
                 log.Debug("Append to Modelspace");
                 btrMs.AppendEntity(bref);
                 log.Debug("AddNewlyCreatedDBObject");
@@ -1462,11 +1515,10 @@ namespace Plan2Ext
                 tr.Commit();
             }
 
-            log.Debug("Return InsertDwg");
             return ret;
         }
 
-        public static void Wblock(string fileName, IEnumerable<_AcDb.ObjectId> objectIds)
+        public static void Wblock(string fileName, IEnumerable<_AcDb.ObjectId> objectIds, _AcGe.Point3d origin)
         {
             if (System.IO.File.Exists(fileName)) throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "File already exists: {0}!", fileName));
 
@@ -1474,7 +1526,7 @@ namespace Plan2Ext
             var objectIdCollection = new _AcDb.ObjectIdCollection(objectIds.ToArray());
             using (var database = new _AcDb.Database(true, false))
             {
-                currentDatabase.Wblock(database, objectIdCollection, _AcGe.Point3d.Origin,
+                currentDatabase.Wblock(database, objectIdCollection, origin,
                     _AcDb.DuplicateRecordCloning.Ignore);
                 database.SaveAs(fileName, _AcDb.DwgVersion.Newest);
             }
@@ -1484,22 +1536,28 @@ namespace Plan2Ext
         /// Explode block in current document
         /// </summary>
         /// <param name="blockOid"></param>
-        public static void Explode(_AcDb.ObjectId blockOid, bool deleteRef = false, bool purge = false)
+        public static List<_AcDb.ObjectId> Explode(_AcDb.ObjectId blockOid, bool deleteRef = false, bool purge = false)
+        {
+            var db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            return Explode(blockOid, db, deleteRef, purge);
+        }
+
+        internal static List<_AcDb.ObjectId> Explode(_AcDb.ObjectId blockOid, _AcDb.Database db, bool deleteRef, bool purge)
         {
             var newlyCreatedObjects = new List<_AcDb.ObjectId>();
-            var db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 //_AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-                _AcDb.BlockReference block = (_AcDb.BlockReference)tr.GetObject(blockOid, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockReference block = (_AcDb.BlockReference) tr.GetObject(blockOid, _AcDb.OpenMode.ForRead);
                 _AcDb.ObjectId blockRefTableId = block.BlockTableRecord;
-                _AcDb.BlockTableRecord targetSpace = (_AcDb.BlockTableRecord)tr.GetObject(block.BlockId, _AcDb.OpenMode.ForWrite);
+                _AcDb.BlockTableRecord targetSpace =
+                    (_AcDb.BlockTableRecord) tr.GetObject(block.BlockId, _AcDb.OpenMode.ForWrite);
                 //_AcDb.BlockTableRecord targetSpace = (_AcDb.BlockTableRecord)tr.GetObject(_AcDb.SymbolUtilityServices.GetBlockModelSpaceId(db), _AcDb.OpenMode.ForWrite);
                 _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
                 block.Explode(objs);
                 foreach (_AcDb.DBObject obj in objs)
                 {
-                    _AcDb.Entity ent = (_AcDb.Entity)obj;
+                    _AcDb.Entity ent = (_AcDb.Entity) obj;
                     targetSpace.AppendEntity(ent);
                     tr.AddNewlyCreatedDBObject(ent, true);
                     newlyCreatedObjects.Add(ent.ObjectId);
@@ -1513,11 +1571,14 @@ namespace Plan2Ext
 
                 if (purge)
                 {
-                    var bd = (_AcDb.BlockTableRecord)tr.GetObject(blockRefTableId, _AcDb.OpenMode.ForWrite);
+                    var bd = (_AcDb.BlockTableRecord) tr.GetObject(blockRefTableId, _AcDb.OpenMode.ForWrite);
                     bd.Erase();
                 }
+
                 tr.Commit();
             }
+
+            return newlyCreatedObjects;
         }
 
 
@@ -2273,10 +2334,15 @@ namespace Plan2Ext
             log.Info(string.Format(CultureInfo.InvariantCulture, "BlockExists: {0}", blockName));
 
             _AcDb.Database db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            return BlockExists(blockName, db);
+        }
+
+        internal static bool BlockExists(string blockName, _AcDb.Database db)
+        {
             _AcDb.TransactionManager tm = db.TransactionManager;
             using (_AcDb.Transaction myT = tm.StartTransaction())
             {
-                using (_AcDb.BlockTable bt = (_AcDb.BlockTable)tm.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead, false))
+                using (_AcDb.BlockTable bt = (_AcDb.BlockTable) tm.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead, false))
                 {
                     return (bt.Has(blockName));
                 }

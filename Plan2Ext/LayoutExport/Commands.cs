@@ -23,6 +23,8 @@ namespace Plan2Ext.LayoutExport
 
         private static string CurrentOutDwg { get; set; }
         private static string CurrentExportDwg { get; set; }
+        private static Point3d CurrentOrigin { get; set; }
+        private static double CurrentScale { get; set; }
 
         [CommandMethod("Plan2LayoutExport")]
         // ReSharper disable once UnusedMember.Global
@@ -50,13 +52,11 @@ namespace Plan2Ext.LayoutExport
                 // Export layout to <dwgprefix><layoutname>.dwg
                 await ExportLayout();
 
-                ed.WriteMessage("\nfertig.\n");
-
                 // Import saved entities to exported layout
-                //ImportSavedEntitiesToExportedLayout();
+                ImportSavedEntitiesToExportedLayout();
 
                 // Draworder correction
-                //DraworderCorrection();
+                DraworderCorrection();
 
                 // Ctb-ColorCorrection
                 //CtbColorCorrection();
@@ -111,10 +111,11 @@ namespace Plan2Ext.LayoutExport
             }
             catch (System.Exception e)
             {
-                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(CultureInfo.InvariantCulture, "Unable to delete file '{0}'! {1}", CurrentOutDwg,e.Message));
+                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(CultureInfo.InvariantCulture, "Unable to delete file '{0}'! {1}", CurrentOutDwg, e.Message));
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void CtbColorCorrection()
         {
             throw new NotImplementedException();
@@ -122,21 +123,75 @@ namespace Plan2Ext.LayoutExport
 
         private static void DraworderCorrection()
         {
-            throw new NotImplementedException();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var newFileName = Path.Combine(Path.GetDirectoryName(CurrentExportDwg),
+                Path.GetFileNameWithoutExtension(CurrentExportDwg) + "_X.dwg");
+            using (var dbTarget = new Database(false, true))
+            {
+                dbTarget.ReadDwgFile(CurrentExportDwg, FileShare.Read, true, "");
+
+                var formerXrefs = new ObjectIdCollection();
+                var otherEntities = new ObjectIdCollection();
+                var wipeOuts = new ObjectIdCollection();
+
+
+                using (var trans = dbTarget.TransactionManager.StartTransaction())
+                {
+
+                    var bt = (BlockTable)trans.GetObject(dbTarget.BlockTableId, OpenMode.ForRead);
+                    var btr = (BlockTableRecord)trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                    foreach (var oid in btr)
+                    {
+                        var ent = trans.GetObject(oid, OpenMode.ForRead);
+                        var blockRef = ent as BlockReference;
+                        if (blockRef != null)
+                        {
+                            var blockName = Globs.GetBlockname(blockRef, trans);
+                            if (blockName.StartsWith("*")) formerXrefs.Add(oid);
+                        }
+                        else
+                        {
+                            var wipeOut = ent as Wipeout;
+                            if (wipeOut != null)
+                            {
+                                wipeOuts.Add(oid);
+                            }
+                            else otherEntities.Add(oid);
+                        }
+                    }
+
+
+                    trans.Commit();
+                }
+
+                if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, dbTarget);
+                if (otherEntities.Count > 0) Globs.DrawOrderBottom(otherEntities, dbTarget);
+                if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, dbTarget);
+                dbTarget.SaveAs(newFileName, DwgVersion.Newest);
+            }
+
+            Globs.BakAndMove(newFileName, CurrentExportDwg);
         }
 
         private static void ImportSavedEntitiesToExportedLayout()
         {
-            throw new NotImplementedException();
+            Globs.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, 0.0, CurrentScale);
         }
 
+        /// <summary>
+        /// Can't be debugged!
+        /// </summary>
+        /// <returns></returns>
         private static async Task ExportLayout()
         {
             Globs.SwitchToPaperSpace();
+#if DEBUG
+            if (File.Exists(CurrentExportDwg)) File.Delete(CurrentExportDwg);
+            File.Copy(CurrentExportDwg + ".sic", CurrentExportDwg);
+#else
             await Globs.CallCommandAsync("_.ExportLayout", CurrentExportDwg);
+#endif
         }
-
-
 
         private static bool SaveAndDeleteNonExportableEntities()
         {
@@ -145,7 +200,7 @@ namespace Plan2Ext.LayoutExport
 
             GetCurrentOutDwg();
 
-            Globs.Wblock(CurrentOutDwg, objectIds);
+            Globs.Wblock(CurrentOutDwg, objectIds, CurrentOrigin);
 
             Delete(objectIds);
 
@@ -178,6 +233,7 @@ namespace Plan2Ext.LayoutExport
 
             CurrentOutDwg = Path.Combine(Path.GetTempPath(), tmpFileName + inc + ".dwg");
         }
+
 
         private static List<ObjectId> SelectNonExportableEntities()
         {
@@ -251,8 +307,19 @@ namespace Plan2Ext.LayoutExport
             var points = new List<Point3d>() { lu, lo, ro, ru };
             var wcsPoints = new List<Point3d>();
             PaperSpaceHelper.ConvertPaperSpaceCoordinatesToModelSpaceWcs(viewport.ObjectId, points, wcsPoints);
+            var luWcs = wcsPoints[0];
+            var loWcs = wcsPoints[1];
+            var heightWcs = luWcs.Distance2dTo(loWcs);
+            CurrentScale = viewport.Height / heightWcs;
+            var retPointCollection = new Point3dCollection(wcsPoints.ToArray());
 
-            return new Point3dCollection(wcsPoints.ToArray());
+            points.Clear();
+            points.Add(Point3d.Origin);
+            wcsPoints.Clear();
+            PaperSpaceHelper.ConvertPaperSpaceCoordinatesToModelSpaceWcs(viewport.ObjectId, points, wcsPoints);
+            CurrentOrigin = wcsPoints[0];
+
+            return retPointCollection;
         }
 
         private static bool GetFirstViewport(Transaction transaction, Document doc, out Viewport viewport)

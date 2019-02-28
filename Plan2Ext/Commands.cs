@@ -77,8 +77,8 @@ namespace Plan2Ext
 
             var fileName = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\output.dwg";
             if (System.IO.File.Exists(fileName)) System.IO.File.Delete(fileName);
-            Globs.Wblock(fileName, objectIds);
-            var blockOid = Globs.InsertDwg(fileName, _AcGe.Point3d.Origin,0.0,"hugo");
+            Globs.Wblock(fileName, objectIds, _AcGe.Point3d.Origin);
+            var blockOid = Globs.InsertDwg(fileName, _AcGe.Point3d.Origin,0.0,1.0,"hugo");
             Globs.Explode(blockOid, false,false);
 
 
