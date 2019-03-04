@@ -25,6 +25,8 @@ namespace Plan2Ext.LayoutExport
         private static string CurrentExportDwg { get; set; }
         private static Point3d CurrentOrigin { get; set; }
         private static double CurrentScale { get; set; }
+        private static double _ViewportTwistAngle;
+
 
         [CommandMethod("Plan2LayoutExport")]
         // ReSharper disable once UnusedMember.Global
@@ -43,8 +45,9 @@ namespace Plan2Ext.LayoutExport
                     return;
                 }
 
-
                 SetCurrentExportDwgName();
+
+                Globs.CreateBakFile(CurrentExportDwg);
 
                 // Export Wipeout and Blockreference entities inside first view to external dwg and delete entities.
                 if (!SaveAndDeleteNonExportableEntities()) return;
@@ -156,10 +159,16 @@ namespace Plan2Ext.LayoutExport
                             {
                                 wipeOuts.Add(oid);
                             }
-                            else otherEntities.Add(oid);
+                            else
+                            {
+                                var txt = ent as DBText;
+                                if (txt == null)
+                                {
+                                    otherEntities.Add(oid);
+                                }
+                            }
                         }
                     }
-
 
                     trans.Commit();
                 }
@@ -170,12 +179,13 @@ namespace Plan2Ext.LayoutExport
                 dbTarget.SaveAs(newFileName, DwgVersion.Newest);
             }
 
-            Globs.BakAndMove(newFileName, CurrentExportDwg);
+            Globs.Move(newFileName, CurrentExportDwg);
         }
+
 
         private static void ImportSavedEntitiesToExportedLayout()
         {
-            Globs.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, 0.0, CurrentScale);
+            Globs.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, _ViewportTwistAngle, CurrentScale, false);
         }
 
         /// <summary>
@@ -247,6 +257,7 @@ namespace Plan2Ext.LayoutExport
                     Globs.SwitchToPaperSpace();
                     Viewport viewport;
                     if (!GetFirstViewport(transaction, doc, out viewport)) return null;
+                    _ViewportTwistAngle = viewport.TwistAngle;
 
                     Point3dCollection point3DCollectionWcs = GetWcsViewportFrame(viewport);
                     Globs.SwitchToModelSpace();

@@ -1446,7 +1446,7 @@ namespace Plan2Ext
         }
 
         public static void InsertDwgToDwg(string targetFileName, string sourceFileName, _AcGe.Point3d insertPt,
-            double rotation, double scale)
+            double rotation, double scale, bool createBak)
         {
             _AcDb.ObjectId blockOid;
             var newFileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(targetFileName),
@@ -1460,7 +1460,9 @@ namespace Plan2Ext
                 dbTarget.SaveAs(newFileName, _AcDb.DwgVersion.Newest);
             }
 
+            if (createBak)
             BakAndMove(newFileName, targetFileName);
+            else Move(newFileName,targetFileName);
         }
 
         internal static string GetNewBlockname(_AcDb.Database dbTarget, string prefix)
@@ -1476,9 +1478,28 @@ namespace Plan2Ext
 
         internal static void BakAndMove(string newFileName, string targetFileName)
         {
-            var bakFileName = targetFileName.Remove(targetFileName.Length - 3, 3) + "Bak";
+            var bakFileName = GetBakFileName(targetFileName);
             if (System.IO.File.Exists(bakFileName)) System.IO.File.Delete(bakFileName);
             System.IO.File.Move(targetFileName, bakFileName);
+            System.IO.File.Move(newFileName, targetFileName);
+        }
+
+        internal static string GetBakFileName(string dwgFileName)
+        {
+            return dwgFileName.Remove(dwgFileName.Length - 3, 3) + "Bak";
+        }
+
+        internal static void CreateBakFile(string dwgFileName)
+        {
+            if (System.IO.File.Exists(dwgFileName))
+            {
+                System.IO.File.Copy(dwgFileName, GetBakFileName(dwgFileName), true);
+            }
+        }
+
+        internal static void Move(string newFileName, string targetFileName)
+        {
+            if (System.IO.File.Exists(targetFileName)) System.IO.File.Delete(targetFileName);
             System.IO.File.Move(newFileName, targetFileName);
         }
 
