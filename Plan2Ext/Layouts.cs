@@ -1,9 +1,6 @@
-﻿using System;
+﻿// ReSharper disable CommentTypo
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
@@ -31,13 +28,12 @@ using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcLm = Autodesk.AutoCAD.LayerManager;
-using System.Globalization;
-using System.Text.RegularExpressions;
+
 #endif
 
 namespace Plan2Ext
 {
-    public class Layouts
+    public static class Layouts
     {
         //Plan2Ext.Layouts.ImportLayout("02.OG B-Bau", @"D:\Plan2\Data\Plan2RenameBlocks\work\02_OGa.dwg");
         //Plan2Ext.Layouts.CreateLayout("alx");
@@ -52,7 +48,7 @@ namespace Plan2Ext
 
             using (_AcDb.Transaction trans = acCurDb.TransactionManager.StartTransaction())
             {
-                _AcDb.DBDictionary lays = trans.GetObject(acCurDb.LayoutDictionaryId, _AcDb.OpenMode.ForRead) as _AcDb.DBDictionary;
+                _AcDb.DBDictionary lays = (_AcDb.DBDictionary)trans.GetObject(acCurDb.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
 
                 foreach (_AcDb.DBDictionaryEntry item in lays)
                 {
@@ -63,26 +59,26 @@ namespace Plan2Ext
             return layoutNames;
         }
 
-        public static List<string> GetOrderedLayoutNames()
+        public static List<string> GetOrderedLayoutNames(bool onlySelected = false)
         {
             var layouts = new List<_AcDb.Layout>();
             _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database acCurDb = acDoc.Database;
             using (_AcDb.Transaction trans = acCurDb.TransactionManager.StartTransaction())
             {
-                _AcDb.DBDictionary lays = trans.GetObject(acCurDb.LayoutDictionaryId, _AcDb.OpenMode.ForRead) as _AcDb.DBDictionary;
+                _AcDb.DBDictionary lays = (_AcDb.DBDictionary)trans.GetObject(acCurDb.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
                 foreach (_AcDb.DBDictionaryEntry item in lays)
                 {
                     layouts.Add((_AcDb.Layout)trans.GetObject(item.Value, _AcDb.OpenMode.ForRead));
                 }
                 trans.Commit();
             }
-            return layouts.OrderBy(x => x.TabOrder).Select(x => x.LayoutName).ToList();
+            return layouts.Where(x => !onlySelected || x.TabSelected).OrderBy(x => x.TabOrder).Select(x => x.LayoutName).ToList();
         }
 
-        public static bool SetLayoutActive(string name)
+        public static void SetLayoutActive(string name)
         {
-            if (!GetLayoutNames().Contains(name)) return false;
+            if (!GetLayoutNames().Contains(name)) return;
 
             _AcAp.Document acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database acCurDb = acDoc.Database;
@@ -92,17 +88,12 @@ namespace Plan2Ext
                 _AcDb.LayoutManager acLayoutMgr = _AcDb.LayoutManager.Current;
 
                 // Open the layout
-                _AcDb.Layout layout = trans.GetObject(acLayoutMgr.GetLayoutId(name), _AcDb.OpenMode.ForRead) as _AcDb.Layout;
-                // Set the layout current if it is not already
-                if (layout.TabSelected == false)
-                {
-                    acLayoutMgr.CurrentLayout = layout.LayoutName;
-                }
+                _AcDb.Layout layout = (_AcDb.Layout)trans.GetObject(acLayoutMgr.GetLayoutId(name), _AcDb.OpenMode.ForRead);
+                acLayoutMgr.CurrentLayout = layout.LayoutName;
 
                 // Save the changes made
                 trans.Commit();
             }
-            return true;
         }
 
         public static void CreateLayout(string name)

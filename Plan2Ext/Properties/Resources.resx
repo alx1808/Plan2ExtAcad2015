@@ -123,7 +123,4 @@
   <data name="LayoutExportNoView" xml:space="preserve">
     <value>Kein Ansichtsfenster gefunden.</value>
   </data>
-  <data name="LayoutExportOnlyPaperspaceMsg" xml:space="preserve">
-    <value>Dieser Befehl kann nur im Papierbereich ausgeführt werden.</value>
-  </data>
 </root>

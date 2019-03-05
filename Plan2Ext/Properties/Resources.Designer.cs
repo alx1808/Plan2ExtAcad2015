@@ -77,14 +77,5 @@ namespace Plan2Ext.Properties {
                 return ResourceManager.GetString("LayoutExportNoView", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Dieser Befehl kann nur im Papierbereich ausgeführt werden..
-        /// </summary>
-        internal static string LayoutExportOnlyPaperspaceMsg {
-            get {
-                return ResourceManager.GetString("LayoutExportOnlyPaperspaceMsg", resourceCulture);
-            }
-        }
     }
 }

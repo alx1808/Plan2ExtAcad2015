@@ -34,37 +34,46 @@ namespace Plan2Ext.LayoutExport
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             dynamic acDoc = doc.GetAcadDocument();
-            acDoc.StartUndoMark();
             try
             {
-                var ed = doc.Editor;
-
-                if (Globs.IsModelspace)
+                var selectedLayoutNames = Layouts.GetOrderedLayoutNames(true);
+                foreach (var selectedLayoutName in selectedLayoutNames)
                 {
-                    ed.WriteMessage("\n" + Resources.LayoutExportOnlyPaperspaceMsg);
-                    return;
+                    acDoc.StartUndoMark();
+
+                    if (selectedLayoutName == "Model") continue;
+                    Layouts.SetLayoutActive(selectedLayoutName);
+                    if (Globs.IsModelspace)
+                    {
+                        continue;
+                    }
+
+                    SetCurrentExportDwgName();
+
+                    Globs.CreateBakFile(CurrentExportDwg);
+
+                    // Export Wipeout and Blockreference entities inside first view to external dwg and delete entities.
+                    if (!SaveAndDeleteNonExportableEntities()) return;
+
+                    // Export layout to <dwgprefix><layoutname>.dwg
+                    await ExportLayout();
+
+                    // Import saved entities to exported layout
+                    ImportSavedEntitiesToExportedLayout();
+
+                    // Draworder correction
+                    DraworderCorrection();
+
+                    // Ctb-ColorCorrection
+                    //CtbColorCorrection();
+
+                    Cleanup();
+
+                    // Undo
+                    acDoc.EndUndoMark();
+                    await Globs.CallCommandAsync("_.U");
+
                 }
-
-                SetCurrentExportDwgName();
-
-                Globs.CreateBakFile(CurrentExportDwg);
-
-                // Export Wipeout and Blockreference entities inside first view to external dwg and delete entities.
-                if (!SaveAndDeleteNonExportableEntities()) return;
-
-                // Export layout to <dwgprefix><layoutname>.dwg
-                await ExportLayout();
-
-                // Import saved entities to exported layout
-                ImportSavedEntitiesToExportedLayout();
-
-                // Draworder correction
-                DraworderCorrection();
-
-                // Ctb-ColorCorrection
-                //CtbColorCorrection();
-
-
             }
             catch (System.Exception ex)
             {
@@ -72,14 +81,6 @@ namespace Plan2Ext.LayoutExport
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, Resources.LayoutExportError,
                     ex.Message));
             }
-            finally
-            {
-                Cleanup();
-
-            }
-            // Undo
-            acDoc.EndUndoMark();
-            await Globs.CallCommandAsync("_.U");
         }
 
         private static void SetCurrentExportDwgName()
@@ -94,7 +95,6 @@ namespace Plan2Ext.LayoutExport
         private static string GetCurrentLayoutName()
         {
             return LayoutManager.Current.CurrentLayout;
-
         }
 
         private static void Cleanup()
