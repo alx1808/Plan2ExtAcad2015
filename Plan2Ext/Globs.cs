@@ -1260,6 +1260,59 @@ namespace Plan2Ext
             }
         }
 
+        public static void PurgeAllBlocks()
+        {
+            // Get the current document and database
+            var acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var acCurDb = acDoc.Database;
+
+            PurgeAllBlocks(acCurDb);
+        }
+
+        /// <summary>
+        /// Purges all Blocks
+        /// </summary>
+        /// <param name="db"></param>
+        /// <returns>Number of purged blocks</returns>
+        public static int PurgeAllBlocks(_AcDb.Database db)
+        {
+            var nrOfPurgedBlocks = 0;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                // Open the Layer table for read
+                var blockTable = (_AcDb.BlockTable) transaction.GetObject(db.BlockTableId,
+                    _AcDb.OpenMode.ForRead);
+                var acObjIdColl = new _AcDb.ObjectIdCollection();
+                foreach (var blockOid in blockTable)
+                {
+                    acObjIdColl.Add(blockOid);
+                }
+
+                if (acObjIdColl.Count > 0)
+                {
+                    // Check to see if it is safe to erase layer
+                    db.Purge(acObjIdColl);
+                    nrOfPurgedBlocks = acObjIdColl.Count;
+
+                    if (acObjIdColl.Count > 0)
+                    {
+                        _AcDb.BlockTableRecord blockTableRecord;
+
+                        foreach (_AcDb.ObjectId oid in acObjIdColl)
+                        {
+                            blockTableRecord =
+                                (_AcDb.BlockTableRecord) transaction.GetObject(oid, _AcDb.OpenMode.ForWrite);
+                            blockTableRecord.Erase(true);
+                        }
+                    }
+                }
+
+                transaction.Commit();
+            }
+
+            return nrOfPurgedBlocks;
+        }
+
         public static Dictionary<string, string> GetAttributes(_AcDb.BlockReference blockRef)
         {
             Dictionary<string, string> valuePerTag = new Dictionary<string, string>();

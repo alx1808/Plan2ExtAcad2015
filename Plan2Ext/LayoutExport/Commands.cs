@@ -62,7 +62,7 @@ namespace Plan2Ext.LayoutExport
                     ImportSavedEntitiesToExportedLayout();
 
                     // Draworder correction
-                    DraworderCorrection();
+                    DraworderCorrectionAndPurgeBlocks();
 
                     // Ctb-ColorCorrection
                     //CtbColorCorrection();
@@ -124,7 +124,7 @@ namespace Plan2Ext.LayoutExport
             throw new NotImplementedException();
         }
 
-        private static void DraworderCorrection()
+        private static void DraworderCorrectionAndPurgeBlocks()
         {
             // ReSharper disable once AssignNullToNotNullAttribute
             var newFileName = Path.Combine(Path.GetDirectoryName(CurrentExportDwg),
@@ -171,6 +171,11 @@ namespace Plan2Ext.LayoutExport
                     }
 
                     trans.Commit();
+                }
+
+                for (var i = 0; i < 5; i++)
+                {
+                    if (Globs.PurgeAllBlocks(dbTarget) == 0) break;
                 }
 
                 if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, dbTarget);
