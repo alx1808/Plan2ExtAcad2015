@@ -12,6 +12,7 @@ using Autodesk.AutoCAD.Runtime;
 using Plan2Ext.Plot;
 using Plan2Ext.Properties;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+// ReSharper disable IdentifierTypo
 
 namespace Plan2Ext.LayoutExport
 {
@@ -65,9 +66,6 @@ namespace Plan2Ext.LayoutExport
                     // export drawing correction: Draworder correction, Purge blocks, Plotsettings, layer name correction
                     ExportDrawingCorrection();
 
-                    // Ctb-ColorCorrection
-                    //CtbColorCorrection();
-
                     Cleanup();
 
                     // Undo
@@ -119,12 +117,6 @@ namespace Plan2Ext.LayoutExport
             }
         }
 
-        // ReSharper disable once UnusedMember.Local
-        private static void CtbColorCorrection()
-        {
-            throw new NotImplementedException();
-        }
-
         private static void ExportDrawingCorrection()
         {
             // ReSharper disable once AssignNullToNotNullAttribute
@@ -140,21 +132,46 @@ namespace Plan2Ext.LayoutExport
 
                 SetPlottersettings(dbTarget);
 
+                RenameLayers(dbTarget);
+
                 dbTarget.SaveAs(newFileName, DwgVersion.Newest);
             }
 
             Globs.Move(newFileName, CurrentExportDwg);
         }
 
-        private static void DraworderCorrection(Database dbTarget)
+        private static void RenameLayers(Database db)
+        {
+            const string searchText = "$0$";
+            const string replaceText = "_";
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var layerTable = (LayerTable)transaction.GetObject(db.LayerTableId, OpenMode.ForRead);
+
+                foreach (var oid in layerTable)
+                {
+                    var ltr = (LayerTableRecord) transaction.GetObject(oid, OpenMode.ForRead);
+                    if (!ltr.Name.Contains(searchText)) continue;
+
+                    var layerName = ltr.Name;
+                    ltr.UpgradeOpen();
+                    ltr.Name = layerName.Replace(searchText, replaceText);
+                    ltr.DowngradeOpen();
+                }
+
+                transaction.Commit();
+            }
+        }
+
+        private static void DraworderCorrection(Database db)
         {
             var formerXrefs = new ObjectIdCollection();
             var otherEntities = new ObjectIdCollection();
             var wipeOuts = new ObjectIdCollection();
 
-            using (var trans = dbTarget.TransactionManager.StartTransaction())
+            using (var trans = db.TransactionManager.StartTransaction())
             {
-                var bt = (BlockTable) trans.GetObject(dbTarget.BlockTableId, OpenMode.ForRead);
+                var bt = (BlockTable) trans.GetObject(db.BlockTableId, OpenMode.ForRead);
                 var btr = (BlockTableRecord) trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
                 foreach (var oid in btr)
                 {
@@ -186,9 +203,9 @@ namespace Plan2Ext.LayoutExport
                 trans.Commit();
             }
 
-            if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, dbTarget);
-            if (otherEntities.Count > 0) Globs.DrawOrderBottom(otherEntities, dbTarget);
-            if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, dbTarget);
+            if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, db);
+            if (otherEntities.Count > 0) Globs.DrawOrderBottom(otherEntities, db);
+            if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, db);
         }
 
         private static void PurgeBlocks(Database dbTarget)
@@ -201,12 +218,11 @@ namespace Plan2Ext.LayoutExport
 
         private static void SetPlottersettings(Database dbTarget)
         {
-// plotter settings in modelspace
             var modelspaceLayoutName = "Model";
             var layoutId = Layouts.GetLayoutId("Model", dbTarget);
             if (!layoutId.IsValid)
             {
-                Log.Error(string.Format(CultureInfo.CurrentCulture, Properties.Resources.LayoutDoesntExist,
+                Log.Error(string.Format(CultureInfo.CurrentCulture, Resources.LayoutDoesntExist,
                     modelspaceLayoutName));
             }
 
