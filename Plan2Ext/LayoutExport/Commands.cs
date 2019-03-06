@@ -9,6 +9,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using Plan2Ext.Plot;
 using Plan2Ext.Properties;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
@@ -61,8 +62,8 @@ namespace Plan2Ext.LayoutExport
                     // Import saved entities to exported layout
                     ImportSavedEntitiesToExportedLayout();
 
-                    // Draworder correction
-                    DraworderCorrectionAndPurgeBlocks();
+                    // export drawing correction: Draworder correction, Purge blocks, Plotsettings, layer name correction
+                    ExportDrawingCorrection();
 
                     // Ctb-ColorCorrection
                     //CtbColorCorrection();
@@ -124,7 +125,7 @@ namespace Plan2Ext.LayoutExport
             throw new NotImplementedException();
         }
 
-        private static void DraworderCorrectionAndPurgeBlocks()
+        private static void ExportDrawingCorrection()
         {
             // ReSharper disable once AssignNullToNotNullAttribute
             var newFileName = Path.Combine(Path.GetDirectoryName(CurrentExportDwg),
@@ -133,58 +134,90 @@ namespace Plan2Ext.LayoutExport
             {
                 dbTarget.ReadDwgFile(CurrentExportDwg, FileShare.Read, true, "");
 
-                var formerXrefs = new ObjectIdCollection();
-                var otherEntities = new ObjectIdCollection();
-                var wipeOuts = new ObjectIdCollection();
+                DraworderCorrection(dbTarget);
 
+                PurgeBlocks(dbTarget);
 
-                using (var trans = dbTarget.TransactionManager.StartTransaction())
-                {
+                SetPlottersettings(dbTarget);
 
-                    var bt = (BlockTable)trans.GetObject(dbTarget.BlockTableId, OpenMode.ForRead);
-                    var btr = (BlockTableRecord)trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
-                    foreach (var oid in btr)
-                    {
-                        var ent = trans.GetObject(oid, OpenMode.ForRead);
-                        var blockRef = ent as BlockReference;
-                        if (blockRef != null)
-                        {
-                            var blockName = Globs.GetBlockname(blockRef, trans);
-                            if (blockName.StartsWith("*")) formerXrefs.Add(oid);
-                        }
-                        else
-                        {
-                            var wipeOut = ent as Wipeout;
-                            if (wipeOut != null)
-                            {
-                                wipeOuts.Add(oid);
-                            }
-                            else
-                            {
-                                var txt = ent as DBText;
-                                if (txt == null)
-                                {
-                                    otherEntities.Add(oid);
-                                }
-                            }
-                        }
-                    }
-
-                    trans.Commit();
-                }
-
-                for (var i = 0; i < 5; i++)
-                {
-                    if (Globs.PurgeAllBlocks(dbTarget) == 0) break;
-                }
-
-                if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, dbTarget);
-                if (otherEntities.Count > 0) Globs.DrawOrderBottom(otherEntities, dbTarget);
-                if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, dbTarget);
                 dbTarget.SaveAs(newFileName, DwgVersion.Newest);
             }
 
             Globs.Move(newFileName, CurrentExportDwg);
+        }
+
+        private static void DraworderCorrection(Database dbTarget)
+        {
+            var formerXrefs = new ObjectIdCollection();
+            var otherEntities = new ObjectIdCollection();
+            var wipeOuts = new ObjectIdCollection();
+
+            using (var trans = dbTarget.TransactionManager.StartTransaction())
+            {
+                var bt = (BlockTable) trans.GetObject(dbTarget.BlockTableId, OpenMode.ForRead);
+                var btr = (BlockTableRecord) trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                foreach (var oid in btr)
+                {
+                    var ent = trans.GetObject(oid, OpenMode.ForRead);
+                    var blockRef = ent as BlockReference;
+                    if (blockRef != null)
+                    {
+                        var blockName = Globs.GetBlockname(blockRef, trans);
+                        if (blockName.StartsWith("*")) formerXrefs.Add(oid);
+                    }
+                    else
+                    {
+                        var wipeOut = ent as Wipeout;
+                        if (wipeOut != null)
+                        {
+                            wipeOuts.Add(oid);
+                        }
+                        else
+                        {
+                            var txt = ent as DBText;
+                            if (txt == null)
+                            {
+                                otherEntities.Add(oid);
+                            }
+                        }
+                    }
+                }
+
+                trans.Commit();
+            }
+
+            if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, dbTarget);
+            if (otherEntities.Count > 0) Globs.DrawOrderBottom(otherEntities, dbTarget);
+            if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, dbTarget);
+        }
+
+        private static void PurgeBlocks(Database dbTarget)
+        {
+            for (var i = 0; i < 5; i++)
+            {
+                if (Globs.PurgeAllBlocks(dbTarget) == 0) break;
+            }
+        }
+
+        private static void SetPlottersettings(Database dbTarget)
+        {
+// plotter settings in modelspace
+            var modelspaceLayoutName = "Model";
+            var layoutId = Layouts.GetLayoutId("Model", dbTarget);
+            if (!layoutId.IsValid)
+            {
+                Log.Error(string.Format(CultureInfo.CurrentCulture, Properties.Resources.LayoutDoesntExist,
+                    modelspaceLayoutName));
+            }
+
+            using (var trans = dbTarget.TransactionManager.StartTransaction())
+            {
+                var layout = (Layout) trans.GetObject(layoutId, OpenMode.ForWrite);
+                layout.SetPlotSettingsDevice("Kein");
+                layout.SetPlotSettingsStyleSheet("");
+
+                trans.Commit();
+            }
         }
 
 

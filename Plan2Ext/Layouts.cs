@@ -129,6 +129,22 @@ namespace Plan2Ext
             }
         }
 
+        public static _AcDb.ObjectId GetLayoutId(string layoutName, _AcDb.Database db)
+        {
+            _AcDb.ObjectId layoutId = default(_AcDb.ObjectId);
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var layouts = (_AcDb.DBDictionary)transaction.GetObject(db.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
+                if (layouts.Contains(layoutName))
+                {
+                    layoutId = layouts.GetAt(layoutName);
+                }
+                transaction.Commit();
+            }
+
+            return layoutId;
+        }
+
         public static void ImportLayout(string layoutName, string filename)
         {
             // Get the current document and database

@@ -35,6 +35,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
+// ReSharper disable IdentifierTypo
 
 
 namespace Plan2Ext.Plot
@@ -118,7 +119,7 @@ namespace Plan2Ext.Plot
                 }
                 else
                 {
-                    log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", mediaName);
+                    log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", styleSheet);
                 }
 
                 // Copy the PlotSettings data back to the Layout
@@ -191,6 +192,85 @@ namespace Plan2Ext.Plot
             }
         }
 
+        public static void SetPlotSettingsStyleSheet(this _AcDb.Layout lay, string styleSheet)
+        {
+            using (var ps = new _AcDb.PlotSettings(lay.ModelType))
+            {
+                ps.CopyFrom(lay);
+
+                var psv = _AcDb.PlotSettingsValidator.Current;
+
+                // Set the pen settings
+                var ssl = psv.GetPlotStyleSheetList();
+                if (string.IsNullOrEmpty(styleSheet) || ssl.ContainsIgnoreUc(ref styleSheet))
+                {
+                    log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName);
+                    psv.SetCurrentStyleSheet(ps, styleSheet);
+                }
+                else
+                {
+                    log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", styleSheet);
+                }
+
+                var upgraded = false;
+                if (!lay.IsWriteEnabled)
+                {
+                    lay.UpgradeOpen();
+                    upgraded = true;
+                }
+
+                lay.CopyFrom(ps);
+
+                if (upgraded)
+                {
+                    lay.DowngradeOpen();
+                }
+            }
+        }
+
+        public static void SetPlotSettingsDevice(this _AcDb.Layout lay, string device)
+        {
+            using (var ps = new _AcDb.PlotSettings(lay.ModelType))
+            {
+                ps.CopyFrom(lay);
+
+                var psv = _AcDb.PlotSettingsValidator.Current;
+
+                // Set the device
+                if (!string.IsNullOrEmpty(device))
+                {
+                    var deviceList = psv.GetPlotDeviceList();
+
+                    if (deviceList.ContainsIgnoreUc(ref device))
+                    {
+                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
+                        psv.SetPlotConfigurationName(ps, device, null);
+                        psv.RefreshLists(ps);
+                    }
+                    else
+                    {
+                        log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);
+                    }
+                }
+
+
+                var upgraded = false;
+                if (!lay.IsWriteEnabled)
+                {
+                    lay.UpgradeOpen();
+                    upgraded = true;
+                }
+
+                lay.CopyFrom(ps);
+
+                if (upgraded)
+                {
+                    lay.DowngradeOpen();
+                }
+            }
+        }
+
+        
         private static string LocaleToCanonicalMediaName(_AcDb.PlotSettingsValidator psv, _AcDb.PlotSettings ps, string mn)
         {
             int cnt = 0;

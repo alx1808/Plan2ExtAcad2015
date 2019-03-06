@@ -61,6 +61,15 @@ namespace Plan2Ext.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Layout &apos;{0}&apos; existiert nicht!.
+        /// </summary>
+        internal static string LayoutDoesntExist {
+            get {
+                return ResourceManager.GetString("LayoutDoesntExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fehler in Plan2LayoutExport aufgetreten! {0}.
         /// </summary>
         internal static string LayoutExportError {
