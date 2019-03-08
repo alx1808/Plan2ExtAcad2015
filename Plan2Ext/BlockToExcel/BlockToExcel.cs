@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
@@ -30,6 +28,8 @@ using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using System.Globalization;
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
 #endif
 
 namespace Plan2Ext.BlockToExcel
@@ -41,20 +41,20 @@ namespace Plan2Ext.BlockToExcel
         #endregion
 
         #region Constants
-        public const string BLOCK_NAME = "BLOCKNAME";
-        public const string HANDLE = "HANDLE";
-        public const string DWGPATH = "DWGPATH";
+        public const string BlockName = "BLOCKNAME";
+        public const string Handle = "HANDLE";
+        public const string Dwgpath = "DWGPATH";
 
         #endregion
         #region Member variables
-        private List<_AcDb.ObjectId> _BlocksForExcelExport = new List<_AcDb.ObjectId>();
-        private string _DwgPath = string.Empty;
-        private string _BlockName = string.Empty;
-        private string _ExcelFileName = string.Empty;
-        private bool _CreateChangeLines = true;
+        protected List<_AcDb.ObjectId> BlocksForExcelExport = new List<_AcDb.ObjectId>();
+        protected string ExcelFileName = string.Empty;
+        protected string DwgPath = string.Empty;
+        private string _blockName = string.Empty;
+        private bool _createChangeLines = true;
 
-        private Dictionary<string, List<string>> _ColsForExcel = new Dictionary<string, List<string>>();
-        private List<string> _AttributesForExcelExport = new List<string>();
+        private readonly Dictionary<string, List<string>> _colsForExcel = new Dictionary<string, List<string>>();
+        private readonly List<string> _attributesForExcelExport = new List<string>();
 
         #endregion
 
@@ -260,21 +260,21 @@ namespace Plan2Ext.BlockToExcel
 
         private void StartImport(string excelFileName, bool createChangeLines)
         {
-            _DwgPath = DrawingPath;
-            _ExcelFileName = excelFileName;
-            _CreateChangeLines = createChangeLines;
+            DwgPath = DrawingPath;
+            ExcelFileName = excelFileName;
+            _createChangeLines = createChangeLines;
 
-            log.InfoFormat("Starte Blockimport für '{0}'.", _DwgPath);
+            log.InfoFormat("Starte Blockimport für '{0}'.", DwgPath);
 
             if (!ExcelImport()) return;
         }
 
         private bool ExcelImport()
         {
-            using (var excelizer = new Excelizer(_ExcelFileName, Excelizer.Direction.Import))
+            using (var excelizer = new Excelizer(ExcelFileName, Excelizer.Direction.Import))
             {
                 var importedRows = excelizer.Import();
-                importedRows = importedRows.Where(x => string.Compare(_DwgPath, x.DwgPath, StringComparison.OrdinalIgnoreCase) == 0).ToList();
+                importedRows = importedRows.Where(x => string.Compare(DwgPath, x.DwgPath, StringComparison.OrdinalIgnoreCase) == 0).ToList();
 
                 Import(importedRows);
             }
@@ -333,7 +333,7 @@ namespace Plan2Ext.BlockToExcel
                                     {
                                         if (string.Compare(attRef.TextString,attVal) != 0)
                                         {
-                                            if (_CreateChangeLines )
+                                            if (_createChangeLines )
                                             { 
                                             Plan2Ext.Globs.InsertFehlerLines(new List<_AcGe.Point3d> { attRef.Position }, 
                                                 "Plan2BlockAttribChanged",
@@ -372,9 +372,9 @@ namespace Plan2Ext.BlockToExcel
 
         private void StartExport(string blockName, string excelFileName)
         {
-            _DwgPath = DrawingPath;
-            _BlockName = blockName;
-            _ExcelFileName = excelFileName;
+            DwgPath = DrawingPath;
+            _blockName = blockName;
+            ExcelFileName = excelFileName;
 
             if (!SelectBlocks()) return;
 
@@ -385,38 +385,38 @@ namespace Plan2Ext.BlockToExcel
             if (!ExcelExport()) return;
         }
 
-        private bool ExcelExport()
+        protected bool ExcelExport()
         {
-            if (_ColsForExcel.Count == 0) return true;
-            using (var excelizer = new Excelizer(_ExcelFileName, Excelizer.Direction.Export))
+            if (_colsForExcel.Count == 0) return true;
+            using (var excelizer = new Excelizer(ExcelFileName, Excelizer.Direction.Export))
             {
-                excelizer.Export(_ColsForExcel);
+                excelizer.Export(_colsForExcel);
             }
 
             return true;
         }
 
-        private bool WriteColsForExcel()
+        protected bool WriteColsForExcel()
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             using (var trans = doc.TransactionManager.StartTransaction())
             {
-                var blockRefs = _BlocksForExcelExport.Select(oid => (_AcDb.BlockReference)trans.GetObject(oid, _AcDb.OpenMode.ForRead));
+                var blockRefs = BlocksForExcelExport.Select(oid => (_AcDb.BlockReference)trans.GetObject(oid, _AcDb.OpenMode.ForRead));
                 foreach (var br in blockRefs)
                 {
-                    _ColsForExcel[BLOCK_NAME].Add(Plan2Ext.Globs.GetBlockname(br, trans));
-                    _ColsForExcel[HANDLE].Add(br.Handle.ToString());
-                    _ColsForExcel[DWGPATH].Add(_DwgPath);
-                    foreach (var attName in _AttributesForExcelExport)
+                    _colsForExcel[BlockName].Add(Plan2Ext.Globs.GetBlockname(br, trans));
+                    _colsForExcel[Handle].Add(br.Handle.ToString());
+                    _colsForExcel[Dwgpath].Add(DwgPath);
+                    foreach (var attName in _attributesForExcelExport)
                     {
                         var att = GetBlockAttribute(attName, br,trans);
                         if (att == null)
                         {
-                            _ColsForExcel[attName].Add("");
+                            _colsForExcel[attName].Add("");
                         }
                         else
                         {
-                            _ColsForExcel[attName].Add(att.TextString);
+                            _colsForExcel[attName].Add(att.TextString);
                         }
                     }
                 }
@@ -441,10 +441,10 @@ namespace Plan2Ext.BlockToExcel
             return null;
         }
 
-        private bool GetExcelExportAtts()
+        protected bool GetExcelExportAtts()
         {
-            _AttributesForExcelExport.Clear();
-            _ColsForExcel.Clear();
+            _attributesForExcelExport.Clear();
+            _colsForExcel.Clear();
 
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             using (var trans = doc.TransactionManager.StartTransaction())
@@ -453,7 +453,7 @@ namespace Plan2Ext.BlockToExcel
                 //var blockRefs = _BlocksForExcelExport.Select(oid => (_AcDb.BlockReference)trans.GetObject(oid, _AcDb.OpenMode.ForRead)).ToList();
                 //List<_AcDb.ObjectId> btrOids = new List<_AcDb.ObjectId>();
 
-                var br = (_AcDb.BlockReference)trans.GetObject(_BlocksForExcelExport[0], _AcDb.OpenMode.ForRead);
+                var br = (_AcDb.BlockReference)trans.GetObject(BlocksForExcelExport[0], _AcDb.OpenMode.ForRead);
                 var bd = (_AcDb.BlockTableRecord)trans.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
                 List<string> atts = new List<string>();
                 foreach (_AcDb.ObjectId oid in bd)
@@ -462,18 +462,18 @@ namespace Plan2Ext.BlockToExcel
                     if (adef != null)
                     {
                         string tagUC = adef.Tag.ToUpperInvariant();
-                        _AttributesForExcelExport.Add(tagUC);
+                        _attributesForExcelExport.Add(tagUC);
                     }
                 }
 
-                _ColsForExcel.Add(BLOCK_NAME, new List<string> {  });
-                _ColsForExcel.Add(HANDLE, new List<string> {  });
-                _ColsForExcel.Add(DWGPATH, new List<string> {  });
-                foreach (var att in _AttributesForExcelExport)
+                _colsForExcel.Add(BlockName, new List<string> {  });
+                _colsForExcel.Add(Handle, new List<string> {  });
+                _colsForExcel.Add(Dwgpath, new List<string> {  });
+                foreach (var att in _attributesForExcelExport)
                 {
-                    if (!_ColsForExcel.ContainsKey(att))
+                    if (!_colsForExcel.ContainsKey(att))
                     {
-                        _ColsForExcel.Add(att, new List<string> {  });
+                        _colsForExcel.Add(att, new List<string> {  });
                     }
                 }
 
@@ -529,13 +529,13 @@ namespace Plan2Ext.BlockToExcel
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             using (var trans = doc.TransactionManager.StartTransaction())
             {
-                _BlocksForExcelExport = selectedBlocks.Where(oid => IsBlockToUse(oid, trans, _BlockName)).ToList();
+                BlocksForExcelExport = selectedBlocks.Where(oid => IsBlockToUse(oid, trans, _blockName)).ToList();
                 trans.Commit();
             }
 
-            log.InfoFormat("Anzahl gefundener Blöcke namens '{0}': {1}.",_BlockName, _BlocksForExcelExport.Count.ToString());
+            log.InfoFormat("Anzahl gefundener Blöcke namens '{0}': {1}.",_blockName, BlocksForExcelExport.Count.ToString());
 
-            if (_BlocksForExcelExport.Count > 0) return true;
+            if (BlocksForExcelExport.Count > 0) return true;
             else return false;
         }
 

@@ -4,8 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace Plan2Ext.BlockToExcel
@@ -187,9 +185,9 @@ namespace Plan2Ext.BlockToExcel
 
         internal class ImportedRow
         {
-            public string DwgPath { get { return Values[IndexPerHeader[BlockToExcel.DWGPATH]]; } }
-            public string BlockName { get { return Values[IndexPerHeader[BlockToExcel.BLOCK_NAME]]; } }
-            public string Handle { get { return Values[IndexPerHeader[BlockToExcel.HANDLE]]; } }
+            public string DwgPath { get { return Values[IndexPerHeader[BlockToExcel.Dwgpath]]; } }
+            public string BlockName { get { return Values[IndexPerHeader[BlockToExcel.BlockName]]; } }
+            public string Handle { get { return Values[IndexPerHeader[BlockToExcel.Handle]]; } }
             public static Dictionary<string, int> IndexPerHeader { get; set; }
             public List<string> Values { get; set; }
 

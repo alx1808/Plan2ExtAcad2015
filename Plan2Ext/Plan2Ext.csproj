@@ -104,6 +104,7 @@
     <Compile Include="BlockInfo\LayoutBlockRowProvider.cs" />
     <Compile Include="BlockInfo\SingleBlockNameRowProvider.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
+    <Compile Include="BlockToExcel\BlockToExcel2.cs" />
     <Compile Include="BlockToExcel\Excelizer.cs" />
     <Compile Include="BlockTrans\Commands.cs" />
     <Compile Include="BlockTrans\Engine.cs" />
