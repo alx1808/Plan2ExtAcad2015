@@ -119,8 +119,10 @@ namespace Plan2Ext.LayoutExport
 
         private static void ExportDrawingCorrection()
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var newFileName = Path.Combine(Path.GetDirectoryName(CurrentExportDwg),
+            var dirName = Path.GetDirectoryName(CurrentExportDwg);
+            if (dirName == null) return;
+
+            var newFileName = Path.Combine(dirName,
                 Path.GetFileNameWithoutExtension(CurrentExportDwg) + "_X.dwg");
             using (var dbTarget = new Database(false, true))
             {
@@ -128,7 +130,9 @@ namespace Plan2Ext.LayoutExport
 
                 DraworderCorrection(dbTarget);
 
-                PurgeBlocks(dbTarget);
+                PurgeAllBlocks(dbTarget);
+
+                PurgeAllLayers(dbTarget);
 
                 SetPlottersettings(dbTarget);
 
@@ -208,11 +212,19 @@ namespace Plan2Ext.LayoutExport
             if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, db);
         }
 
-        private static void PurgeBlocks(Database dbTarget)
+        private static void PurgeAllBlocks(Database dbTarget)
         {
             for (var i = 0; i < 5; i++)
             {
-                if (Globs.PurgeAllBlocks(dbTarget) == 0) break;
+                if (Globs.PurgeBlocks(dbTarget) == 0) break;
+            }
+        }
+
+        private static void PurgeAllLayers(Database dbTarget)
+        {
+            for (var i = 0; i < 5; i++)
+            {
+                if (Globs.PurgeLayers(dbTarget) == 0) break;
             }
         }
 

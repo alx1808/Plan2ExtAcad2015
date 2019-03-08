@@ -1266,43 +1266,53 @@ namespace Plan2Ext
             var acDoc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var acCurDb = acDoc.Database;
 
-            PurgeAllBlocks(acCurDb);
+            PurgeBlocks(acCurDb);
         }
 
         /// <summary>
-        /// Purges all Blocks
+        /// Purges Blocks
         /// </summary>
         /// <param name="db"></param>
         /// <returns>Number of purged blocks</returns>
-        public static int PurgeAllBlocks(_AcDb.Database db)
+        public static int PurgeBlocks(_AcDb.Database db)
         {
-            var nrOfPurgedBlocks = 0;
+            return Purge(db, db.BlockTableId);
+        }
+
+        /// <summary>
+        /// Purges Layers
+        /// </summary>
+        /// <param name="db"></param>
+        /// <returns>Number of purged blocks</returns>
+        public static int PurgeLayers(_AcDb.Database db)
+        {
+            return Purge(db, db.LayerTableId);
+        }
+
+        private static int Purge(_AcDb.Database db, _AcDb.ObjectId tableId)
+        {
+            var nrOfPurged = 0;
             using (var transaction = db.TransactionManager.StartTransaction())
             {
                 // Open the Layer table for read
-                var blockTable = (_AcDb.BlockTable) transaction.GetObject(db.BlockTableId,
-                    _AcDb.OpenMode.ForRead);
-                var acObjIdColl = new _AcDb.ObjectIdCollection();
-                foreach (var blockOid in blockTable)
+                var table = (_AcDb.SymbolTable) transaction.GetObject(tableId, _AcDb.OpenMode.ForRead);
+                var objIdColl = new _AcDb.ObjectIdCollection();
+                foreach (var oid in table)
                 {
-                    acObjIdColl.Add(blockOid);
+                    objIdColl.Add(oid);
                 }
 
-                if (acObjIdColl.Count > 0)
+                if (objIdColl.Count > 0)
                 {
-                    // Check to see if it is safe to erase layer
-                    db.Purge(acObjIdColl);
-                    nrOfPurgedBlocks = acObjIdColl.Count;
+                    db.Purge(objIdColl);
+                    nrOfPurged = objIdColl.Count;
 
-                    if (acObjIdColl.Count > 0)
+                    if (objIdColl.Count > 0)
                     {
-                        _AcDb.BlockTableRecord blockTableRecord;
-
-                        foreach (_AcDb.ObjectId oid in acObjIdColl)
+                        foreach (_AcDb.ObjectId oid in objIdColl)
                         {
-                            blockTableRecord =
-                                (_AcDb.BlockTableRecord) transaction.GetObject(oid, _AcDb.OpenMode.ForWrite);
-                            blockTableRecord.Erase(true);
+                            var record = transaction.GetObject(oid, _AcDb.OpenMode.ForWrite);
+                            record.Erase(true);
                         }
                     }
                 }
@@ -1310,7 +1320,7 @@ namespace Plan2Ext
                 transaction.Commit();
             }
 
-            return nrOfPurgedBlocks;
+            return nrOfPurged;
         }
 
         public static Dictionary<string, string> GetAttributes(_AcDb.BlockReference blockRef)
