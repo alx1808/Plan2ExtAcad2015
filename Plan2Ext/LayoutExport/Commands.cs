@@ -134,6 +134,8 @@ namespace Plan2Ext.LayoutExport
 
                 SetPlottersettings(dbTarget);
 
+                SetLayerLineWeight(dbTarget,LineWeight.LineWeight000);
+
                 Globs.PurgeAllSymbolTables(dbTarget);
 
                 dbTarget.SaveAs(newFileName, DwgVersion.Newest);
@@ -141,6 +143,27 @@ namespace Plan2Ext.LayoutExport
 
             Globs.Move(newFileName, CurrentExportDwg);
         }
+
+        private static void SetLayerLineWeight(Database db, LineWeight lineWeight)
+        {
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var layerTable = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (var layerOid in layerTable)
+                {
+                    var layerTableRecord = (LayerTableRecord)trans.GetObject(layerOid, OpenMode.ForRead);
+                    if (layerTableRecord.LineWeight != lineWeight)
+                    {
+                        layerTableRecord.UpgradeOpen();
+                        layerTableRecord.LineWeight = lineWeight;
+                        layerTableRecord.DowngradeOpen();
+                    }
+                }
+
+                trans.Commit();
+            }
+        }
+
 
         private static void RenameLayers(Database db)
         {
