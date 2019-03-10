@@ -130,13 +130,11 @@ namespace Plan2Ext.LayoutExport
 
                 DraworderCorrection(dbTarget);
 
-                PurgeAllBlocks(dbTarget);
-
-                PurgeAllLayers(dbTarget);
+                RenameLayers(dbTarget);
 
                 SetPlottersettings(dbTarget);
 
-                RenameLayers(dbTarget);
+                Globs.PurgeAllSymbolTables(dbTarget);
 
                 dbTarget.SaveAs(newFileName, DwgVersion.Newest);
             }
@@ -212,6 +210,7 @@ namespace Plan2Ext.LayoutExport
             if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, db);
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void PurgeAllBlocks(Database dbTarget)
         {
             for (var i = 0; i < 5; i++)
@@ -220,6 +219,7 @@ namespace Plan2Ext.LayoutExport
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void PurgeAllLayers(Database dbTarget)
         {
             for (var i = 0; i < 5; i++)

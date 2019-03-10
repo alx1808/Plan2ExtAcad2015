@@ -1055,11 +1055,11 @@ namespace Plan2Ext
         {
             using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
             {
-                _AcDb.BlockTable bt = (_AcDb.BlockTable) tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
                 _AcDb.BlockTableRecord btr =
-                    (_AcDb.BlockTableRecord) tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+                    (_AcDb.BlockTableRecord)tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
 
-                var dot = (_AcDb.DrawOrderTable) tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+                var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
                 dot.MoveToBottom(ids);
 
                 tr.Commit();
@@ -1279,6 +1279,39 @@ namespace Plan2Ext
             return Purge(db, db.BlockTableId);
         }
 
+        public static void PurgeAllSymbolTables(_AcDb.Database db, int nrOfLevels = 5, int nrOfRepetition = 5)
+        {
+
+            for (int i = 0; i < nrOfRepetition; i++)
+            {
+                var nrOfPurged = 0;
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.LayerTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.LinetypeTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.BlockTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.TextStyleTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.ViewTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.UcsTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.ViewportTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.RegAppTableId);
+                nrOfPurged += PurgeAll(db, nrOfLevels, db.DimStyleTableId);
+                if (nrOfPurged == 0) break;
+            }
+        }
+
+        private static int PurgeAll(_AcDb.Database db, int nrOfLevels, _AcDb.ObjectId tableId)
+        {
+            var nrOfPurged = 0;
+            for (var i = 0; i < nrOfLevels; i++)
+            {
+                var nrOfInnerPurged = Purge(db, tableId);
+                nrOfPurged += nrOfInnerPurged;
+                if (nrOfInnerPurged == 0) break;
+            }
+
+            return nrOfPurged;
+        }
+
+
         /// <summary>
         /// Purges Layers
         /// </summary>
@@ -1295,7 +1328,7 @@ namespace Plan2Ext
             using (var transaction = db.TransactionManager.StartTransaction())
             {
                 // Open the Layer table for read
-                var table = (_AcDb.SymbolTable) transaction.GetObject(tableId, _AcDb.OpenMode.ForRead);
+                var table = (_AcDb.SymbolTable)transaction.GetObject(tableId, _AcDb.OpenMode.ForRead);
                 var objIdColl = new _AcDb.ObjectIdCollection();
                 foreach (var oid in table)
                 {
@@ -1518,14 +1551,14 @@ namespace Plan2Ext
             {
                 dbTarget.ReadDwgFile(targetFileName, System.IO.FileShare.Read, true, "");
                 string newBlockName = GetNewBlockname(dbTarget, "Dummy");
-                blockOid = InsertDwgToDb(sourceFileName, insertPt, rotation, scale,newBlockName, dbTarget);
-                Explode(blockOid,dbTarget,true,true);
+                blockOid = InsertDwgToDb(sourceFileName, insertPt, rotation, scale, newBlockName, dbTarget);
+                Explode(blockOid, dbTarget, true, true);
                 dbTarget.SaveAs(newFileName, _AcDb.DwgVersion.Newest);
             }
 
             if (createBak)
-            BakAndMove(newFileName, targetFileName);
-            else Move(newFileName,targetFileName);
+                BakAndMove(newFileName, targetFileName);
+            else Move(newFileName, targetFileName);
         }
 
         internal static string GetNewBlockname(_AcDb.Database dbTarget, string prefix)
@@ -1632,16 +1665,16 @@ namespace Plan2Ext
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 //_AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-                _AcDb.BlockReference block = (_AcDb.BlockReference) tr.GetObject(blockOid, _AcDb.OpenMode.ForRead);
+                _AcDb.BlockReference block = (_AcDb.BlockReference)tr.GetObject(blockOid, _AcDb.OpenMode.ForRead);
                 _AcDb.ObjectId blockRefTableId = block.BlockTableRecord;
                 _AcDb.BlockTableRecord targetSpace =
-                    (_AcDb.BlockTableRecord) tr.GetObject(block.BlockId, _AcDb.OpenMode.ForWrite);
+                    (_AcDb.BlockTableRecord)tr.GetObject(block.BlockId, _AcDb.OpenMode.ForWrite);
                 //_AcDb.BlockTableRecord targetSpace = (_AcDb.BlockTableRecord)tr.GetObject(_AcDb.SymbolUtilityServices.GetBlockModelSpaceId(db), _AcDb.OpenMode.ForWrite);
                 _AcDb.DBObjectCollection objs = new _AcDb.DBObjectCollection();
                 block.Explode(objs);
                 foreach (_AcDb.DBObject obj in objs)
                 {
-                    _AcDb.Entity ent = (_AcDb.Entity) obj;
+                    _AcDb.Entity ent = (_AcDb.Entity)obj;
                     targetSpace.AppendEntity(ent);
                     tr.AddNewlyCreatedDBObject(ent, true);
                     newlyCreatedObjects.Add(ent.ObjectId);
@@ -1655,7 +1688,7 @@ namespace Plan2Ext
 
                 if (purge)
                 {
-                    var bd = (_AcDb.BlockTableRecord) tr.GetObject(blockRefTableId, _AcDb.OpenMode.ForWrite);
+                    var bd = (_AcDb.BlockTableRecord)tr.GetObject(blockRefTableId, _AcDb.OpenMode.ForWrite);
                     bd.Erase();
                 }
 
@@ -2426,7 +2459,7 @@ namespace Plan2Ext
             _AcDb.TransactionManager tm = db.TransactionManager;
             using (_AcDb.Transaction myT = tm.StartTransaction())
             {
-                using (_AcDb.BlockTable bt = (_AcDb.BlockTable) tm.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead, false))
+                using (_AcDb.BlockTable bt = (_AcDb.BlockTable)tm.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead, false))
                 {
                     return (bt.Has(blockName));
                 }
