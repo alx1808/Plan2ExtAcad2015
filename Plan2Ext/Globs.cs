@@ -2984,5 +2984,12 @@ namespace Plan2Ext
             fileName = r.Replace(fileName, "_");
             return fileName;
         }
+
+        internal static string GetCurrentDwgName()
+        {
+            var dwgPath = _AcAp.Application.GetSystemVariable("DWGPREFIX").ToString();
+            var dwgName = _AcAp.Application.GetSystemVariable("DWGNAME").ToString();
+            return System.IO.Path.Combine(dwgPath, dwgName);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -13,6 +14,7 @@ using Plan2Ext.Plot;
 using Plan2Ext.Properties;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 // ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext.LayoutExport
 {
@@ -28,6 +30,7 @@ namespace Plan2Ext.LayoutExport
         private static Point3d CurrentOrigin { get; set; }
         private static double CurrentScale { get; set; }
         private static double _ViewportTwistAngle;
+        private static readonly List<string> ExportDwgNames = new List<string>();
 
 
         [CommandMethod("Plan2LayoutExport")]
@@ -36,6 +39,7 @@ namespace Plan2Ext.LayoutExport
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             dynamic acDoc = doc.GetAcadDocument();
+            ExportDwgNames.Clear();
             try
             {
                 var selectedLayoutNames = Layouts.GetOrderedLayoutNames(true);
@@ -72,6 +76,8 @@ namespace Plan2Ext.LayoutExport
                     acDoc.EndUndoMark();
                     await Globs.CallCommandAsync("_.U");
 
+                    //WriteHatchPolyBreiteScript();
+
                 }
             }
             catch (System.Exception ex)
@@ -82,6 +88,28 @@ namespace Plan2Ext.LayoutExport
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
+        private static void WriteHatchPolyBreiteScript()
+        {
+            if (ExportDwgNames.Count == 0) return;
+            var sb = new StringBuilder();
+            foreach (var exportDwgName in ExportDwgNames)
+            {
+                sb.AppendLine("_open");
+                sb.AppendLine("\"" + exportDwgName +  "\"");
+                sb.AppendLine("(PLAN2HATCHPOLYBREITE) _ALL ");
+                sb.AppendLine("_Close");
+                sb.AppendLine("_Y");
+            }
+
+            var curDwgName = Globs.GetCurrentDwgName();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var scriptName = Path.Combine(Path.GetDirectoryName(curDwgName),
+                Path.GetFileNameWithoutExtension(curDwgName) + ".scr");
+            if (File.Exists(scriptName)) File.Delete(scriptName);
+            File.WriteAllText(scriptName,sb.ToString());
+        }
+
         private static void SetCurrentExportDwgName()
         {
             var layoutName = GetCurrentLayoutName();
@@ -89,6 +117,7 @@ namespace Plan2Ext.LayoutExport
             var dwgName = Globs.RemoveInvalidCharacters(layoutName);
 
             CurrentExportDwg = Path.Combine(prefix, dwgName + ".dwg");
+            ExportDwgNames.Add(CurrentExportDwg);
         }
 
         private static string GetCurrentLayoutName()
