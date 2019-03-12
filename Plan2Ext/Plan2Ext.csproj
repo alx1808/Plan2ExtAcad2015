@@ -283,6 +283,7 @@
       <DependentUpon>VorauswahlControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Vorauswahl\VorauswahlPalette.cs" />
+    <Compile Include="WildcardAcad.cs" />
     <Compile Include="XrefToExcel\Commands.cs" />
     <Compile Include="XrefToExcel\Engine.cs" />
   </ItemGroup>

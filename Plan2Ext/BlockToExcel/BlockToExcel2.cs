@@ -29,7 +29,9 @@ using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using System.Globalization;
+
 // ReSharper disable StringLiteralTypo
+// ReSharper disable IdentifierTypo
 #endif
 
 namespace Plan2Ext.BlockToExcel
@@ -41,11 +43,10 @@ namespace Plan2Ext.BlockToExcel
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(BlockToExcel2))));
         #endregion
 
-        private string _blockNames;
         private string _dwgPath;
         private readonly Dictionary<string, List<_AcDb.ObjectId>> _blocksForExcelExportDictionary =
             new Dictionary<string, List<_AcDb.ObjectId>>();
-
+        private WildcardAcad _wildcardAcad;
 
         /// <summary>
         /// Aufruf: (Plan2BlockToExcel BlockName ExcelFileName)
@@ -83,8 +84,12 @@ namespace Plan2Ext.BlockToExcel
                     return false;
                 }
 
+                Log.InfoFormat(CultureInfo.CurrentCulture, "\nZeichnung: '{0}'", Application.GetSystemVariable("DWGNAME"));
+
+                _wildcardAcad = new WildcardAcad(blockNames);
+
                 // Start Export 
-                StartExport(blockNames);
+                StartExport();
 
                 return true;
             }
@@ -98,12 +103,10 @@ namespace Plan2Ext.BlockToExcel
             }
         }
 
-
-        private void StartExport(string blockNames)
+        private void StartExport()
         {
             _blocksForExcelExportDictionary.Clear();
             _dwgPath = Application.GetSystemVariable("DWGPREFIX").ToString();
-            _blockNames = blockNames;
             DwgPath = DrawingPath;
 
             if (!SelectBlocks()) return;
@@ -130,11 +133,11 @@ namespace Plan2Ext.BlockToExcel
             var ed = Application.DocumentManager.MdiActiveDocument.Editor;
             _AcEd.SelectionFilter filter = new _AcEd.SelectionFilter(new[] { 
                 new _AcDb.TypedValue((int)_AcDb.DxfCode.Start,"INSERT" ),
-                new _AcDb.TypedValue((int)_AcDb.DxfCode.BlockName,_blockNames ),
+                //new _AcDb.TypedValue((int)_AcDb.DxfCode.BlockName,_blockNames ), // this variant doesn't support dynamic blocks
             });
 
             _AcEd.PromptSelectionResult res = ed.SelectAll(filter);
-            //if (res.Status != _AcEd.PromptStatus.OK) return false;
+            if (res.Status != _AcEd.PromptStatus.OK) return false;
 
             List<_AcDb.ObjectId> selectedBlocks = new List<_AcDb.ObjectId>();
 #if BRX_APP
@@ -154,6 +157,8 @@ namespace Plan2Ext.BlockToExcel
                 {
                     var blockReference = (_AcDb.BlockReference)trans.GetObject(objectId, _AcDb.OpenMode.ForRead);
                     var blockName = Globs.GetBlockname(blockReference, trans);
+                    if (!_wildcardAcad.IsMatch(blockName)) continue;
+
                     List<_AcDb.ObjectId> objectIds;
                     if (!_blocksForExcelExportDictionary.TryGetValue(blockName, out objectIds))
                     {
@@ -166,15 +171,14 @@ namespace Plan2Ext.BlockToExcel
                 //_BlocksForExcelExport = selectedBlocks.Where(oid => IsBlockToUse(oid, trans, _BlockName)).ToList();
                 trans.Commit();
             }
-
+            Log.Info("Anzahl gefundener Blöcke: ");
             foreach (var kvp in _blocksForExcelExportDictionary)
             {
-                Log.InfoFormat("Anzahl gefundener Blöcke namens '{0}': {1}.", kvp.Key, kvp.Value.Count);
+
+                Log.InfoFormat("'{0}': {1}.", kvp.Key, kvp.Value.Count);
             }
 
-            if (_blocksForExcelExportDictionary.Count > 0) return true;
-            else return false;
+            return _blocksForExcelExportDictionary.Count > 0;
         }
-
     }
 }
