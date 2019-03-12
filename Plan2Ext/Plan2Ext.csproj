@@ -150,6 +150,7 @@
     <Compile Include="Kleinbefehle\AddMissingAttDefs.cs" />
     <Compile Include="Kleinbefehle\AddMissingAttRefs.cs" />
     <Compile Include="Kleinbefehle\BlockFarben.cs" />
+    <Compile Include="Kleinbefehle\HatchPolyBreite.cs" />
     <Compile Include="Kleinbefehle\KurzBereinig.cs" />
     <Compile Include="Kleinbefehle\LayerAufteil.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />

@@ -15,6 +15,7 @@ using Plan2Ext.Properties;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
 
 namespace Plan2Ext.LayoutExport
 {
@@ -76,7 +77,7 @@ namespace Plan2Ext.LayoutExport
                     acDoc.EndUndoMark();
                     await Globs.CallCommandAsync("_.U");
 
-                    //WriteHatchPolyBreiteScript();
+                    WriteHatchPolyBreiteScript();
 
                 }
             }
@@ -86,6 +87,31 @@ namespace Plan2Ext.LayoutExport
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, Resources.LayoutExportError,
                     ex.Message));
             }
+
+#pragma warning disable 4014
+            Globs.CallCommandAsync("_.Script", GetScriptName());
+#pragma warning restore 4014
+
+        }
+
+        [LispFunction("Plan2LayoutExportDrawOrder")]
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedParameter.Global
+        public static bool Plan2LayoutExportDrawOrder(ResultBuffer rb)
+        {
+            try
+            {
+                var db = Application.DocumentManager.MdiActiveDocument.Database;
+                DraworderCorrection(db);
+            }
+            catch (System.Exception ex)
+            {
+                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (Plan2LayoutExportDrawOrder): {0}", ex.Message);
+                Log.Error(msg);
+                return false;
+            }
+
+            return true;
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -97,18 +123,27 @@ namespace Plan2Ext.LayoutExport
             {
                 sb.AppendLine("_open");
                 sb.AppendLine("\"" + exportDwgName +  "\"");
-                sb.AppendLine("(PLAN2HATCHPOLYBREITE) _ALL ");
+                sb.AppendLine("(Plan2HatchPolyBreite)");
+                sb.AppendLine("(Plan2LayoutExportDrawOrder)");
                 sb.AppendLine("_Close");
-                sb.AppendLine("_Y");
+                sb.AppendLine("_N");
             }
 
+            var scriptName = GetScriptName();
+            if (File.Exists(scriptName)) File.Delete(scriptName);
+            File.WriteAllText(scriptName,sb.ToString());
+        }
+
+        private static string GetScriptName()
+        {
             var curDwgName = Globs.GetCurrentDwgName();
             // ReSharper disable once AssignNullToNotNullAttribute
             var scriptName = Path.Combine(Path.GetDirectoryName(curDwgName),
                 Path.GetFileNameWithoutExtension(curDwgName) + ".scr");
-            if (File.Exists(scriptName)) File.Delete(scriptName);
-            File.WriteAllText(scriptName,sb.ToString());
+            return scriptName;
         }
+
+
 
         private static void SetCurrentExportDwgName()
         {
@@ -157,7 +192,9 @@ namespace Plan2Ext.LayoutExport
             {
                 dbTarget.ReadDwgFile(CurrentExportDwg, FileShare.Read, true, "");
 
-                DraworderCorrection(dbTarget);
+                //HatchPolyBreite(dbTarget); -> via script
+
+                //DraworderCorrection(dbTarget); -> via script
 
                 RenameLayers(dbTarget);
 
@@ -171,6 +208,47 @@ namespace Plan2Ext.LayoutExport
             }
 
             Globs.Move(newFileName, CurrentExportDwg);
+        }
+        
+        // ReSharper disable once UnusedMember.Local
+        /// <summary>
+        /// Creates Hatches from Polyline.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <remarks>
+        /// Doesn't work yet. Creation of Entities in different Database. Maybe with wblockclone
+        /// </remarks>
+        private static void HatchPolyBreite(Database db)
+        {
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var blockTable = (BlockTable) transaction.GetObject(db.BlockTableId, OpenMode.ForRead);
+                var blockTableRecord = (BlockTableRecord)blockTable[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForRead, false);
+                var lwPolys = new List<Polyline>();
+                foreach (var objectId in blockTableRecord)
+                {
+                    var poly = transaction.GetObject(objectId, OpenMode.ForRead) as Polyline;
+                    if (poly == null) continue;
+                    if (poly.ConstantWidth > 0.0001)
+                    {
+                        lwPolys.Add(poly);
+                    }
+                }
+
+                foreach (var polyline in lwPolys)
+                {
+                    try
+                    {
+                        Kleinbefehle.HatchPolyBreite.CreateBoundedHatch(polyline, db);
+                    }
+                    catch (System.Exception e)
+                    {
+                        Log.Error(string.Format(CultureInfo.CurrentCulture, "Fehler in '{0}': {1}", CurrentExportDwg, e.Message));
+                    }
+                }
+
+                transaction.Commit();
+            }
         }
 
         private static void SetLayerLineWeight(Database db, LineWeight lineWeight)
@@ -222,6 +300,7 @@ namespace Plan2Ext.LayoutExport
             var formerXrefs = new ObjectIdCollection();
             var otherEntities = new ObjectIdCollection();
             var wipeOuts = new ObjectIdCollection();
+            var hatches = new ObjectIdCollection();
 
             using (var trans = db.TransactionManager.StartTransaction())
             {
@@ -248,7 +327,16 @@ namespace Plan2Ext.LayoutExport
                             var txt = ent as DBText;
                             if (txt == null)
                             {
-                                otherEntities.Add(oid);
+                                var hatch = ent as Hatch;
+                                if (hatch != null &&
+                                    hatch.PatternName.EndsWith("SOLID", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    hatches.Add(oid);
+                                }
+                                else
+                                {
+                                    otherEntities.Add(oid);
+                                }
                             }
                         }
                     }
@@ -259,6 +347,7 @@ namespace Plan2Ext.LayoutExport
 
             if (wipeOuts.Count > 0) Globs.DrawOrderBottom(wipeOuts, db);
             if (otherEntities.Count > 0) Globs.DrawOrderBottom(otherEntities, db);
+            if (hatches.Count > 0) Globs.DrawOrderBottom(hatches, db);
             if (formerXrefs.Count > 0) Globs.DrawOrderBottom(formerXrefs, db);
         }
 
@@ -310,7 +399,9 @@ namespace Plan2Ext.LayoutExport
         /// Can't be debugged!
         /// </summary>
         /// <returns></returns>
+#pragma warning disable 1998
         private static async Task ExportLayout()
+#pragma warning restore 1998
         {
             Globs.SwitchToPaperSpace();
 #if DEBUG

@@ -1759,6 +1759,34 @@ namespace Plan2Ext
             }
 
         }
+        internal static _AcDb.Hatch CreateHatch(List<_AcDb.ObjectId> outerIds, List<_AcDb.ObjectId> innerIds, string layer, _AcDb.BlockTableRecord btr, _AcDb.Transaction transaction)
+        {
+            string patternName = "_SOLID";
+
+            var objIds = new _AcDb.ObjectIdCollection();
+            outerIds.ForEach(x => objIds.Add(x));
+
+            _AcDb.Hatch oHatch = new _AcDb.Hatch();
+            _AcGe.Vector3d normal = new _AcGe.Vector3d(0.0, 0.0, 1.0);
+            oHatch.Normal = normal;
+            oHatch.SetHatchPattern(_AcDb.HatchPatternType.PreDefined, patternName);
+            oHatch.Layer = layer;
+
+            btr.AppendEntity(oHatch);
+            transaction.AddNewlyCreatedDBObject(oHatch, true);
+
+            oHatch.Associative = false;
+            oHatch.AppendLoop((int)_AcDb.HatchLoopTypes.Default, objIds);
+
+            if (innerIds != null && innerIds.Count > 0)
+            {
+                var objIds2 = new _AcDb.ObjectIdCollection();
+                innerIds.ForEach(x => objIds2.Add(x));
+                oHatch.AppendLoop((int)_AcDb.HatchLoopTypes.Default, objIds2);
+            }
+            oHatch.EvaluateHatch(true);
+            return oHatch;
+        }
 
         internal static void HatchPoly(_AcDb.ObjectId oid, string layer, _AcCm.Color layerCol)
         {
