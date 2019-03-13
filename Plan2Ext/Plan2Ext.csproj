@@ -158,6 +158,14 @@
     <Compile Include="Kleinbefehle\Schraff2Solid.cs" />
     <Compile Include="Kleinbefehle\SpecialXrefLayer.cs" />
     <Compile Include="LayerFilters\Commands.cs" />
+    <Compile Include="LayerKontrolle\Commands.cs" />
+    <Compile Include="LayerKontrolle\LayerKontrolleControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="LayerKontrolle\LayerKontrolleControl.Designer.cs">
+      <DependentUpon>LayerKontrolleControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LayerKontrolle\Palette.cs" />
     <Compile Include="LayerNummerierung\Commands.cs" />
     <Compile Include="LayerNummerierung\Engine.cs" />
     <Compile Include="LayerNummerierung\Globs.cs" />
@@ -347,6 +355,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="HoehenPruefung\HoePrControl.resx">
       <DependentUpon>HoePrControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LayerKontrolle\LayerKontrolleControl.resx">
+      <DependentUpon>LayerKontrolleControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LayerNummerierung\NrControl.resx">
       <DependentUpon>NrControl.cs</DependentUpon>
