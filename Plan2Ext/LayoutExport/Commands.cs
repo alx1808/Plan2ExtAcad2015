@@ -125,6 +125,7 @@ namespace Plan2Ext.LayoutExport
                 sb.AppendLine("\"" + exportDwgName +  "\"");
                 sb.AppendLine("(Plan2HatchPolyBreite)");
                 sb.AppendLine("(Plan2LayoutExportDrawOrder)");
+                sb.AppendLine("(setvar \"LTSCALE\" 5.0)");
                 sb.AppendLine("_Close");
                 sb.AppendLine("_N");
             }
@@ -142,8 +143,6 @@ namespace Plan2Ext.LayoutExport
                 Path.GetFileNameWithoutExtension(curDwgName) + ".scr");
             return scriptName;
         }
-
-
 
         private static void SetCurrentExportDwgName()
         {
