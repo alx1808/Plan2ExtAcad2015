@@ -32,8 +32,8 @@
             this.btnPrevious = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.listBox1 = new System.Windows.Forms.ListBox();
             this.btnGetAlwaysOn = new System.Windows.Forms.Button();
+            this.lstAlwaysOn = new System.Windows.Forms.ListBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -44,25 +44,27 @@
             this.lstAllLayers.FormattingEnabled = true;
             this.lstAllLayers.Location = new System.Drawing.Point(3, 3);
             this.lstAllLayers.Name = "lstAllLayers";
-            this.lstAllLayers.Size = new System.Drawing.Size(254, 95);
+            this.lstAllLayers.Size = new System.Drawing.Size(254, 199);
             this.lstAllLayers.TabIndex = 0;
+            this.lstAllLayers.SelectedIndexChanged += new System.EventHandler(this.lstAllLayers_SelectedIndexChanged);
             // 
             // btnPrevious
             // 
             this.btnPrevious.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnPrevious.Font = new System.Drawing.Font("Symbol", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
-            this.btnPrevious.Location = new System.Drawing.Point(201, 104);
+            this.btnPrevious.Location = new System.Drawing.Point(198, 213);
             this.btnPrevious.Name = "btnPrevious";
             this.btnPrevious.Size = new System.Drawing.Size(25, 23);
             this.btnPrevious.TabIndex = 1;
             this.btnPrevious.Text = "";
             this.btnPrevious.UseVisualStyleBackColor = true;
+            this.btnPrevious.Click += new System.EventHandler(this.btnPrevious_Click);
             // 
             // btnNext
             // 
             this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnNext.Font = new System.Drawing.Font("Symbol", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
-            this.btnNext.Location = new System.Drawing.Point(232, 104);
+            this.btnNext.Location = new System.Drawing.Point(229, 213);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(25, 23);
             this.btnNext.TabIndex = 2;
@@ -75,23 +77,13 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.btnGetAlwaysOn);
-            this.groupBox1.Controls.Add(this.listBox1);
-            this.groupBox1.Location = new System.Drawing.Point(3, 133);
+            this.groupBox1.Controls.Add(this.lstAlwaysOn);
+            this.groupBox1.Location = new System.Drawing.Point(3, 242);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(254, 217);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Immer ein";
-            // 
-            // listBox1
-            // 
-            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(6, 19);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(242, 160);
-            this.listBox1.TabIndex = 0;
             // 
             // btnGetAlwaysOn
             // 
@@ -102,6 +94,18 @@
             this.btnGetAlwaysOn.TabIndex = 1;
             this.btnGetAlwaysOn.Text = "...";
             this.btnGetAlwaysOn.UseVisualStyleBackColor = true;
+            this.btnGetAlwaysOn.Click += new System.EventHandler(this.btnGetAlwaysOn_Click);
+            // 
+            // lstAlwaysOn
+            // 
+            this.lstAlwaysOn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lstAlwaysOn.FormattingEnabled = true;
+            this.lstAlwaysOn.Location = new System.Drawing.Point(6, 19);
+            this.lstAlwaysOn.Name = "lstAlwaysOn";
+            this.lstAlwaysOn.Size = new System.Drawing.Size(242, 160);
+            this.lstAlwaysOn.TabIndex = 0;
+            this.lstAlwaysOn.KeyUp += new System.Windows.Forms.KeyEventHandler(this.lstAlwaysOn_KeyUp);
             // 
             // LayerKontrolleControl
             // 
@@ -125,6 +129,6 @@
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnGetAlwaysOn;
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListBox lstAlwaysOn;
     }
 }

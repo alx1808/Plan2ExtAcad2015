@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.Windows;
+﻿using Autodesk.AutoCAD.ApplicationServices.Core;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Windows;
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
 
@@ -14,7 +16,12 @@ namespace Plan2Ext.LayerKontrolle
             _Control = new LayerKontrolleControl();
         }
 
-        public bool Show()
+        private string CurrentLayerName
+        {
+            get { return _Control.CurrentLayerName; }
+        }
+
+        public void Show()
         {
             if (_PaletteSet == null)
             {
@@ -36,31 +43,59 @@ namespace Plan2Ext.LayerKontrolle
                     _PaletteSet.Visible = true;
                 }
 
-                return false;
             }
             else
             {
                 if (!_PaletteSet.Visible)
                 {
                     _PaletteSet.Visible = true;
-                    return false;
                 }
-                return true;
+            }
 
+        }
+
+        internal void InitLayers()
+        {
+            _Control.InitLayers();
+        }
+
+        internal void SetLayers()
+        {
+
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = doc.TransactionManager.StartTransaction())
+            {
+                var layTb = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (var ltrOid in layTb)
+                {
+                    bool dontFreeze = (ltrOid == db.Clayer);
+                    var ltr = (LayerTableRecord)trans.GetObject(ltrOid, OpenMode.ForRead);
+                    var name = ltr.Name;
+                    var on = IsAlwaysOn(name) || (name == CurrentLayerName);
+                    SetLayer(ltr, !on, dontFreeze);
+                }
+                trans.Commit();
             }
         }
 
-        public bool IsAlwaysOn(string name)
+        private void SetLayer(LayerTableRecord ltr, bool off, bool dontFreeze)
         {
-            // todo: get layers always on from control
-            return false;
+            if (!ltr.IsFrozen && ltr.IsOff == off) return;
+
+            ltr.UpgradeOpen();
+            if (!dontFreeze) ltr.IsFrozen = false;
+            ltr.IsOff = off;
         }
 
-        public bool IsCurrentLayer(string name)
+        public void AddAlwaysOnLayer(string entityLayer)
         {
-            // todo: get currentActiveLayer from control
-            return false;
+            _Control.AddAlwaysOnLayer(entityLayer);
         }
 
+        private bool IsAlwaysOn(string name)
+        {
+            return _Control.IsAlwaysOn(name);
+        }
     }
 }
