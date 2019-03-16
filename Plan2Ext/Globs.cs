@@ -2494,6 +2494,25 @@ namespace Plan2Ext
             }
         }
 
+        internal static bool InsertWblock(_AcDb.Database db, string blockName, string newBlockName = null)
+        {
+            if (string.IsNullOrEmpty(newBlockName)) newBlockName = blockName;
+            var dwgFullPath = _AcDb.HostApplicationServices.Current.FindFile(blockName + ".dwg", db, _AcDb.FindFileHint.Default);
+            if (!System.IO.File.Exists(dwgFullPath)) return false;
+
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                using (var wblockDatabase = new _AcDb.Database(false, true))
+                {
+                    wblockDatabase.ReadDwgFile(dwgFullPath, System.IO.FileShare.Read, true, null);
+                    db.Insert(newBlockName, wblockDatabase, true);
+                }
+                transaction.Commit();
+            }
+            return true;
+        }
+
+
 #if ARX_APP
         internal static object GetLispVariable(string name)
         {
