@@ -54,9 +54,9 @@ namespace Plan2Ext.LayerKontrolle
 
         }
 
-        internal void InitLayers()
+        internal void InitLayers(bool ignoreSetLayers)
         {
-            _Control.InitLayers();
+            _Control.InitLayers(ignoreSetLayers);
         }
 
         internal void SetLayers()

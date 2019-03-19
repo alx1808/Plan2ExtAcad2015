@@ -31,12 +31,13 @@ namespace Plan2Ext.LayerKontrolle
             HandleSetLayers(false);
         }
 
-        private void HandleSetLayers(bool initLayers)
+        private void HandleSetLayers(bool firstCall)
         {
             try
             {
                 OpenPalette();
-                if (initLayers) _Palette.InitLayers();
+
+                if (firstCall) _Palette.InitLayers(ignoreSetLayers: true);
 
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 if (doc == null) return;
@@ -50,8 +51,14 @@ namespace Plan2Ext.LayerKontrolle
 #else
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
-
-                    _Palette.SetLayers();
+                    if (firstCall)
+                    {
+                        GetAlwaysOnLayers(doc,first: true);
+                    }
+                    else
+                    {
+                        _Palette.SetLayers();
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -74,29 +81,43 @@ namespace Plan2Ext.LayerKontrolle
                 // ReSharper disable once UnusedVariable
                 using (var mDoclock = doc.LockDocument())
                 {
-                    var ed = doc.Editor;
 #if NEWSETFOCUS
                     doc.Window.Focus();
 #else
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
-
-                    var per = ed.GetEntity("\nElement wählen, dessen Layer immer angezeigt werden soll: ");
-                    if (per.Status == PromptStatus.OK)
-                    {
-                        using (var tr = doc.TransactionManager.StartTransaction())
-                        {
-                            Entity entity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
-                            if (entity == null) return;
-                            _Palette.AddAlwaysOnLayer(entity.Layer);
-                            tr.Commit();
-                        }
-                    }
+                    GetAlwaysOnLayers(doc);
                 }
             }
             catch (System.Exception ex)
             {
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayerKontrolleSelectAlwaysOnLayer aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        private static void GetAlwaysOnLayers(Document doc, bool first = false)
+        {
+            while (true)
+            {
+                PromptEntityResult per;
+                if (first)
+                { 
+                    // first is always cancel
+                    doc.Editor.GetEntity("\nElement wählen, dessen Layer immer angezeigt werden soll: ");
+                    first = false;
+                }
+                per = doc.Editor.GetEntity("\nElement wählen, dessen Layer immer angezeigt werden soll: ");
+                if (per.Status == PromptStatus.OK)
+                {
+                    using (var tr = doc.TransactionManager.StartTransaction())
+                    {
+                        Entity entity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
+                        if (entity == null) return;
+                        _Palette.AddAlwaysOnLayer(entity.Layer);
+                        tr.Commit();
+                    }
+                }
+                else break;
             }
         }
 

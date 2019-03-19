@@ -44,7 +44,7 @@
             this.lstAllLayers.FormattingEnabled = true;
             this.lstAllLayers.Location = new System.Drawing.Point(3, 3);
             this.lstAllLayers.Name = "lstAllLayers";
-            this.lstAllLayers.Size = new System.Drawing.Size(254, 199);
+            this.lstAllLayers.Size = new System.Drawing.Size(254, 82);
             this.lstAllLayers.TabIndex = 0;
             this.lstAllLayers.SelectedIndexChanged += new System.EventHandler(this.lstAllLayers_SelectedIndexChanged);
             // 
@@ -52,7 +52,7 @@
             // 
             this.btnPrevious.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnPrevious.Font = new System.Drawing.Font("Symbol", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
-            this.btnPrevious.Location = new System.Drawing.Point(198, 213);
+            this.btnPrevious.Location = new System.Drawing.Point(198, 91);
             this.btnPrevious.Name = "btnPrevious";
             this.btnPrevious.Size = new System.Drawing.Size(25, 23);
             this.btnPrevious.TabIndex = 1;
@@ -64,7 +64,7 @@
             // 
             this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnNext.Font = new System.Drawing.Font("Symbol", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
-            this.btnNext.Location = new System.Drawing.Point(229, 213);
+            this.btnNext.Location = new System.Drawing.Point(229, 91);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(25, 23);
             this.btnNext.TabIndex = 2;
@@ -78,9 +78,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.btnGetAlwaysOn);
             this.groupBox1.Controls.Add(this.lstAlwaysOn);
-            this.groupBox1.Location = new System.Drawing.Point(3, 242);
+            this.groupBox1.Location = new System.Drawing.Point(3, 120);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(254, 217);
+            this.groupBox1.Size = new System.Drawing.Size(254, 108);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Immer ein";
@@ -88,7 +88,7 @@
             // btnGetAlwaysOn
             // 
             this.btnGetAlwaysOn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnGetAlwaysOn.Location = new System.Drawing.Point(173, 188);
+            this.btnGetAlwaysOn.Location = new System.Drawing.Point(173, 81);
             this.btnGetAlwaysOn.Name = "btnGetAlwaysOn";
             this.btnGetAlwaysOn.Size = new System.Drawing.Size(75, 23);
             this.btnGetAlwaysOn.TabIndex = 1;
@@ -103,7 +103,7 @@
             this.lstAlwaysOn.FormattingEnabled = true;
             this.lstAlwaysOn.Location = new System.Drawing.Point(6, 19);
             this.lstAlwaysOn.Name = "lstAlwaysOn";
-            this.lstAlwaysOn.Size = new System.Drawing.Size(242, 160);
+            this.lstAlwaysOn.Size = new System.Drawing.Size(242, 56);
             this.lstAlwaysOn.TabIndex = 0;
             this.lstAlwaysOn.KeyUp += new System.Windows.Forms.KeyEventHandler(this.lstAlwaysOn_KeyUp);
             // 
