@@ -1,6 +1,8 @@
-﻿using Autodesk.AutoCAD.ApplicationServices.Core;
+﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Windows;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
 
@@ -14,6 +16,14 @@ namespace Plan2Ext.LayerKontrolle
         public Palette()
         {
             _Control = new LayerKontrolleControl();
+            Application.DocumentManager.DocumentActivated += DocumentManager_DocumentActivated;
+        }
+
+        void DocumentManager_DocumentActivated(object sender, DocumentCollectionEventArgs e)
+        {
+            if (!_PaletteSet.Visible) return;
+            if (e.Document == null) _Control.ClearLayerList();
+            else _Control.InitLayers(ignoreSetLayers: true);
         }
 
         private string CurrentLayerName

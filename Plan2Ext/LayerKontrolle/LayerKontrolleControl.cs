@@ -36,7 +36,7 @@ namespace Plan2Ext.LayerKontrolle
             lstAllLayers.SelectedIndex = index;
         }
 
-        private bool _ignoreSetLayers = false;
+        private bool _ignoreSetLayers;
         private void SetLayers()
         {
             if (_ignoreSetLayers) return;
@@ -65,6 +65,19 @@ namespace Plan2Ext.LayerKontrolle
                 if (layerNames.Count == 0) return;
                 layerNames.ForEach(x => lstAllLayers.Items.Add(x));
                 lstAllLayers.SelectedIndex = 0;
+            }
+            finally
+            {
+                _ignoreSetLayers = false;
+            }
+        }
+
+        public void ClearLayerList()
+        {
+            try
+            {
+                _ignoreSetLayers = true;
+                lstAllLayers.Items.Clear();
             }
             finally
             {
