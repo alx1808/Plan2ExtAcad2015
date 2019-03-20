@@ -32,10 +32,13 @@
             this.btnPrevious = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnAllLayerOn = new System.Windows.Forms.Button();
             this.btnGetAlwaysOn = new System.Windows.Forms.Button();
             this.lstAlwaysOn = new System.Windows.Forms.ListBox();
-            this.btnAllLayerOn = new System.Windows.Forms.Button();
+            this.grpBoxEntityTypes = new System.Windows.Forms.GroupBox();
+            this.lstEntityTypes = new System.Windows.Forms.ListBox();
             this.groupBox1.SuspendLayout();
+            this.grpBoxEntityTypes.SuspendLayout();
             this.SuspendLayout();
             // 
             // lstAllLayers
@@ -87,6 +90,17 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Immer ein";
             // 
+            // btnAllLayerOn
+            // 
+            this.btnAllLayerOn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAllLayerOn.Location = new System.Drawing.Point(92, 81);
+            this.btnAllLayerOn.Name = "btnAllLayerOn";
+            this.btnAllLayerOn.Size = new System.Drawing.Size(75, 23);
+            this.btnAllLayerOn.TabIndex = 4;
+            this.btnAllLayerOn.Text = "Alle Ein";
+            this.btnAllLayerOn.UseVisualStyleBackColor = true;
+            this.btnAllLayerOn.Click += new System.EventHandler(this.btnAllLayerOn_Click);
+            // 
             // btnGetAlwaysOn
             // 
             this.btnGetAlwaysOn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -109,28 +123,40 @@
             this.lstAlwaysOn.TabIndex = 0;
             this.lstAlwaysOn.KeyUp += new System.Windows.Forms.KeyEventHandler(this.lstAlwaysOn_KeyUp);
             // 
-            // btnAllLayerOn
+            // grpBoxEntityTypes
             // 
-            this.btnAllLayerOn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAllLayerOn.Location = new System.Drawing.Point(92, 81);
-            this.btnAllLayerOn.Name = "btnAllLayerOn";
-            this.btnAllLayerOn.Size = new System.Drawing.Size(75, 23);
-            this.btnAllLayerOn.TabIndex = 4;
-            this.btnAllLayerOn.Text = "Alle Ein";
-            this.btnAllLayerOn.UseVisualStyleBackColor = true;
-            this.btnAllLayerOn.Click += new System.EventHandler(this.btnAllLayerOn_Click);
+            this.grpBoxEntityTypes.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpBoxEntityTypes.Controls.Add(this.lstEntityTypes);
+            this.grpBoxEntityTypes.Location = new System.Drawing.Point(3, 234);
+            this.grpBoxEntityTypes.Name = "grpBoxEntityTypes";
+            this.grpBoxEntityTypes.Size = new System.Drawing.Size(254, 152);
+            this.grpBoxEntityTypes.TabIndex = 5;
+            this.grpBoxEntityTypes.TabStop = false;
+            this.grpBoxEntityTypes.Text = "Elementtypen";
+            // 
+            // lstEntityTypes
+            // 
+            this.lstEntityTypes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstEntityTypes.FormattingEnabled = true;
+            this.lstEntityTypes.Location = new System.Drawing.Point(3, 16);
+            this.lstEntityTypes.Name = "lstEntityTypes";
+            this.lstEntityTypes.Size = new System.Drawing.Size(248, 133);
+            this.lstEntityTypes.TabIndex = 0;
             // 
             // LayerKontrolleControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.grpBoxEntityTypes);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.btnPrevious);
             this.Controls.Add(this.lstAllLayers);
             this.Name = "LayerKontrolleControl";
-            this.Size = new System.Drawing.Size(260, 474);
+            this.Size = new System.Drawing.Size(260, 478);
             this.groupBox1.ResumeLayout(false);
+            this.grpBoxEntityTypes.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -144,5 +170,7 @@
         private System.Windows.Forms.Button btnGetAlwaysOn;
         private System.Windows.Forms.ListBox lstAlwaysOn;
         private System.Windows.Forms.Button btnAllLayerOn;
+        private System.Windows.Forms.GroupBox grpBoxEntityTypes;
+        private System.Windows.Forms.ListBox lstEntityTypes;
     }
 }

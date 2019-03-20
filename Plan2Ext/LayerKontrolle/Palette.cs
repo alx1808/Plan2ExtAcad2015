@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
+﻿using System.Collections.Generic;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
@@ -22,7 +23,7 @@ namespace Plan2Ext.LayerKontrolle
         void DocumentManager_DocumentActivated(object sender, DocumentCollectionEventArgs e)
         {
             if (!_PaletteSet.Visible) return;
-            if (e.Document == null) _Control.ClearLayerList();
+            if (e.Document == null) _Control.ClearLists();
             else _Control.InitLayers(ignoreSetLayers: true);
         }
 
@@ -115,6 +116,39 @@ namespace Plan2Ext.LayerKontrolle
         private bool IsAlwaysOn(string name)
         {
             return _Control.IsAlwaysOn(name);
+        }
+
+        public static void GetEntityTypesForLayer(string layerName, Dictionary<string, int> entityTypesDictionary)
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            using (doc.LockDocument())
+            {
+                using (var transaction = doc.TransactionManager.StartTransaction())
+                {
+                    var blockTable = (BlockTable)transaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead);
+                    foreach (var blockTableRecordOid in blockTable)
+                    {
+                        var blockTableRecord =
+                            (BlockTableRecord) transaction.GetObject(blockTableRecordOid, OpenMode.ForRead);
+                        foreach (var oid in blockTableRecord)
+                        {
+                            var entity = transaction.GetObject(oid, OpenMode.ForRead) as Entity;
+                            if (entity == null) continue;
+                            if (!entity.Layer.Equals(layerName)) continue;
+
+                            var typName = entity.GetType().Name;
+
+                            int cnt;
+                            if (entityTypesDictionary.TryGetValue(typName, out cnt))
+                            {
+                                entityTypesDictionary[typName] = cnt + 1;
+                            }
+                            else entityTypesDictionary.Add(typName, 1);
+                        }
+                    }
+                    transaction.Commit();
+                }
+            }
         }
     }
 }

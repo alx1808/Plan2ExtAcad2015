@@ -36,10 +36,10 @@ namespace Plan2Ext.LayerKontrolle
             lstAllLayers.SelectedIndex = index;
         }
 
-        private bool _ignoreSetLayers;
+        private bool _ignoreIndexChangedReaction;
         private void SetLayers()
         {
-            if (_ignoreSetLayers) return;
+            if (_ignoreIndexChangedReaction) return;
             try
             {
                 Globs.CancelCommand();
@@ -57,8 +57,9 @@ namespace Plan2Ext.LayerKontrolle
         {
             try
             {
-                _ignoreSetLayers = ignoreSetLayers;
+                _ignoreIndexChangedReaction = ignoreSetLayers;
                 lstAllLayers.Items.Clear();
+                lstEntityTypes.Items.Clear();
                 var layerNames = new List<string>();
                 Globs.GetAllLayerNames(layerNames);
                 layerNames = layerNames.OrderBy(x => x).ToList();
@@ -68,26 +69,41 @@ namespace Plan2Ext.LayerKontrolle
             }
             finally
             {
-                _ignoreSetLayers = false;
+                _ignoreIndexChangedReaction = false;
             }
         }
 
-        public void ClearLayerList()
+        public void ClearLists()
         {
             try
             {
-                _ignoreSetLayers = true;
+                _ignoreIndexChangedReaction = true;
                 lstAllLayers.Items.Clear();
+                lstEntityTypes.Items.Clear();
             }
             finally
             {
-                _ignoreSetLayers = false;
+                _ignoreIndexChangedReaction = false;
             }
         }
 
         private void lstAllLayers_SelectedIndexChanged(object sender, EventArgs e)
         {
+            SetEntityTypesList();
             SetLayers();
+        }
+
+        private void SetEntityTypesList()
+        {
+            if (_ignoreIndexChangedReaction) return;
+            lstEntityTypes.Items.Clear();
+            if (lstAllLayers.SelectedItem == null) return;
+            var entityTypesDictionary = new Dictionary<string, int>();
+            Palette.GetEntityTypesForLayer(lstAllLayers.SelectedItem.ToString(), entityTypesDictionary);
+            foreach (var kvp in entityTypesDictionary)
+            {
+                lstEntityTypes.Items.Add(kvp.Key + " (" + kvp.Value + ")");
+            }
         }
 
         private bool _getAlwaysOnShield;
