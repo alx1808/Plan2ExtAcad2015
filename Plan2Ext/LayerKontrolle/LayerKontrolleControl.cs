@@ -140,5 +140,10 @@ namespace Plan2Ext.LayerKontrolle
                 lstAlwaysOn.Items.Remove(lstAlwaysOn.SelectedItem);
             SetLayers();
         }
+
+        private void btnAllLayerOn_Click(object sender, EventArgs e)
+        {
+            Palette.AllLayersOn();
+        }
     }
 }

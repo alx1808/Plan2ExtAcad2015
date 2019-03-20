@@ -1036,6 +1036,35 @@ namespace Plan2Ext
             }
         }
 
+        public static void LayerOn(string layerRegexPattern)
+        {
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
+                    foreach (var layerOid in layTb)
+                    {
+                        var layerTableRecord =
+                            (_AcDb.LayerTableRecord) trans.GetObject(layerOid, _AcDb.OpenMode.ForRead);
+                        if (!layerTableRecord.IsOff) continue;
+
+                        if (!Regex.IsMatch(layerTableRecord.Name, layerRegexPattern, RegexOptions.IgnoreCase)) continue;
+
+                        layerTableRecord.UpgradeOpen();
+                        layerTableRecord.IsOff = false;
+                        layerTableRecord.DowngradeOpen();
+                    }
+                }
+                finally
+                {
+                    trans.Commit();
+                }
+            }
+        }
+
         /// <summary>
         /// Draworder to bottom
         /// </summary>

@@ -34,6 +34,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnGetAlwaysOn = new System.Windows.Forms.Button();
             this.lstAlwaysOn = new System.Windows.Forms.ListBox();
+            this.btnAllLayerOn = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -76,6 +77,7 @@
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.btnAllLayerOn);
             this.groupBox1.Controls.Add(this.btnGetAlwaysOn);
             this.groupBox1.Controls.Add(this.lstAlwaysOn);
             this.groupBox1.Location = new System.Drawing.Point(3, 120);
@@ -107,6 +109,17 @@
             this.lstAlwaysOn.TabIndex = 0;
             this.lstAlwaysOn.KeyUp += new System.Windows.Forms.KeyEventHandler(this.lstAlwaysOn_KeyUp);
             // 
+            // btnAllLayerOn
+            // 
+            this.btnAllLayerOn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAllLayerOn.Location = new System.Drawing.Point(92, 81);
+            this.btnAllLayerOn.Name = "btnAllLayerOn";
+            this.btnAllLayerOn.Size = new System.Drawing.Size(75, 23);
+            this.btnAllLayerOn.TabIndex = 4;
+            this.btnAllLayerOn.Text = "Alle Ein";
+            this.btnAllLayerOn.UseVisualStyleBackColor = true;
+            this.btnAllLayerOn.Click += new System.EventHandler(this.btnAllLayerOn_Click);
+            // 
             // LayerKontrolleControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -130,5 +143,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnGetAlwaysOn;
         private System.Windows.Forms.ListBox lstAlwaysOn;
+        private System.Windows.Forms.Button btnAllLayerOn;
     }
 }

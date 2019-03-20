@@ -89,6 +89,15 @@ namespace Plan2Ext.LayerKontrolle
             }
         }
 
+        internal static void AllLayersOn()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            using (doc.LockDocument())
+            {
+                Globs.LayerOn(".*");
+            }
+        }
+
         private void SetLayer(LayerTableRecord ltr, bool off, bool dontFreeze)
         {
             if (!ltr.IsFrozen && ltr.IsOff == off) return;
