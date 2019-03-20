@@ -118,8 +118,20 @@ namespace Plan2Ext.LayerKontrolle
             return _Control.IsAlwaysOn(name);
         }
 
-        public static void GetEntityTypesForLayer(string layerName, Dictionary<string, int> entityTypesDictionary)
+        internal enum EntityPropertyMode
         {
+            ByLayer,
+            Variabel,
+        };
+
+        internal static void GetEntityTypesForLayer(string layerName, Dictionary<string, int> entityTypesDictionary, 
+            out  EntityPropertyMode colorPropertyMode,
+            out  EntityPropertyMode lineTypePropertyMode,
+            out EntityPropertyMode lineWeightPropertyMode)
+        {
+            colorPropertyMode = EntityPropertyMode.ByLayer;
+            lineTypePropertyMode = EntityPropertyMode.ByLayer;
+            lineWeightPropertyMode = EntityPropertyMode.ByLayer;
             var doc = Application.DocumentManager.MdiActiveDocument;
             using (doc.LockDocument())
             {
@@ -135,6 +147,12 @@ namespace Plan2Ext.LayerKontrolle
                             var entity = transaction.GetObject(oid, OpenMode.ForRead) as Entity;
                             if (entity == null) continue;
                             if (!entity.Layer.Equals(layerName)) continue;
+
+                            if (!entity.EntityColor.IsByLayer) colorPropertyMode = EntityPropertyMode.Variabel;
+                            if (entity.Linetype != "ByLayer") lineTypePropertyMode = EntityPropertyMode.Variabel;
+                            if (entity.LineWeight != LineWeight.ByLayer)
+                                lineWeightPropertyMode = EntityPropertyMode.Variabel;
+                            
 
                             var typName = entity.GetType().Name;
 

@@ -60,6 +60,9 @@ namespace Plan2Ext.LayerKontrolle
                 _ignoreIndexChangedReaction = ignoreSetLayers;
                 lstAllLayers.Items.Clear();
                 lstEntityTypes.Items.Clear();
+                lblColorPropertyMode.Text = "";
+                lblLineTypePropertyMode.Text = "";
+                lblLineWeightPropertyMode.Text = "";
                 var layerNames = new List<string>();
                 Globs.GetAllLayerNames(layerNames);
                 layerNames = layerNames.OrderBy(x => x).ToList();
@@ -80,6 +83,9 @@ namespace Plan2Ext.LayerKontrolle
                 _ignoreIndexChangedReaction = true;
                 lstAllLayers.Items.Clear();
                 lstEntityTypes.Items.Clear();
+                lblColorPropertyMode.Text = "";
+                lblLineTypePropertyMode.Text = "";
+                lblLineWeightPropertyMode.Text = "";
             }
             finally
             {
@@ -99,11 +105,21 @@ namespace Plan2Ext.LayerKontrolle
             lstEntityTypes.Items.Clear();
             if (lstAllLayers.SelectedItem == null) return;
             var entityTypesDictionary = new Dictionary<string, int>();
-            Palette.GetEntityTypesForLayer(lstAllLayers.SelectedItem.ToString(), entityTypesDictionary);
+            Palette.EntityPropertyMode colorPropertyMode;
+            Palette.EntityPropertyMode lineTypePropertyMode;
+            Palette.EntityPropertyMode lineWeightPropertyMode;
+            Palette.GetEntityTypesForLayer(lstAllLayers.SelectedItem.ToString(), entityTypesDictionary, out colorPropertyMode, out lineTypePropertyMode, out lineWeightPropertyMode);
             foreach (var kvp in entityTypesDictionary)
             {
                 lstEntityTypes.Items.Add(kvp.Key + " (" + kvp.Value + ")");
             }
+
+            // ReSharper disable once LocalizableElement
+            lblColorPropertyMode.Text = "Color: " + colorPropertyMode;
+            // ReSharper disable once LocalizableElement
+            lblLineTypePropertyMode.Text = "LineType: " + lineTypePropertyMode;
+            // ReSharper disable once LocalizableElement
+            lblLineWeightPropertyMode.Text = "LineWeight: " + lineWeightPropertyMode;
         }
 
         private bool _getAlwaysOnShield;

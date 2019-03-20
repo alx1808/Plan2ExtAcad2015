@@ -37,6 +37,9 @@
             this.lstAlwaysOn = new System.Windows.Forms.ListBox();
             this.grpBoxEntityTypes = new System.Windows.Forms.GroupBox();
             this.lstEntityTypes = new System.Windows.Forms.ListBox();
+            this.lblColorPropertyMode = new System.Windows.Forms.Label();
+            this.lblLineTypePropertyMode = new System.Windows.Forms.Label();
+            this.lblLineWeightPropertyMode = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.grpBoxEntityTypes.SuspendLayout();
             this.SuspendLayout();
@@ -144,20 +147,48 @@
             this.lstEntityTypes.Size = new System.Drawing.Size(248, 133);
             this.lstEntityTypes.TabIndex = 0;
             // 
+            // lblColorPropertyMode
+            // 
+            this.lblColorPropertyMode.AutoSize = true;
+            this.lblColorPropertyMode.Location = new System.Drawing.Point(6, 389);
+            this.lblColorPropertyMode.Name = "lblColorPropertyMode";
+            this.lblColorPropertyMode.Size = new System.Drawing.Size(0, 13);
+            this.lblColorPropertyMode.TabIndex = 6;
+            // 
+            // lblLineTypePropertyMode
+            // 
+            this.lblLineTypePropertyMode.AutoSize = true;
+            this.lblLineTypePropertyMode.Location = new System.Drawing.Point(6, 402);
+            this.lblLineTypePropertyMode.Name = "lblLineTypePropertyMode";
+            this.lblLineTypePropertyMode.Size = new System.Drawing.Size(0, 13);
+            this.lblLineTypePropertyMode.TabIndex = 7;
+            // 
+            // lblLineWeightPropertyMode
+            // 
+            this.lblLineWeightPropertyMode.AutoSize = true;
+            this.lblLineWeightPropertyMode.Location = new System.Drawing.Point(6, 415);
+            this.lblLineWeightPropertyMode.Name = "lblLineWeightPropertyMode";
+            this.lblLineWeightPropertyMode.Size = new System.Drawing.Size(0, 13);
+            this.lblLineWeightPropertyMode.TabIndex = 8;
+            // 
             // LayerKontrolleControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lblLineWeightPropertyMode);
+            this.Controls.Add(this.lblLineTypePropertyMode);
+            this.Controls.Add(this.lblColorPropertyMode);
             this.Controls.Add(this.grpBoxEntityTypes);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.btnPrevious);
             this.Controls.Add(this.lstAllLayers);
             this.Name = "LayerKontrolleControl";
-            this.Size = new System.Drawing.Size(260, 478);
+            this.Size = new System.Drawing.Size(260, 550);
             this.groupBox1.ResumeLayout(false);
             this.grpBoxEntityTypes.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -172,5 +203,8 @@
         private System.Windows.Forms.Button btnAllLayerOn;
         private System.Windows.Forms.GroupBox grpBoxEntityTypes;
         private System.Windows.Forms.ListBox lstEntityTypes;
+        private System.Windows.Forms.Label lblColorPropertyMode;
+        private System.Windows.Forms.Label lblLineTypePropertyMode;
+        private System.Windows.Forms.Label lblLineWeightPropertyMode;
     }
 }
