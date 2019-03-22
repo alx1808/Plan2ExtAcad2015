@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+// ReSharper disable IdentifierTypo
 
 namespace Plan2Ext.Configuration
 {
     public partial class SetConfigForm : Form
     {
 
-        private List<string> _ExistingConfigs;
-        private string _Current;
+        private readonly List<string> _existingConfigs;
+        private string _current;
 
         
 
@@ -22,9 +18,9 @@ namespace Plan2Ext.Configuration
         {
             InitializeComponent();
 
-            _ExistingConfigs = configs.Select(x => x.ToUpperInvariant()).ToList();
+            _existingConfigs = configs.Select(x => x.ToUpperInvariant()).ToList();
 
-            _Current = current.ToUpperInvariant();
+            _current = current.ToUpperInvariant();
 
         }
 
@@ -38,7 +34,7 @@ namespace Plan2Ext.Configuration
         private void SetButtons()
         {
 
-            foreach (var c in _ExistingConfigs)
+            foreach (var c in _existingConfigs)
             {
                 switch (c)
                 {
@@ -66,12 +62,14 @@ namespace Plan2Ext.Configuration
                         rbnSalk.Enabled = true;
                         btnOk.Enabled = true;
                         break;
-                    default:
+                    case "KAV.CFG":
+                        rbnKav.Enabled = true;
+                        btnOk.Enabled = true;
                         break;
                 }
             }
 
-            switch (_Current )
+            switch (_current )
             {
                 case "PLAN2.CFG":
                     rbnPlan2.Checked = true;
@@ -91,7 +89,8 @@ namespace Plan2Ext.Configuration
                 case "SALK.CFG":
                     rbnSalk.Checked = true;
                     break;
-                default:
+                case "KAV.CFG":
+                    rbnKav.Checked = true;
                     break;
             }
         }
@@ -100,27 +99,31 @@ namespace Plan2Ext.Configuration
         {
             if (rbnBig.Checked)
             {
-                _Current = "BIG.CFG";
+                _current = "BIG.CFG";
             }
             else if (rbnPlan2.Checked)
             {
-                _Current = "PLAN2.CFG";
+                _current = "PLAN2.CFG";
             }
             else if (rbnFM.Checked)
             {
-                _Current = "FM.CFG";
+                _current = "FM.CFG";
             }
             else if (rbnPlFm.Checked)
             {
-                _Current = "PLAN2 - FM.CFG";
+                _current = "PLAN2 - FM.CFG";
             }
             else if (rbnNorm.Checked)
             {
-                _Current = "NORM.CFG";
+                _current = "NORM.CFG";
             }
             else if (rbnSalk.Checked)
             {
-                _Current = "SALK.CFG";
+                _current = "SALK.CFG";
+            }
+            else if (rbnKav.Checked)
+            {
+                _current = "KAV.CFG";
             }
 
         }
@@ -130,7 +133,7 @@ namespace Plan2Ext.Configuration
         {
             get
             {
-                return _Current;
+                return _current;
             }
         }
 
@@ -169,6 +172,12 @@ namespace Plan2Ext.Configuration
 
         }
 
+        private void rbnKav_CheckedChanged(object sender, EventArgs e)
+        {
+            SetCurrent();
+
+        }
+
         private void SetConfigForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
@@ -188,8 +197,8 @@ namespace Plan2Ext.Configuration
 
         private void Abbruch()
         {
-            this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -199,9 +208,10 @@ namespace Plan2Ext.Configuration
 
         private void Ok()
         {
-            this.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
+
 
 
     }

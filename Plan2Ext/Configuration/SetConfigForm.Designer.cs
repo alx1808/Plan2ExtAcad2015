@@ -37,6 +37,7 @@
             this.rbnPlan2 = new System.Windows.Forms.RadioButton();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.rbnKav = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,6 +46,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.rbnKav);
             this.groupBox1.Controls.Add(this.rbnSalk);
             this.groupBox1.Controls.Add(this.rbnNorm);
             this.groupBox1.Controls.Add(this.rbnBig);
@@ -159,6 +161,19 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // rbnKav
+            // 
+            this.rbnKav.AutoSize = true;
+            this.rbnKav.Enabled = false;
+            this.rbnKav.Location = new System.Drawing.Point(6, 155);
+            this.rbnKav.Name = "rbnKav";
+            this.rbnKav.Size = new System.Drawing.Size(46, 17);
+            this.rbnKav.TabIndex = 6;
+            this.rbnKav.TabStop = true;
+            this.rbnKav.Text = "KAV";
+            this.rbnKav.UseVisualStyleBackColor = true;
+            this.rbnKav.CheckedChanged += new System.EventHandler(this.rbnKav_CheckedChanged);
+            // 
             // SetConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -193,5 +208,6 @@
         private System.Windows.Forms.RadioButton rbnPlan2;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.RadioButton rbnKav;
     }
 }
