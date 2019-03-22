@@ -46,6 +46,7 @@ namespace Plan2Ext.LayerKontrolle
                 };
 #if ACAD2013_OR_NEWER
                 _PaletteSet.SetSize(new System.Drawing.Size(210, 164));
+                _PaletteSet.DockEnabled = DockSides.Left;
 #endif
                 _PaletteSet.Add("LayerKontrolle", _Control);
 
