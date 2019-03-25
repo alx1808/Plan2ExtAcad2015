@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -60,6 +61,7 @@ namespace Plan2Ext.LayerKontrolle
                 _ignoreIndexChangedReaction = ignoreSetLayers;
                 lstAllLayers.Items.Clear();
                 lstEntityTypes.Items.Clear();
+                lstAlwaysOn.Items.Clear(); 
                 lblColorPropertyMode.Text = "";
                 lblLineTypePropertyMode.Text = "";
                 lblLineWeightPropertyMode.Text = "";
@@ -82,6 +84,7 @@ namespace Plan2Ext.LayerKontrolle
             {
                 _ignoreIndexChangedReaction = true;
                 lstAllLayers.Items.Clear();
+                lstAlwaysOn.Items.Clear();
                 lstEntityTypes.Items.Clear();
                 lblColorPropertyMode.Text = "";
                 lblLineTypePropertyMode.Text = "";
@@ -116,10 +119,27 @@ namespace Plan2Ext.LayerKontrolle
 
             // ReSharper disable once LocalizableElement
             lblColorPropertyMode.Text = "Color: " + colorPropertyMode;
+            lblColorPropertyMode.ForeColor = colorPropertyMode == Palette.EntityPropertyMode.Variabel ? System.Drawing.Color.Red : System.Drawing.SystemColors.ControlText;
+            lblColorPropertyMode.Font = colorPropertyMode == Palette.EntityPropertyMode.Variabel
+                ? new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold)
+                : new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular);
             // ReSharper disable once LocalizableElement
             lblLineTypePropertyMode.Text = "LineType: " + lineTypePropertyMode;
+            lblLineTypePropertyMode.ForeColor = lineTypePropertyMode == Palette.EntityPropertyMode.Variabel ? System.Drawing.Color.Red : System.Drawing.SystemColors.ControlText;
+            lblLineTypePropertyMode.Font = lineTypePropertyMode == Palette.EntityPropertyMode.Variabel
+                ? new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold)
+                : new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular);
+            //    ? new Font(lblLineTypePropertyMode.Font.Name, lblLineTypePropertyMode.Font.Size, FontStyle.Bold)
+            //    : new Font(lblLineTypePropertyMode.Font.Name, lblLineTypePropertyMode.Font.Size, FontStyle.Regular);
             // ReSharper disable once LocalizableElement
             lblLineWeightPropertyMode.Text = "LineWeight: " + lineWeightPropertyMode;
+            lblLineWeightPropertyMode.ForeColor = lineWeightPropertyMode == Palette.EntityPropertyMode.Variabel ? System.Drawing.Color.Red : System.Drawing.SystemColors.ControlText;
+            lblLineWeightPropertyMode.Font = lineWeightPropertyMode == Palette.EntityPropertyMode.Variabel
+                ? new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold)
+                : new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular);
+            //    ? new Font(lblLineWeightPropertyMode.Font.Name, lblLineWeightPropertyMode.Font.Size, FontStyle.Bold)
+            //    : new Font(lblLineWeightPropertyMode.Font.Name, lblLineWeightPropertyMode.Font.Size, FontStyle.Regular);
+
         }
 
         private bool _getAlwaysOnShield;
@@ -170,7 +190,7 @@ namespace Plan2Ext.LayerKontrolle
 
             if (lstAlwaysOn.SelectedItem != null)
                 lstAlwaysOn.Items.Remove(lstAlwaysOn.SelectedItem);
-            SetLayers();
+            //SetLayers();
         }
 
         private void btnAllLayerOn_Click(object sender, EventArgs e)
