@@ -59,6 +59,33 @@ namespace Plan2Ext
 
         #region Constants
         internal const string FEHLERBLOCKNAME = "UPDFLA_FEHLER";
+
+        internal static Dictionary<string, string> GermanNameForTypeName = new Dictionary<string, string>()
+        {
+            {"Arc", "Bogen"},
+            {"BlockReference", "Blockreferenz"},
+            {"Circle", "Kreis"},
+            {"DBPoint", "Punkt"},
+            {"DBText", "Text"},
+            {"Hatch", "Schraffur"},
+            {"Line", "Linie"},
+            {"MText", "M-Text"},
+            {"MLine", "M-Linie"},
+            {"Polyline", "Polylinie"},
+            {"Polyline2d", "2D-Polylinie"},
+            {"Polyline3d", "3D-Polylinie"},
+            {"RotatedDimension", "Gedrehte Bemaßung"},
+            {"AlignedDimension", "Ausgerichtete Bemaßung"},
+            
+            // todo: uncomment entitytypes
+            //{"MLeader", "Multiführungslinie"},
+            //{"RasterImage", "Pixelbild"},
+            //{"LineAngularDimension2", "Winkelbemaßung"},
+            //{"DiametricDimension", "DiametralBemaßung"},
+            //{"AttributeDefinition", "Attributdefinition"},
+        };
+
+        
         #endregion
 
         public static void SwitchToModelSpace()

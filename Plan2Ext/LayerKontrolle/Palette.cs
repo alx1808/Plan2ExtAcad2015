@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Windows;
@@ -168,7 +169,7 @@ namespace Plan2Ext.LayerKontrolle
             Variabel,
         };
 
-        internal static void GetEntityTypesForLayer(string layerName, Dictionary<string, int> entityTypesDictionary, 
+        internal static void GetEntityTypesForLayer(string layerName, Dictionary<Type, int> entityTypesDictionary, 
             out  EntityPropertyMode colorPropertyMode,
             out  EntityPropertyMode lineTypePropertyMode,
             out EntityPropertyMode lineWeightPropertyMode)
@@ -198,14 +199,13 @@ namespace Plan2Ext.LayerKontrolle
                                 lineWeightPropertyMode = EntityPropertyMode.Variabel;
                             
 
-                            var typName = entity.GetType().Name;
-
+                            var type = entity.GetType();
                             int cnt;
-                            if (entityTypesDictionary.TryGetValue(typName, out cnt))
+                            if (entityTypesDictionary.TryGetValue(type, out cnt))
                             {
-                                entityTypesDictionary[typName] = cnt + 1;
+                                entityTypesDictionary[type] = cnt + 1;
                             }
-                            else entityTypesDictionary.Add(typName, 1);
+                            else entityTypesDictionary.Add(type, 1);
                         }
                     }
                     transaction.Commit();

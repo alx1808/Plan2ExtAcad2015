@@ -48,45 +48,12 @@ namespace Plan2Ext.Vorauswahl
             InitializeComponent();
         }
 
-        internal class EntityItem
-        {
-            private static Dictionary<string, string> _GermanNameForTypeName = new Dictionary<string, string>()
-            {
-                {"Arc", "Bogen"},
-                {"BlockReference", "Blockreferenz"},
-                {"Circle", "Kreis"},
-                {"DBPoint", "Punkt"},
-                {"DBText", "Text"},
-                {"Hatch", "Schraffur"},
-                {"Line", "Linie"},
-                {"MText", "M-Text"},
-                {"MLine", "M-Linie"},
-                {"Polyline", "Polylinie"},
-                {"Polyline2d", "2D-Polylinie"},
-                {"Polyline3d", "3D-Polylinie"},
-                {"RotatedDimension", "Gedrehte Bemaßung"},
-                {"AlignedDimension", "Ausgerichtete Bemaßung"},
-            };
-
-            public Type Type { get; set; }
-            public override string ToString()
-            {
-                return Type != null ? TypeName() : "";
-            }
-
-            private string TypeName()
-            {
-                string name;
-                return _GermanNameForTypeName.TryGetValue(Type.Name, out name) ? name : Type.Name;
-            }
-        }
-
         private void FillEntityTypesCombobox()
         {
             cmbEntityTypes.Items.Clear();
             foreach (var entityType in GetAllEntityTypesInModelSpace())
             {
-                cmbEntityTypes.Items.Add(new EntityItem() { Type = entityType });
+                cmbEntityTypes.Items.Add(new EntityTypeItem(entityType));
             }
         }
 
@@ -232,7 +199,7 @@ namespace Plan2Ext.Vorauswahl
 
         private void cmbEntityTypes_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var entityItem = (EntityItem)cmbEntityTypes.SelectedItem;
+            var entityItem = (EntityTypeItem)cmbEntityTypes.SelectedItem;
             if (entityItem == null) return;
             if (lstEntityTypes.Items.Contains(entityItem)) return;
             lstEntityTypes.Items.Add(entityItem);

@@ -130,7 +130,7 @@ namespace Plan2Ext.Vorauswahl
             var entityTypes = new List<Type>();
             foreach (var item in _userControl.lstEntityTypes.Items)
             {
-                var entityItem = (VorauswahlControl.EntityItem) item;
+                var entityItem = (EntityTypeItem) item;
                 entityTypes.Add(entityItem.Type);
             }
 

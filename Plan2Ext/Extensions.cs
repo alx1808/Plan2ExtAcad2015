@@ -76,6 +76,12 @@ namespace Plan2Ext
                 (p1[2] + p2[2]) / 2.0);
         }
 
+        public static string GetGermanName(this Type type)
+        {
+            string name;
+            return Globs.GermanNameForTypeName.TryGetValue(type.Name, out name) ? name : type.Name;
+        }
+
         ///<summary>
         /// Projects the provided Point3d onto the specified coordinate system.
         ///</summary>

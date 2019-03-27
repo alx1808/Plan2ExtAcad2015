@@ -174,6 +174,7 @@
             // 
             // btnCheckVonlayer
             // 
+            this.btnCheckVonlayer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCheckVonlayer.Location = new System.Drawing.Point(159, 389);
             this.btnCheckVonlayer.Name = "btnCheckVonlayer";
             this.btnCheckVonlayer.Size = new System.Drawing.Size(98, 23);

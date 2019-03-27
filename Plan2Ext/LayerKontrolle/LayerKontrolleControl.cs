@@ -107,14 +107,16 @@ namespace Plan2Ext.LayerKontrolle
             if (_ignoreIndexChangedReaction) return;
             lstEntityTypes.Items.Clear();
             if (lstAllLayers.SelectedItem == null) return;
-            var entityTypesDictionary = new Dictionary<string, int>();
+            var entityTypesDictionary = new Dictionary<Type, int>();
             Palette.EntityPropertyMode colorPropertyMode;
             Palette.EntityPropertyMode lineTypePropertyMode;
             Palette.EntityPropertyMode lineWeightPropertyMode;
             Palette.GetEntityTypesForLayer(lstAllLayers.SelectedItem.ToString(), entityTypesDictionary, out colorPropertyMode, out lineTypePropertyMode, out lineWeightPropertyMode);
             foreach (var kvp in entityTypesDictionary)
             {
-                lstEntityTypes.Items.Add(kvp.Key + " (" + kvp.Value + ")");
+                // todo: uncomment entitytypes
+                //lstEntityTypes.Items.Add(kvp.Key.GetGermanName() + " (" + kvp.Value + ")");
+                lstEntityTypes.Items.Add(kvp.Key.Name + " (" + kvp.Value + ")");
             }
 
             // ReSharper disable once LocalizableElement
