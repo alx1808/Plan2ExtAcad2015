@@ -795,7 +795,7 @@ namespace Plan2Ext
             string layer = arr[0].Value.ToString();
 
             var length = GetDoubleValue(arr[1].Value);
-            // angle 2
+            // angle 2c
             // colorindex 3
             // LB 4
 

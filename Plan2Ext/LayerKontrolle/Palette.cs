@@ -44,16 +44,19 @@ namespace Plan2Ext.LayerKontrolle
                             PaletteSetStyles.ShowCloseButton,
                     MinimumSize = new System.Drawing.Size(170, 164)
                 };
-#if ACAD2013_OR_NEWER
-                _PaletteSet.SetSize(new System.Drawing.Size(210, 164));
-                _PaletteSet.DockEnabled = DockSides.Left;
-#endif
                 _PaletteSet.Add("LayerKontrolle", _Control);
 
                 if (!_PaletteSet.Visible)
                 {
                     _PaletteSet.Visible = true;
                 }
+#if ACAD2013_OR_NEWER
+                // moved here since bug in acad 2016 and 2017 (must be visible before setting dock)
+                // https://forums.autodesk.com/t5/net/paletteset-docking-via-c-not-working-in-autocad-2016/td-p/5568372
+                //_PaletteSet.SetSize(new System.Drawing.Size(210, 164));
+                _PaletteSet.DockEnabled = DockSides.Left;
+                _PaletteSet.Dock = DockSides.Left;
+#endif
 
             }
             else
