@@ -197,5 +197,10 @@ namespace Plan2Ext.LayerKontrolle
         {
             Palette.AllLayersOn();
         }
+
+        private void btnCheckVonlayer_Click(object sender, EventArgs e)
+        {
+            Palette.SelectAllVariableEntitiesInModelSpace();
+        }
     }
 }

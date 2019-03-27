@@ -40,6 +40,7 @@
             this.lblColorPropertyMode = new System.Windows.Forms.Label();
             this.lblLineTypePropertyMode = new System.Windows.Forms.Label();
             this.lblLineWeightPropertyMode = new System.Windows.Forms.Label();
+            this.btnCheckVonlayer = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.grpBoxEntityTypes.SuspendLayout();
             this.SuspendLayout();
@@ -171,10 +172,22 @@
             this.lblLineWeightPropertyMode.Size = new System.Drawing.Size(0, 13);
             this.lblLineWeightPropertyMode.TabIndex = 8;
             // 
+            // btnCheckVonlayer
+            // 
+            this.btnCheckVonlayer.Location = new System.Drawing.Point(159, 389);
+            this.btnCheckVonlayer.Name = "btnCheckVonlayer";
+            this.btnCheckVonlayer.Size = new System.Drawing.Size(98, 23);
+            this.btnCheckVonlayer.TabIndex = 9;
+            this.btnCheckVonlayer.Text = "Vonlayer prüfen";
+            this.btnCheckVonlayer.UseVisualStyleBackColor = true;
+            this.btnCheckVonlayer.Visible = false;
+            this.btnCheckVonlayer.Click += new System.EventHandler(this.btnCheckVonlayer_Click);
+            // 
             // LayerKontrolleControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnCheckVonlayer);
             this.Controls.Add(this.lblLineWeightPropertyMode);
             this.Controls.Add(this.lblLineTypePropertyMode);
             this.Controls.Add(this.lblColorPropertyMode);
@@ -206,5 +219,6 @@
         private System.Windows.Forms.Label lblColorPropertyMode;
         private System.Windows.Forms.Label lblLineTypePropertyMode;
         private System.Windows.Forms.Label lblLineWeightPropertyMode;
+        private System.Windows.Forms.Button btnCheckVonlayer;
     }
 }

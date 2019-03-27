@@ -103,6 +103,46 @@ namespace Plan2Ext.LayerKontrolle
             }
         }
 
+        internal static void SelectAllVariableEntitiesInModelSpace()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            using (doc.LockDocument())
+            {
+                var db = doc.Database;
+                var listOfVariableEntityOids = new List<ObjectId>();
+                using (var transaction = doc.TransactionManager.StartTransaction())
+                {
+                    var blockTable = (BlockTable) transaction.GetObject(db.BlockTableId, OpenMode.ForRead);
+                    var blockTableRecord =
+                        (BlockTableRecord) transaction.GetObject(blockTable[BlockTableRecord.ModelSpace],
+                            OpenMode.ForRead);
+
+                    foreach (var oid in blockTableRecord)
+                    {
+                        var entity = transaction.GetObject(oid, OpenMode.ForRead) as Entity;
+                        if (IsVariable(entity))
+                        {
+                            listOfVariableEntityOids.Add(oid);
+                        }
+                    }
+                    transaction.Commit();
+                }
+
+                doc.Editor.SetImpliedSelection(new ObjectId[0]);
+                if (listOfVariableEntityOids.Count <= 0) return;
+                Globs.LayerOn(".*");
+                doc.Editor.SetImpliedSelection(listOfVariableEntityOids.ToArray());
+            }
+        }
+
+        private static bool IsVariable(Entity entity)
+        {
+            if (!entity.EntityColor.IsByLayer) return true;
+            if (entity.Linetype != "ByLayer") return true;
+            if (entity.LineWeight != LineWeight.ByLayer) return true;
+            return false;
+        }
+
         private void SetLayer(LayerTableRecord ltr, bool off, bool dontFreeze)
         {
             if (!ltr.IsFrozen && ltr.IsOff == off) return;
