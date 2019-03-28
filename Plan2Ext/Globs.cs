@@ -76,13 +76,11 @@ namespace Plan2Ext
             {"Polyline3d", "3D-Polylinie"},
             {"RotatedDimension", "Gedrehte Bemaßung"},
             {"AlignedDimension", "Ausgerichtete Bemaßung"},
-            
-            // todo: uncomment entitytypes
-            //{"MLeader", "Multiführungslinie"},
-            //{"RasterImage", "Pixelbild"},
-            //{"LineAngularDimension2", "Winkelbemaßung"},
-            //{"DiametricDimension", "DiametralBemaßung"},
-            //{"AttributeDefinition", "Attributdefinition"},
+            {"MLeader", "Multiführungslinie"},
+            {"RasterImage", "Pixelbild"},
+            {"LineAngularDimension2", "Winkelbemaßung"},
+            {"DiametricDimension", "DiametralBemaßung"},
+            {"AttributeDefinition", "Attributdefinition"},
         };
 
         

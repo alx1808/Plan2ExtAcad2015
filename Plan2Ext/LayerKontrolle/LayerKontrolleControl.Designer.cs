@@ -181,7 +181,6 @@
             this.btnCheckVonlayer.TabIndex = 9;
             this.btnCheckVonlayer.Text = "Vonlayer prüfen";
             this.btnCheckVonlayer.UseVisualStyleBackColor = true;
-            this.btnCheckVonlayer.Visible = false;
             this.btnCheckVonlayer.Click += new System.EventHandler(this.btnCheckVonlayer_Click);
             // 
             // LayerKontrolleControl
