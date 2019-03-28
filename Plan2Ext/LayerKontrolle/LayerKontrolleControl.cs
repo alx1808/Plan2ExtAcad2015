@@ -195,12 +195,32 @@ namespace Plan2Ext.LayerKontrolle
 
         private void btnAllLayerOn_Click(object sender, EventArgs e)
         {
-            Palette.AllLayersOn();
+            try
+            {
+                Globs.CancelCommand();
+
+                var doc = AcApp.DocumentManager.MdiActiveDocument;
+                doc.SendStringToExecute("Plan2LayerKontrolleAllLayersOn ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                AcApp.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler aufgetreten! {0}", ex.Message));
+            }
         }
 
         private void btnCheckVonlayer_Click(object sender, EventArgs e)
         {
-            Palette.SelectAllVariableEntitiesInModelSpace();
+            try
+            {
+                Globs.CancelCommand();
+
+                var doc = AcApp.DocumentManager.MdiActiveDocument;
+                doc.SendStringToExecute("Plan2LayerKontrolleSelectAllVariableEntitiesInModelSpace ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                AcApp.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler aufgetreten! {0}", ex.Message));
+            }
         }
     }
 }

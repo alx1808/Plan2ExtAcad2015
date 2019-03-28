@@ -31,6 +31,38 @@ namespace Plan2Ext.LayerKontrolle
             HandleSetLayers(false);
         }
 
+        [CommandMethod("Plan2LayerKontrolleSelectAllVariableEntitiesInModelSpace")]
+        // ReSharper disable once UnusedMember.Global
+        public void Plan2LayerKontrolleSelectAllVariableEntitiesInModelSpace()
+        {
+            try
+            {
+                OpenPalette();
+                Palette.SelectAllVariableEntitiesInModelSpace();
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture,
+                    "Fehler in Plan2LayerKontrolle aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        [CommandMethod("Plan2LayerKontrolleAllLayersOn")]
+        // ReSharper disable once UnusedMember.Global
+        public void Plan2LayerKontrolleAllLayersOn()
+        {
+            try
+            {
+                OpenPalette();
+                Palette.AllLayersOn();
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture,
+                    "Fehler in Plan2LayerKontrolle aufgetreten! {0}", ex.Message));
+            }
+        }
+
         private void HandleSetLayers(bool firstCall)
         {
             try

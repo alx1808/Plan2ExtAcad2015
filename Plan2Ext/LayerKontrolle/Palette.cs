@@ -43,7 +43,9 @@ namespace Plan2Ext.LayerKontrolle
                             PaletteSetStyles.ShowPropertiesMenu |
                             PaletteSetStyles.ShowAutoHideButton |
                             PaletteSetStyles.ShowCloseButton,
-                    MinimumSize = new System.Drawing.Size(170, 164)
+                    MinimumSize = new System.Drawing.Size(170, 164),
+                    KeepFocus = false
+
                 };
                 _PaletteSet.Add("LayerKontrolle", _Control);
 
@@ -100,6 +102,11 @@ namespace Plan2Ext.LayerKontrolle
             var doc = Application.DocumentManager.MdiActiveDocument;
             using (doc.LockDocument())
             {
+#if NEWSETFOCUS
+                doc.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
                 Globs.LayerOn(".*");
             }
         }
@@ -107,6 +114,11 @@ namespace Plan2Ext.LayerKontrolle
         internal static void SelectAllVariableEntitiesInModelSpace()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
+#if NEWSETFOCUS
+            doc.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
             using (doc.LockDocument())
             {
                 var db = doc.Database;
@@ -130,9 +142,15 @@ namespace Plan2Ext.LayerKontrolle
                 }
 
                 doc.Editor.SetImpliedSelection(new ObjectId[0]);
-                if (listOfVariableEntityOids.Count <= 0) return;
+
+                if (listOfVariableEntityOids.Count <= 0)
+                {
+                    doc.Editor.WriteMessage("\nKein Entity gefunden.");
+                    return;
+                }
                 Globs.LayerOn(".*");
                 doc.Editor.SetImpliedSelection(listOfVariableEntityOids.ToArray());
+                doc.Editor.WriteMessage("\nAnzahl gefundener Entities: " + listOfVariableEntityOids.Count);
             }
         }
 
