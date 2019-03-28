@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 // ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext.LayerKontrolle
 {
@@ -118,13 +119,13 @@ namespace Plan2Ext.LayerKontrolle
             }
 
             // ReSharper disable once LocalizableElement
-            lblColorPropertyMode.Text = "Color: " + colorPropertyMode;
+            lblColorPropertyMode.Text = "Farbe: " + ToGerman(colorPropertyMode);
             lblColorPropertyMode.ForeColor = colorPropertyMode == Palette.EntityPropertyMode.Variabel ? System.Drawing.Color.Red : System.Drawing.SystemColors.ControlText;
             lblColorPropertyMode.Font = colorPropertyMode == Palette.EntityPropertyMode.Variabel
                 ? new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold)
                 : new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular);
             // ReSharper disable once LocalizableElement
-            lblLineTypePropertyMode.Text = "LineType: " + lineTypePropertyMode;
+            lblLineTypePropertyMode.Text = "Linientyp: " + ToGerman(lineTypePropertyMode);
             lblLineTypePropertyMode.ForeColor = lineTypePropertyMode == Palette.EntityPropertyMode.Variabel ? System.Drawing.Color.Red : System.Drawing.SystemColors.ControlText;
             lblLineTypePropertyMode.Font = lineTypePropertyMode == Palette.EntityPropertyMode.Variabel
                 ? new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold)
@@ -132,7 +133,7 @@ namespace Plan2Ext.LayerKontrolle
             //    ? new Font(lblLineTypePropertyMode.Font.Name, lblLineTypePropertyMode.Font.Size, FontStyle.Bold)
             //    : new Font(lblLineTypePropertyMode.Font.Name, lblLineTypePropertyMode.Font.Size, FontStyle.Regular);
             // ReSharper disable once LocalizableElement
-            lblLineWeightPropertyMode.Text = "LineWeight: " + lineWeightPropertyMode;
+            lblLineWeightPropertyMode.Text = "Linienstärke: " + ToGerman(lineWeightPropertyMode);
             lblLineWeightPropertyMode.ForeColor = lineWeightPropertyMode == Palette.EntityPropertyMode.Variabel ? System.Drawing.Color.Red : System.Drawing.SystemColors.ControlText;
             lblLineWeightPropertyMode.Font = lineWeightPropertyMode == Palette.EntityPropertyMode.Variabel
                 ? new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold)
@@ -140,6 +141,19 @@ namespace Plan2Ext.LayerKontrolle
             //    ? new Font(lblLineWeightPropertyMode.Font.Name, lblLineWeightPropertyMode.Font.Size, FontStyle.Bold)
             //    : new Font(lblLineWeightPropertyMode.Font.Name, lblLineWeightPropertyMode.Font.Size, FontStyle.Regular);
 
+        }
+
+        private string ToGerman(Palette.EntityPropertyMode colorPropertyMode)
+        {
+            switch (colorPropertyMode)
+            {
+                case Palette.EntityPropertyMode.ByLayer:
+                    return "VonLayer";
+                case Palette.EntityPropertyMode.Variabel:
+                    return "Variabel";
+                default:
+                    throw new ArgumentOutOfRangeException("colorPropertyMode", colorPropertyMode, null);
+            }
         }
 
         private bool _getAlwaysOnShield;
