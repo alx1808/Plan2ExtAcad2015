@@ -193,6 +193,7 @@
             this.lstCheckLayernameLength.TabIndex = 10;
             this.lstCheckLayernameLength.Text = "Layerlängenprüfung";
             this.lstCheckLayernameLength.UseVisualStyleBackColor = true;
+            this.lstCheckLayernameLength.Click += new System.EventHandler(this.lstCheckLayernameLength_Click);
             // 
             // LayerKontrolleControl
             // 
