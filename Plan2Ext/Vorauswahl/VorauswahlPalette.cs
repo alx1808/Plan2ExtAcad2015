@@ -43,23 +43,23 @@ namespace Plan2Ext.Vorauswahl
     {
         // We cannot derive from PaletteSet
         // so we contain it
-        static PaletteSet _ps;
+        static PaletteSet _Ps;
 
         // We need to make the textbox available
         // via a static member
-        static VorauswahlControl _userControl;
+        static VorauswahlControl _UserControl;
 
         public VorauswahlPalette()
         {
-            _userControl = new VorauswahlControl();
+            _UserControl = new VorauswahlControl();
         }
 
         public bool Show()
         {
 
-            if (_ps == null)
+            if (_Ps == null)
             {
-                _ps = new PaletteSet("Vorauswahl")
+                _Ps = new PaletteSet("Vorauswahl")
                 {
                     Style = PaletteSetStyles.NameEditable |
                             PaletteSetStyles.ShowPropertiesMenu |
@@ -69,21 +69,21 @@ namespace Plan2Ext.Vorauswahl
                 };
 #if ACAD2013_OR_NEWER
 #if ARX_APP
-                _ps.SetSize(new System.Drawing.Size(154, 235));
+                _Ps.SetSize(new System.Drawing.Size(154, 235));
 #endif
 #endif
-                _ps.Add("Vorauswahl", _userControl);
-                if (!_ps.Visible)
+                _Ps.Add("Vorauswahl", _UserControl);
+                if (!_Ps.Visible)
                 {
-                    _ps.Visible = true;
+                    _Ps.Visible = true;
                 }
                 return false;
             }
             else
             {
-                if (!_ps.Visible)
+                if (!_Ps.Visible)
                 {
-                    _ps.Visible = true;
+                    _Ps.Visible = true;
                     return false;
                 }
                 return true;
@@ -93,7 +93,7 @@ namespace Plan2Ext.Vorauswahl
         public List<string> BlocknamesInList()
         {
             var blockNames = new List<string>();
-            foreach (var item in _userControl.lstBlocknamen.Items)
+            foreach (var item in _UserControl.lstBlocknamen.Items)
             {
                 blockNames.Add(item.ToString());
             }
@@ -105,20 +105,20 @@ namespace Plan2Ext.Vorauswahl
             if (blockNames == null) return;
             foreach (var blockName in blockNames)
             {
-                _userControl.lstBlocknamen.Items.Add(blockName);
+                _UserControl.lstBlocknamen.Items.Add(blockName);
             }
         }
 
         public void AddBlockNameToList(string blockName)
         {
             if (string.IsNullOrEmpty(blockName)) return;
-            _userControl.lstBlocknamen.Items.Add(blockName);
+            _UserControl.lstBlocknamen.Items.Add(blockName);
         }
 
         public List<string> LayernamesInList()
         {
             var layerNames = new List<string>();
-            foreach (var item in _userControl.lstLayer.Items)
+            foreach (var item in _UserControl.lstLayer.Items)
             {
                 layerNames.Add(item.ToString());
             }
@@ -128,7 +128,7 @@ namespace Plan2Ext.Vorauswahl
         public IEnumerable<Type> EntityTypesInList()
         {
             var entityTypes = new List<Type>();
-            foreach (var item in _userControl.lstEntityTypes.Items)
+            foreach (var item in _UserControl.lstEntityTypes.Items)
             {
                 var entityItem = (EntityTypeItem) item;
                 entityTypes.Add(entityItem.Type);
@@ -140,12 +140,12 @@ namespace Plan2Ext.Vorauswahl
         public void AddLayerNameToList(string layerName)
         {
             if (string.IsNullOrEmpty(layerName)) return;
-            _userControl.lstLayer.Items.Add(layerName);
+            _UserControl.lstLayer.Items.Add(layerName);
         }
 
         public void SetResultTextTo(string s)
         {
-            _userControl.lblResult.Text = s;
+            _UserControl.lblResult.Text = s;
         }
     }
 }

@@ -113,9 +113,15 @@ namespace Plan2Ext.LayerKontrolle
             Palette.EntityPropertyMode lineTypePropertyMode;
             Palette.EntityPropertyMode lineWeightPropertyMode;
             Palette.GetEntityTypesForLayer(lstAllLayers.SelectedItem.ToString(), entityTypesDictionary, out colorPropertyMode, out lineTypePropertyMode, out lineWeightPropertyMode);
+            var itemTexts = new List<string>();
             foreach (var kvp in entityTypesDictionary)
             {
-                lstEntityTypes.Items.Add(kvp.Key.GetGermanName() + " (" + kvp.Value + ")");
+                itemTexts.Add(kvp.Key.GetGermanName() + " (" + kvp.Value + ")");
+                
+            }
+            foreach (var itemT in itemTexts.OrderBy(x => x))
+            {
+                lstEntityTypes.Items.Add(itemT);
             }
 
             // ReSharper disable once LocalizableElement

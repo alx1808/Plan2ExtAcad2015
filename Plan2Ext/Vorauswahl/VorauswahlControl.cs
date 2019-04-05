@@ -51,9 +51,15 @@ namespace Plan2Ext.Vorauswahl
         private void FillEntityTypesCombobox()
         {
             cmbEntityTypes.Items.Clear();
+            var entityTypeItems = new List<EntityTypeItem>();
             foreach (var entityType in GetAllEntityTypesInModelSpace())
             {
-                cmbEntityTypes.Items.Add(new EntityTypeItem(entityType));
+                entityTypeItems.Add(new EntityTypeItem(entityType));
+                
+            }
+            foreach (var entityTypeItem in entityTypeItems.OrderBy(x => x.ToString()))
+            {
+                cmbEntityTypes.Items.Add(entityTypeItem);
             }
         }
 

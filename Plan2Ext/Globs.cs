@@ -81,6 +81,7 @@ namespace Plan2Ext
             {"LineAngularDimension2", "Winkelbemaßung"},
             {"DiametricDimension", "DiametralBemaßung"},
             {"AttributeDefinition", "Attributdefinition"},
+            {"Wipeout", "Abdecken"},
         };
 
 
@@ -1783,6 +1784,21 @@ namespace Plan2Ext
 
             return bowner as _AcDb.BlockReference;
 
+        }
+
+        internal static bool LayerExists(string layerName)
+        {
+            bool hasLayer;
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _AcDb.Database db = doc.Database;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var lt = (_AcDb.LayerTable)transaction.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+                hasLayer = lt.Has(layerName);
+                transaction.Commit();
+            }
+
+            return hasLayer;
         }
 
         internal static void VerifyLayerExists(string layerName, _AcCm.Color col)

@@ -44,7 +44,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lstDifferingLayerNames.FormattingEnabled = true;
-            this.lstDifferingLayerNames.Location = new System.Drawing.Point(12, 50);
+            this.lstDifferingLayerNames.Location = new System.Drawing.Point(12, 53);
             this.lstDifferingLayerNames.Name = "lstDifferingLayerNames";
             this.lstDifferingLayerNames.Size = new System.Drawing.Size(319, 160);
             this.lstDifferingLayerNames.TabIndex = 4;

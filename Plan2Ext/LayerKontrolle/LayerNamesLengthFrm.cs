@@ -112,10 +112,12 @@ namespace Plan2Ext.LayerKontrolle
 
         private void txtLayerName_TextChanged(object sender, EventArgs e)
         {
+            btnRename.Enabled = false;
             int len;
             if (!GetValidTextLength(out len)) return;
             btnRename.BackColor =
                 (len == txtLayerName.Text.Length) ? System.Drawing.Color.LightGreen : _btnRenameBackColorOrig;
+            btnRename.Enabled = !Globs.LayerExists(txtLayerName.Text);
         }
     }
 }
