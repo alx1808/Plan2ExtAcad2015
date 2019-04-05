@@ -236,5 +236,26 @@ namespace Plan2Ext.LayerKontrolle
                 AcApp.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler aufgetreten! {0}", ex.Message));
             }
         }
+
+        private void lstCheckLayernameLength_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var frm = new LayerNamesLengthFrm())
+                {
+                    if (Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(frm) == DialogResult.Yes)
+                    {
+                        var index = lstAllLayers.SelectedIndex;
+                        InitLayers(true);
+                        if (index > 0)
+                            lstAllLayers.SelectedIndex = index;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AcApp.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler aufgetreten! {0}", ex.Message));
+            }
+        }
     }
 }

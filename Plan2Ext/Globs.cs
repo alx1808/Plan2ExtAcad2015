@@ -83,7 +83,7 @@ namespace Plan2Ext
             {"AttributeDefinition", "Attributdefinition"},
         };
 
-        
+
         #endregion
 
         public static void SwitchToModelSpace()
@@ -1073,7 +1073,7 @@ namespace Plan2Ext
                     foreach (var layerOid in layTb)
                     {
                         var layerTableRecord =
-                            (_AcDb.LayerTableRecord) trans.GetObject(layerOid, _AcDb.OpenMode.ForRead);
+                            (_AcDb.LayerTableRecord)trans.GetObject(layerOid, _AcDb.OpenMode.ForRead);
                         if (!layerTableRecord.IsOff) continue;
 
                         if (!Regex.IsMatch(layerTableRecord.Name, layerRegexPattern, RegexOptions.IgnoreCase)) continue;
@@ -3091,6 +3091,25 @@ namespace Plan2Ext
             var dwgPath = _AcAp.Application.GetSystemVariable("DWGPREFIX").ToString();
             var dwgName = _AcAp.Application.GetSystemVariable("DWGNAME").ToString();
             return System.IO.Path.Combine(dwgPath, dwgName);
+        }
+
+        internal static void RenameLayers(_AcDb.Database db, string fromLayer, string toLayer)
+        {
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var layerTable = (_AcDb.LayerTable)transaction.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+
+                foreach (var oid in layerTable)
+                {
+                    var ltr = (_AcDb.LayerTableRecord)transaction.GetObject(oid, _AcDb.OpenMode.ForRead);
+                    if (string.Compare(ltr.Name, fromLayer, StringComparison.OrdinalIgnoreCase) != 0) continue;
+                    ltr.UpgradeOpen();
+                    ltr.Name = toLayer;
+                    ltr.DowngradeOpen();
+                }
+
+                transaction.Commit();
+            }
         }
     }
 }

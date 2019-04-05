@@ -41,6 +41,7 @@
             this.lblLineTypePropertyMode = new System.Windows.Forms.Label();
             this.lblLineWeightPropertyMode = new System.Windows.Forms.Label();
             this.btnCheckVonlayer = new System.Windows.Forms.Button();
+            this.lstCheckLayernameLength = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.grpBoxEntityTypes.SuspendLayout();
             this.SuspendLayout();
@@ -175,18 +176,30 @@
             // btnCheckVonlayer
             // 
             this.btnCheckVonlayer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCheckVonlayer.Location = new System.Drawing.Point(159, 389);
+            this.btnCheckVonlayer.Location = new System.Drawing.Point(145, 392);
             this.btnCheckVonlayer.Name = "btnCheckVonlayer";
-            this.btnCheckVonlayer.Size = new System.Drawing.Size(98, 23);
+            this.btnCheckVonlayer.Size = new System.Drawing.Size(112, 23);
             this.btnCheckVonlayer.TabIndex = 9;
             this.btnCheckVonlayer.Text = "Vonlayer prüfen";
             this.btnCheckVonlayer.UseVisualStyleBackColor = true;
             this.btnCheckVonlayer.Click += new System.EventHandler(this.btnCheckVonlayer_Click);
             // 
+            // lstCheckLayernameLength
+            // 
+            this.lstCheckLayernameLength.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lstCheckLayernameLength.Location = new System.Drawing.Point(145, 418);
+            this.lstCheckLayernameLength.Name = "lstCheckLayernameLength";
+            this.lstCheckLayernameLength.Size = new System.Drawing.Size(112, 23);
+            this.lstCheckLayernameLength.TabIndex = 10;
+            this.lstCheckLayernameLength.Text = "Layerlängenprüfung";
+            this.lstCheckLayernameLength.UseVisualStyleBackColor = true;
+            this.lstCheckLayernameLength.Click += new System.EventHandler(this.lstCheckLayernameLength_Click);
+            // 
             // LayerKontrolleControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lstCheckLayernameLength);
             this.Controls.Add(this.btnCheckVonlayer);
             this.Controls.Add(this.lblLineWeightPropertyMode);
             this.Controls.Add(this.lblLineTypePropertyMode);
@@ -220,5 +233,6 @@
         private System.Windows.Forms.Label lblLineTypePropertyMode;
         private System.Windows.Forms.Label lblLineWeightPropertyMode;
         private System.Windows.Forms.Button btnCheckVonlayer;
+        private System.Windows.Forms.Button lstCheckLayernameLength;
     }
 }
