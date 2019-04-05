@@ -44,19 +44,14 @@ namespace Plan2Ext.Tuer
 
             if (ps == null)
             {
-                ps = new PaletteSet("Türoptionen");
-                ps.Style =
-                  PaletteSetStyles.NameEditable |
-                  PaletteSetStyles.ShowPropertiesMenu |
-                  PaletteSetStyles.ShowAutoHideButton |
-                  PaletteSetStyles.ShowCloseButton;
-                ps.MinimumSize =
-                  new System.Drawing.Size(170, 164);
-#if ACAD2013_OR_NEWER
-#if ARX_APP
-                ps.SetSize(new System.Drawing.Size(210, 164));
-#endif
-#endif
+                ps = new PaletteSet("Türoptionen")
+                {
+                    Style = PaletteSetStyles.NameEditable |
+                            PaletteSetStyles.ShowPropertiesMenu |
+                            PaletteSetStyles.ShowAutoHideButton |
+                            PaletteSetStyles.ShowCloseButton,
+                    MinimumSize = new System.Drawing.Size(170, 164)
+                };
 
                 ps.Add("TuerOptions", userControl);
 
@@ -64,6 +59,12 @@ namespace Plan2Ext.Tuer
                 {
                     ps.Visible = true;
                 }
+#if ACAD2013_OR_NEWER
+#if ARX_APP
+                //ps.SetSize(new System.Drawing.Size(210, 164));
+                Plan2Ext.Globs.SetPaletteDockSettings(ps);
+#endif
+#endif
 
                 return false;
             }

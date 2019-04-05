@@ -31,11 +31,6 @@ namespace Plan2Ext.LayerNummerierung
                             PaletteSetStyles.ShowCloseButton,
                     MinimumSize = new System.Drawing.Size(170, 164)
                 };
-#if ACAD2013_OR_NEWER
-#if ARX_APP
-                _ps.SetSize(new System.Drawing.Size(210, 164));
-#endif
-#endif
 
                 _ps.Add("LayerNummerierung", _userControl);
 
@@ -43,6 +38,12 @@ namespace Plan2Ext.LayerNummerierung
                 {
                     _ps.Visible = true;
                 }
+#if ACAD2013_OR_NEWER
+#if ARX_APP
+                //_ps.SetSize(new System.Drawing.Size(210, 164));
+                Plan2Ext.Globs.SetPaletteDockSettings(_ps);
+#endif
+#endif
 
                 return false;
             }
