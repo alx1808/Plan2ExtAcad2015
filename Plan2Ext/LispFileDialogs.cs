@@ -50,7 +50,7 @@ namespace Plan2Ext
             if (args == null) return new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil);
             string FileName, Ext, Title;
             bool Multiple;
-            if (!GetArgsFromRb(args, out FileName, out Ext, out Title, out Multiple ))
+            if (!GetArgsFromRbForFileDialog(args, out FileName, out Ext, out Title, out Multiple ))
             {
                 return new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil);
             }
@@ -71,7 +71,7 @@ namespace Plan2Ext
             if (args == null) return new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil));
             string FileName, Ext, Title;
             bool Multiple;
-            if (!GetArgsFromRb(args, out FileName, out Ext, out Title, out Multiple ))
+            if (!GetArgsFromRbForFileDialog(args, out FileName, out Ext, out Title, out Multiple ))
             {
                 return new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil));
             }
@@ -107,7 +107,7 @@ namespace Plan2Ext
             if (args == null) return new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil));
             string FileName, Ext, Title;
             bool Multiple;
-            if (!GetArgsFromRb(args, out FileName, out Ext, out Title, out Multiple))
+            if (!GetArgsFromRbForFileDialog(args, out FileName, out Ext, out Title, out Multiple))
             {
                 return new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil));
             }
@@ -144,7 +144,34 @@ namespace Plan2Ext
             }
         }
 
-        private static bool GetArgsFromRb(_AcDb.ResultBuffer args, out string FileName, out string Ext, out string Title, out bool Multiple)
+        [_AcTrx.LispFunction("Plan2FolderDialog")]
+        public static object Plan2FolderDialog(_AcDb.ResultBuffer args)
+        {
+            string title, defaultPath;
+            if (!GetArgsFromRbForFolderDialog(args, out title, out defaultPath))
+            {
+                return null;
+            }
+
+            using (var folderBrowser = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                if (!string.IsNullOrEmpty(title)) folderBrowser.Description = title;
+                folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
+                if (!string.IsNullOrEmpty(defaultPath))
+                {
+                    folderBrowser.SelectedPath = defaultPath;
+                }
+
+                if (folderBrowser.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                {
+                    return null;
+                }
+
+                return folderBrowser.SelectedPath;
+            }
+        }
+
+        private static bool GetArgsFromRbForFileDialog(_AcDb.ResultBuffer args, out string FileName, out string Ext, out string Title, out bool Multiple)
         {
             FileName = ""; Ext = ""; Title = ""; Multiple = false;
             _AcDb.TypedValue[] array = args.AsArray();
@@ -163,6 +190,20 @@ namespace Plan2Ext
                     else Multiple = (bool)array[3].Value;
                 }
             }
+
+            return true;
+        }
+        private static bool GetArgsFromRbForFolderDialog(_AcDb.ResultBuffer args, out string title, out string defaultPath)
+        {
+            title = null;
+            defaultPath = null;
+            if (args == null) return false;
+            _AcDb.TypedValue[] array = args.AsArray();
+            if (array.Length < 2) return false;
+            if (array[0].TypeCode != (int)_AcBrx.LispDataType.Text) return false;
+            title = array[0].Value.ToString();
+            if (array[1].TypeCode != (int)_AcBrx.LispDataType.Text) return false;
+            defaultPath = array[1].Value.ToString();
 
             return true;
         }

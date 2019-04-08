@@ -43,7 +43,7 @@ namespace Plan2Ext.BlockToExcel
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(BlockToExcel2))));
         #endregion
 
-        private string _dwgPath;
+        private string _exportPath;
         private readonly Dictionary<string, List<_AcDb.ObjectId>> _blocksForExcelExportDictionary =
             new Dictionary<string, List<_AcDb.ObjectId>>();
         private WildcardAcad _wildcardAcad;
@@ -84,6 +84,15 @@ namespace Plan2Ext.BlockToExcel
                     return false;
                 }
 
+                if (values.Length > 1 && values[1].Value != null)
+                {
+                    _exportPath = values[1].Value.ToString();
+                }
+                else
+                {
+                    _exportPath = Application.GetSystemVariable("DWGPREFIX").ToString();
+                }
+
                 Log.InfoFormat(CultureInfo.CurrentCulture, "\nZeichnung: '{0}'", Application.GetSystemVariable("DWGNAME"));
 
                 _wildcardAcad = new WildcardAcad(blockNames);
@@ -106,7 +115,6 @@ namespace Plan2Ext.BlockToExcel
         private void StartExport()
         {
             _blocksForExcelExportDictionary.Clear();
-            _dwgPath = Application.GetSystemVariable("DWGPREFIX").ToString();
             DwgPath = DrawingPath;
 
             if (!SelectBlocks()) return;
@@ -115,7 +123,7 @@ namespace Plan2Ext.BlockToExcel
             {
                 var blockName = kvp.Key;
                 BlocksForExcelExport = kvp.Value;
-                ExcelFileName = System.IO.Path.Combine(_dwgPath, Globs.RemoveInvalidCharacters(blockName) + ".xlsx");
+                ExcelFileName = System.IO.Path.Combine(_exportPath, Globs.RemoveInvalidCharacters(blockName) + ".xlsx");
 
                 if (!GetExcelExportAtts()) return;
                 if (!WriteColsForExcel()) return;
@@ -125,7 +133,7 @@ namespace Plan2Ext.BlockToExcel
 
         private static void ShowCallInfo(_AcEd.Editor ed)
         {
-            ed.WriteMessage("\n Aufruf: (Plan2BlockToExcel BlockNames)");
+            ed.WriteMessage("\n Aufruf: (Plan2BlockToExcel BlockNames [Exportpath])");
         }
 
         private bool SelectBlocks()
