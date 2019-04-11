@@ -62,8 +62,7 @@ namespace Plan2Ext.ETransmit
                         var exportDirForFile = Path.GetDirectoryName(targetFileName);
                         if (exportDirForFile != null && !Directory.Exists(exportDirForFile)) Directory.CreateDirectory(exportDirForFile);
                         log.Info(string.Format(CultureInfo.CurrentCulture, "\nFile: {0} to {1}", dwgFileName, targetFileName));
-                        Globs.CreateBakFile(targetFileName);
-                        File.Copy(dwgFileName,targetFileName, true);
+                        //File.Copy(dwgFileName,targetFileName, true);
 
                         log.Info("----------------------------------------------------------------------------------");
                         log.Info(string.Format(CultureInfo.CurrentCulture, "Öffne Zeichnung {0}", targetFileName));
@@ -71,13 +70,14 @@ namespace Plan2Ext.ETransmit
                         Application.DocumentManager.Open(targetFileName, false);
                         doc = Application.DocumentManager.MdiActiveDocument;
                         db = doc.Database;
-                        //db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
 
                         using (DocumentLock acLckDoc = doc.LockDocument())
                         {
                             CheckXRefBinding(insertBind, db);
                             //AddLine(db);
                         }
+                        Globs.CreateBakFile(targetFileName);
+                        db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
                         doc.CloseAndSave(targetFileName);
                     }
                 }
@@ -154,15 +154,6 @@ namespace Plan2Ext.ETransmit
         private string GetCommonParent(string[] dwgFileNames)
         {
             var firstDwg = dwgFileNames[0];
-
-            //var pathList = GetPathList(firstDwg);
-
-            //foreach (var path in pathList)
-            //{
-
-            //}
-
-
             var path = Path.GetDirectoryName(firstDwg);
             while (path != null && dwgFileNames.Any(x => !x.StartsWith(path)))
             {
@@ -204,13 +195,10 @@ namespace Plan2Ext.ETransmit
             throw new InvalidOperationException("Userinput Status: " + pKeyRes.Status);
         }
 
-
-
         private void CheckXRefBinding(bool insertBind, Database db)
         {
-            //var doc = Application.DocumentManager.MdiActiveDocument;
             var xrefObjectIds = Globs.GetAllMsXrefIds(db);
-            using (ObjectIdCollection acXrefIdCol = new ObjectIdCollection())
+            using (var acXrefIdCol = new ObjectIdCollection())
             {
                 foreach (var xrefObjectId in xrefObjectIds)
                 {
@@ -218,7 +206,11 @@ namespace Plan2Ext.ETransmit
 
                 }
                 if (acXrefIdCol.Count > 0)
+                {
+                    var method = insertBind ? "Einfügen" : "Binden";
+                    log.InfoFormat(CultureInfo.CurrentCulture, "{0} von XRefs, Anzahl = {1}",method,acXrefIdCol.Count);
                     db.BindXrefs(acXrefIdCol, insertBind);
+                }
             }
         }
     }
