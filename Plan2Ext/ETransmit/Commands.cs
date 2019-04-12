@@ -6,9 +6,9 @@ using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+// ReSharper disable LocalizableElement
 
 // ReSharper disable StringLiteralTypo
 
@@ -18,7 +18,7 @@ namespace Plan2Ext.ETransmit
     public class Commands
     {
         #region log4net Initialization
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(Commands))));
         #endregion
         [CommandMethod("Plan2ETransmit", CommandFlags.Session)]
         // ReSharper disable once UnusedMember.Global
@@ -26,13 +26,13 @@ namespace Plan2Ext.ETransmit
         {
             try
             {
+                var ctbDir = GetPrinterStyleSheetDir();
+
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 var db = doc.Database;
                 var ed = doc.Editor;
                 var dirName = string.Empty;
                 string[] dwgFileNames = null;
-                bool useCurrentDwg;
-                string commonParent = null;
                 var targetDir = GetTargetDir();
                 var insertBind = GetUserInputForInsertBind();
                 if (!Globs.GetMultipleFileNames(
@@ -44,37 +44,41 @@ namespace Plan2Ext.ETransmit
                     ref dirName,
                     Application.GetSystemVariable("DWGPREFIX").ToString()))
                 {
+                    var dwgFileName = Globs.GetCurrentDwgName();
                     var targetFileName = Path.Combine(targetDir, Application.GetSystemVariable("DWGNAME").ToString());
                     ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nFile: {0} to {1}", "this", targetFileName));
+                    using (doc.LockDocument())
+                    {
+                        CheckXRefBinding(insertBind, db);
+                        CopyCtbs(targetDir, ctbDir);
+                    }
                     db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
-                    CheckXRefBinding(insertBind, db);
-                    //DetachAllXrefs(db);
-                    //db.Save();
-                    useCurrentDwg = true;
+                    doc.CloseAndSave(targetFileName);
+                    Application.DocumentManager.Open(dwgFileName, false);
+
                 }
                 else
                 {
                     if (dwgFileNames.Length == 0) return;
-                    commonParent = GetCommonParent(dwgFileNames);
+                    var commonParent = GetCommonParent(dwgFileNames);
                     foreach (var dwgFileName in dwgFileNames)
                     {
                         var targetFileName = GetTargetFileName(dwgFileName, commonParent, targetDir);
                         var exportDirForFile = Path.GetDirectoryName(targetFileName);
                         if (exportDirForFile != null && !Directory.Exists(exportDirForFile)) Directory.CreateDirectory(exportDirForFile);
-                        log.Info(string.Format(CultureInfo.CurrentCulture, "\nFile: {0} to {1}", dwgFileName, targetFileName));
-                        //File.Copy(dwgFileName,targetFileName, true);
+                        Log.Info(string.Format(CultureInfo.CurrentCulture, "\nFile: {0} to {1}", dwgFileName, targetFileName));
 
-                        log.Info("----------------------------------------------------------------------------------");
-                        log.Info(string.Format(CultureInfo.CurrentCulture, "Öffne Zeichnung {0}", targetFileName));
+                        Log.Info("----------------------------------------------------------------------------------");
+                        Log.Info(string.Format(CultureInfo.CurrentCulture, "Öffne Zeichnung {0}", targetFileName));
 
-                        Application.DocumentManager.Open(targetFileName, false);
+                        Application.DocumentManager.Open(dwgFileName, false);
                         doc = Application.DocumentManager.MdiActiveDocument;
                         db = doc.Database;
 
-                        using (DocumentLock acLckDoc = doc.LockDocument())
+                        using (doc.LockDocument())
                         {
                             CheckXRefBinding(insertBind, db);
-                            //AddLine(db);
+                            CopyCtbs(Path.GetDirectoryName(targetFileName), ctbDir);
                         }
                         Globs.CreateBakFile(targetFileName);
                         db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
@@ -93,34 +97,49 @@ namespace Plan2Ext.ETransmit
             }
         }
 
-        //private void AddLine(Database acCurDb)
-        //{
-        //    using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
-        //    {
-        //        // Open the Block table for read
-        //        BlockTable acBlkTbl;
-        //        acBlkTbl = acTrans.GetObject(acCurDb.BlockTableId,
-        //            OpenMode.ForRead) as BlockTable;
+        private void CopyCtbs(string targetDir, string ctbDir)
+        {
+            foreach (var stylesheetName in GetAllUsedStylesheetNames())
+            {
+                var sourceFile = Path.Combine(ctbDir, stylesheetName);
+                if (!File.Exists(sourceFile)) continue;
+                var targetFile = Path.Combine(targetDir, stylesheetName);
+                File.Copy(sourceFile,targetFile,true);
+            }
+        }
 
-        //        // Open the Block table record Model space for write
-        //        BlockTableRecord acBlkTblRec;
-        //        acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace],
-        //            OpenMode.ForWrite) as BlockTableRecord;
+        private string GetPrinterStyleSheetDir()
+        {
+            UserConfigurationManager userConfigurationManager = Application.UserConfigurationManager;
+            IConfigurationSection profile = userConfigurationManager.OpenCurrentProfile();
+            using (IConfigurationSection general = profile.OpenSubsection("General"))
+            {
+                return (string)general.ReadProperty("PrinterStyleSheetDir", string.Empty);
+            }
+        }
 
-        //        // Create a line that starts at 5,5 and ends at 12,3
-        //        using (Line acLine = new Line(new Point3d(5, 5, 0),
-        //            new Point3d(12, 3, 0)))
-        //        {
+        private static IEnumerable<string> GetAllUsedStylesheetNames()
+        {
+            var stylesheetNames = new HashSet<string>();
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var layouts = (DBDictionary)transaction.GetObject(db.LayoutDictionaryId, OpenMode.ForRead);
+                foreach (var layoutDe in layouts)
+                {
+                    var layoutId = layoutDe.Value;
+                    var layoutObj = (Layout)transaction.GetObject(layoutId, OpenMode.ForRead);
+                    var ps = (PlotSettings)layoutObj;
+                    var stylesheetName = ps.CurrentStyleSheet;
+                    if (!string.IsNullOrEmpty(stylesheetName)) stylesheetNames.Add(stylesheetName);
+                }
+                transaction.Commit();
+            }
 
-        //            // Add the new object to the block table record and the transaction
-        //            acBlkTblRec.AppendEntity(acLine);
-        //            acTrans.AddNewlyCreatedDBObject(acLine, true);
-        //        }
+            return stylesheetNames;
+        }
 
-        //        // Save the new object to the database
-        //        acTrans.Commit();
-        //    }
-        //}
 
         private string GetTargetFileName(string dwgFileName, string commonParent, string targetDir)
         {
@@ -163,20 +182,6 @@ namespace Plan2Ext.ETransmit
             return path;
         }
 
-        private IEnumerable<string> GetPathList(string firstDwg)
-        {
-            var path = System.IO.Path.GetDirectoryName(firstDwg);
-            var lst = new List<string>();
-            while (path != null)
-            {
-                lst.Add(path);
-                path = Path.GetDirectoryName(path);
-            }
-
-            lst.Reverse();
-            return lst;
-        }
-
         private bool GetUserInputForInsertBind()
         {
             var pKeyOpts = new PromptKeywordOptions("") { Message = "\nXRefs Binden/<Einfügen>: " };
@@ -208,7 +213,7 @@ namespace Plan2Ext.ETransmit
                 if (acXrefIdCol.Count > 0)
                 {
                     var method = insertBind ? "Einfügen" : "Binden";
-                    log.InfoFormat(CultureInfo.CurrentCulture, "{0} von XRefs, Anzahl = {1}",method,acXrefIdCol.Count);
+                    Log.InfoFormat(CultureInfo.CurrentCulture, "{0} von XRefs, Anzahl = {1}", method, acXrefIdCol.Count);
                     db.BindXrefs(acXrefIdCol, insertBind);
                 }
             }
