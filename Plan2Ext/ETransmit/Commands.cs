@@ -9,6 +9,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 // ReSharper disable LocalizableElement
+// ReSharper disable IdentifierTypo
 
 // ReSharper disable StringLiteralTypo
 
@@ -51,6 +52,7 @@ namespace Plan2Ext.ETransmit
                     {
                         CheckXRefBinding(insertBind, db);
                         CopyCtbs(targetDir, ctbDir);
+                        SetNoPlotterToAllLayouts(db);
                     }
                     db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
                     doc.CloseAndSave(targetFileName);
@@ -79,6 +81,7 @@ namespace Plan2Ext.ETransmit
                         {
                             CheckXRefBinding(insertBind, db);
                             CopyCtbs(Path.GetDirectoryName(targetFileName), ctbDir);
+                            SetNoPlotterToAllLayouts(db);
                         }
                         Globs.CreateBakFile(targetFileName);
                         db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
@@ -97,6 +100,83 @@ namespace Plan2Ext.ETransmit
             }
         }
 
+        private void SetNoPlotterToAllLayouts(Database db)
+        {
+            var noPlotterName = GetNoPlotterName(db);
+            SetPlotterInLayouts(noPlotterName);
+        }
+
+        private static void SetPlotterInLayouts(string plotterName)
+        {
+            var db = Application.DocumentManager.MdiActiveDocument.Database;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var plotSetVal = PlotSettingsValidator.Current;
+
+                var layouts = (DBDictionary)transaction.GetObject(db.LayoutDictionaryId, OpenMode.ForRead);
+                foreach (var layoutDe in layouts)
+                {
+                    var layoutId = layoutDe.Value;
+                    var layoutObj = (Layout)transaction.GetObject(layoutId, OpenMode.ForWrite);
+                    plotSetVal.RefreshLists(layoutObj);
+                    using (var ps = new PlotSettings(layoutObj.ModelType))
+                    {
+                        ps.CopyFrom(layoutObj);
+                        plotSetVal.SetPlotConfigurationName(ps, plotterName, null);
+                        layoutObj.CopyFrom(ps);
+                    }
+                }
+                transaction.Commit();
+            }
+        }
+
+
+        private static string GetNoPlotterName(Database db)
+        {
+            var possibleNoPlotterNames = new[] { "Kein", "None", "No" };
+            var devList = GetDeviceList(db);
+            if (devList.Count == 0) throw new InvalidOperationException("Es wurden keine Plotter gefunden!");
+
+            var noPlotterName = possibleNoPlotterNames.FirstOrDefault(x => devList.Contains(x));
+            if (noPlotterName == default(string))
+            {
+                throw new InvalidOperationException("Es wurde kein Plotter mit Namen 'Kein' gefunden!");
+            }
+
+            return noPlotterName;
+        }
+
+        private static List<string> GetDeviceList(Database db)
+        {
+            var devices = new List<string>();
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var plotSetVal = PlotSettingsValidator.Current;
+                var layouts = (DBDictionary)trans.GetObject(db.LayoutDictionaryId, OpenMode.ForRead);
+                foreach (var layoutDe in layouts)
+                {
+                    var layoutId = layoutDe.Value;
+                    var layoutObj = (Layout)trans.GetObject(layoutId, OpenMode.ForRead);
+                    if (layoutObj.LayoutName == "Model")
+                    {
+                        layoutObj.UpgradeOpen();
+                        plotSetVal.RefreshLists(layoutObj);
+                        layoutObj.DowngradeOpen();
+                        System.Collections.Specialized.StringCollection deviceList = plotSetVal.GetPlotDeviceList();
+                        foreach (var dev in deviceList)
+                        {
+                            devices.Add(dev);
+                        }
+                        break;
+                    }
+                }
+                trans.Commit();
+            }
+
+            return devices;
+        }
+
+
         private void CopyCtbs(string targetDir, string ctbDir)
         {
             foreach (var stylesheetName in GetAllUsedStylesheetNames())
@@ -104,11 +184,11 @@ namespace Plan2Ext.ETransmit
                 var sourceFile = Path.Combine(ctbDir, stylesheetName);
                 if (!File.Exists(sourceFile)) continue;
                 var targetFile = Path.Combine(targetDir, stylesheetName);
-                File.Copy(sourceFile,targetFile,true);
+                File.Copy(sourceFile, targetFile, true);
             }
         }
 
-        private string GetPrinterStyleSheetDir()
+        private static string GetPrinterStyleSheetDir()
         {
             UserConfigurationManager userConfigurationManager = Application.UserConfigurationManager;
             IConfigurationSection profile = userConfigurationManager.OpenCurrentProfile();
