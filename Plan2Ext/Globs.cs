@@ -87,6 +87,13 @@ namespace Plan2Ext
 
         #endregion
 
+        internal static void SetPaletteDockSettings(_AcWnd.PaletteSet paletteSet)
+        {
+            paletteSet.DockEnabled = _AcWnd.DockSides.Left | _AcWnd.DockSides.Right;
+            paletteSet.Dock = _AcWnd.DockSides.Left;
+        }
+
+
         public static void SwitchToModelSpace()
         {
             _AcAp.Application.SetSystemVariable("TILEMODE", 1);

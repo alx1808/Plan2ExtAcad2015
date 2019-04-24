@@ -67,16 +67,17 @@ namespace Plan2Ext.Vorauswahl
                             PaletteSetStyles.ShowCloseButton,
                     MinimumSize = new System.Drawing.Size(140, 235)
                 };
-#if ACAD2013_OR_NEWER
-#if ARX_APP
-                _Ps.SetSize(new System.Drawing.Size(154, 235));
-#endif
-#endif
                 _Ps.Add("Vorauswahl", _UserControl);
                 if (!_Ps.Visible)
                 {
                     _Ps.Visible = true;
                 }
+#if ACAD2013_OR_NEWER
+#if ARX_APP
+                //_Ps.SetSize(new System.Drawing.Size(154, 235));
+                Plan2Ext.Globs.SetPaletteDockSettings(_Ps);
+#endif
+#endif
                 return false;
             }
             else

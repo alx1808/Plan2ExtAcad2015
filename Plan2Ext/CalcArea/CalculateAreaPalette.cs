@@ -37,16 +37,17 @@ namespace Plan2Ext.CalcArea
         {
             if (ps == null)
             {
-                ps = new PaletteSet("Flächenberechnung");
-                ps.Style =
-                  PaletteSetStyles.NameEditable |
-                  PaletteSetStyles.ShowPropertiesMenu |
-                  PaletteSetStyles.ShowAutoHideButton |
-                  PaletteSetStyles.ShowCloseButton;
-                ps.MinimumSize =
-                  new System.Drawing.Size(300, 300);
+                ps = new PaletteSet("Flächenberechnung")
+                {
+                    Style = PaletteSetStyles.NameEditable |
+                            PaletteSetStyles.ShowPropertiesMenu |
+                            PaletteSetStyles.ShowAutoHideButton |
+                            PaletteSetStyles.ShowCloseButton,
+                    MinimumSize = new System.Drawing.Size(300, 300)
+                };
                 ps.Add("CalcArea1", userControl);
-                //ps.Add("Type Viewer 1", tvc);
+                ps.Visible = true;
+                Plan2Ext.Globs.SetPaletteDockSettings(ps);
             }
             ps.Visible = true;
         }
@@ -61,17 +62,18 @@ namespace Plan2Ext.CalcArea
         {
             if (ps == null)
             {
-                ps = new PaletteSet("Flächenberechnung");
-                ps.Style =
-                  PaletteSetStyles.NameEditable |
-                  PaletteSetStyles.ShowPropertiesMenu |
-                  PaletteSetStyles.ShowAutoHideButton |
-                  PaletteSetStyles.ShowCloseButton;
-                ps.MinimumSize =
-                  new System.Drawing.Size(300, 300);
+                ps = new PaletteSet("Flächenberechnung")
+                {
+                    Style = PaletteSetStyles.NameEditable |
+                            PaletteSetStyles.ShowPropertiesMenu |
+                            PaletteSetStyles.ShowAutoHideButton |
+                            PaletteSetStyles.ShowCloseButton,
+                    MinimumSize = new System.Drawing.Size(300, 300)
+                };
                 ps.Add("CalcArea1", userControl);
                 userControl.SetAktFlaecheDelegate(aktFlaecheDelegate);
-                //ps.Add("Type Viewer 1", tvc);
+                ps.Visible = true;
+                Plan2Ext.Globs.SetPaletteDockSettings(ps);
             }
             userControl.txtBlockname.Text = _RaumblockName;
             userControl.txtAttribute.Text = _FlAttrib;
