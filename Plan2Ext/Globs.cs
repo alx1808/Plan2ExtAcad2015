@@ -3134,5 +3134,40 @@ namespace Plan2Ext
                 transaction.Commit();
             }
         }
+
+        /// <summary>
+        /// Gets all xref-ids from XRefs in modelspace from database db.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <remarks>
+        /// xref id is different from id of blockreference in modelspace
+        /// </remarks>
+        /// <returns></returns>
+        internal static IEnumerable<_AcDb.ObjectId> GetAllMsXrefIds(_AcDb.Database db)
+        {
+            log.Debug("GetAllMsXrefIds");
+            var xrefOids = new List<_AcDb.ObjectId>();
+            using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                var btr = (_AcDb.BlockTableRecord)tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+                foreach (var oid in btr)
+                {
+                    var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+                    if (br == null) continue;
+                    
+                    var bd = (_AcDb.BlockTableRecord)tr.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
+                    if (bd.IsFromExternalReference)
+                    {
+                        //xrefOids.Add(oid);
+                        xrefOids.Add(br.BlockTableRecord); // the correct xref id
+                    }
+                }
+
+                tr.Commit();
+            }
+
+            return xrefOids;
+        }
     }
 }
