@@ -52,6 +52,7 @@ namespace Plan2Ext.ETransmit
                     {
                         CheckXRefBinding(insertBind, db);
                         CopyCtbs(targetDir, ctbDir);
+
                         SetNoPlotterToAllLayouts(db);
                     }
                     db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
