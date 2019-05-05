@@ -1,19 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+
+// ReSharper disable IdentifierTypo
 
 namespace Plan2Ext
 {
-    public class XrefManager
+    internal static class XrefManager
     {
+        public static IEnumerable<ObjectId> GetAllFirstLevelXrefIds(Database db)
+        {
+            var xrefOids = new List<ObjectId>();
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                //db.ResolveXrefs(true, false);
+                var xrefGraph = db.GetHostDwgXrefGraph(true);
+                var graphNode = xrefGraph.RootNode;
+                for (int i = 0; i < graphNode.NumOut; i++)
+                {
+                    var xrefGraphNode = graphNode.Out(i) as XrefGraphNode;
+                    if (xrefGraphNode == null) continue;
+                    if (xrefGraphNode.XrefStatus == XrefStatus.Resolved)
+                    {
+                        xrefOids.Add(xrefGraphNode.BlockTableRecordId);
+                    }
+                }
+
+                transaction.Commit();
+            }
+
+            return xrefOids;
+        }
+
+
         [CommandMethod("XrefGraph")]
 
+        // ReSharper disable once UnusedMember.Global
         public static void XrefGraph()
         {
 
@@ -23,7 +48,8 @@ namespace Plan2Ext
 
             Editor ed = doc.Editor;
 
-            using (Transaction Tx = db.TransactionManager.StartTransaction())
+            // ReSharper disable once UnusedVariable
+            using (Transaction tx = db.TransactionManager.StartTransaction())
             {
 
                 ed.WriteMessage("\n---Resolving the XRefs------------------");
@@ -38,7 +64,7 @@ namespace Plan2Ext
 
                 GraphNode root = xg.RootNode;
 
-                printChildren(root, "|-------", ed, Tx);
+                PrintChildren(root, "|-------", ed);
 
                 ed.WriteMessage("\n----------------------------------------\n");
 
@@ -50,26 +76,27 @@ namespace Plan2Ext
 
         // Recursively prints out information about the XRef's hierarchy
 
-        private static void printChildren(GraphNode i_root, string i_indent,
+        private static void PrintChildren(GraphNode iRoot, string iIndent,
 
-            Editor i_ed, Transaction i_Tx)
+            Editor iEd)
         {
 
-            for (int o = 0; o < i_root.NumOut; o++)
+            for (int o = 0; o < iRoot.NumOut; o++)
             {
 
-                XrefGraphNode child = i_root.Out(o) as XrefGraphNode;
+                XrefGraphNode child = iRoot.Out(o) as XrefGraphNode;
 
+                // ReSharper disable once PossibleNullReferenceException
                 if (child.XrefStatus == XrefStatus.Resolved)
                 {
 
-                    BlockTableRecord bl =
+                    //BlockTableRecord bl =
 
-                        i_Tx.GetObject(child.BlockTableRecordId, OpenMode.ForRead)
+                    //    iTx.GetObject(child.BlockTableRecordId, OpenMode.ForRead)
 
-                            as BlockTableRecord;
+                    //        as BlockTableRecord;
 
-                    i_ed.WriteMessage("\n" + i_indent + child.Database.Filename);
+                    iEd.WriteMessage("\n" + iIndent + child.Database.Filename);
 
                     // Name of the Xref (found name)
 
@@ -81,7 +108,7 @@ namespace Plan2Ext
 
                     //                      + bl.PathName);
 
-                    printChildren(child, "| " + i_indent, i_ed, i_Tx);
+                    PrintChildren(child, "| " + iIndent, iEd);
 
                 }
 

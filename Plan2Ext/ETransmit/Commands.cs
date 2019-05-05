@@ -52,7 +52,6 @@ namespace Plan2Ext.ETransmit
                     {
                         CheckXRefBinding(insertBind, db);
                         CopyCtbs(targetDir, ctbDir);
-
                         SetNoPlotterToAllLayouts(db);
                     }
                     db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
@@ -113,7 +112,6 @@ namespace Plan2Ext.ETransmit
             using (var transaction = db.TransactionManager.StartTransaction())
             {
                 var plotSetVal = PlotSettingsValidator.Current;
-
                 var layouts = (DBDictionary)transaction.GetObject(db.LayoutDictionaryId, OpenMode.ForRead);
                 foreach (var layoutDe in layouts)
                 {
@@ -124,11 +122,27 @@ namespace Plan2Ext.ETransmit
                     {
                         ps.CopyFrom(layoutObj);
                         plotSetVal.SetPlotConfigurationName(ps, plotterName, null);
+                        SetCanonicalMediaToSunHires(plotSetVal, ps);
                         layoutObj.CopyFrom(ps);
                     }
                 }
                 transaction.Commit();
             }
+        }
+
+        private static void SetCanonicalMediaToSunHires(PlotSettingsValidator plotSetVal, PlotSettings ps)
+        {
+            var mediaNames = plotSetVal.GetCanonicalMediaNameList(ps);
+            var mediaName = "";
+            foreach (var mn in mediaNames)
+            {
+                if (mn.StartsWith("Sun_Hi", StringComparison.OrdinalIgnoreCase))
+                {
+                    mediaName = mn;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(mediaName)) plotSetVal.SetCanonicalMediaName(ps, mediaName);
         }
 
 
@@ -283,7 +297,8 @@ namespace Plan2Ext.ETransmit
 
         private void CheckXRefBinding(bool insertBind, Database db)
         {
-            var xrefObjectIds = Globs.GetAllMsXrefIds(db);
+            //var xrefObjectIds = Globs.GetAllMsXrefIds(db);
+            var xrefObjectIds = XrefManager.GetAllFirstLevelXrefIds(db);
             using (var acXrefIdCol = new ObjectIdCollection())
             {
                 foreach (var xrefObjectId in xrefObjectIds)
