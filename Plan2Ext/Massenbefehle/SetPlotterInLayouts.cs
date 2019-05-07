@@ -262,7 +262,7 @@ namespace Plan2Ext.Massenbefehle
 
         private static bool GetPlotter(_AcEd.Editor ed)
         {
-            var devList = GetDeviceList();
+            var devList = Plotter.GetDeviceList(_Db);
             if (devList.Count == 0) throw new InvalidOperationException("Es wurden keine Plotter gefunden!");
             _NoPlotterName = devList[0];
             if (!
@@ -295,36 +295,5 @@ namespace Plan2Ext.Massenbefehle
             //}
             return true;
         }
-
-        private static List<string> GetDeviceList()
-        {
-            var devices = new List<string>();
-            using (var trans = _Db.TransactionManager.StartTransaction())
-            {
-                var plotSetVal = _AcDb.PlotSettingsValidator.Current;
-                var layouts = trans.GetObject(_Db.LayoutDictionaryId, _AcDb.OpenMode.ForRead) as _AcDb.DBDictionary;
-                foreach (var layoutDe in layouts)
-                {
-                    var layoutId = layoutDe.Value;
-                    var layoutObj = (_AcDb.Layout)trans.GetObject(layoutId, _AcDb.OpenMode.ForRead);
-                    if (layoutObj.LayoutName == "Model")
-                    {
-                        layoutObj.UpgradeOpen();
-                        plotSetVal.RefreshLists(layoutObj);
-                        layoutObj.DowngradeOpen();
-                        System.Collections.Specialized.StringCollection deviceList = plotSetVal.GetPlotDeviceList();
-                        foreach (var dev in deviceList)
-                        {
-                            devices.Add(dev);
-                        }
-                        break;
-                    }
-                }
-                trans.Commit();
-            }
-
-            return devices;
-        }
-
     }
 }

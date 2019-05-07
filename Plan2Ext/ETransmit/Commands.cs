@@ -149,7 +149,7 @@ namespace Plan2Ext.ETransmit
         private static string GetNoPlotterName(Database db)
         {
             var possibleNoPlotterNames = new[] { "Kein", "None", "No" };
-            var devList = GetDeviceList(db);
+            var devList = Plotter.GetDeviceList(db);
             if (devList.Count == 0) throw new InvalidOperationException("Es wurden keine Plotter gefunden!");
 
             var noPlotterName = possibleNoPlotterNames.FirstOrDefault(x => devList.Contains(x));
@@ -160,37 +160,6 @@ namespace Plan2Ext.ETransmit
 
             return noPlotterName;
         }
-
-        private static List<string> GetDeviceList(Database db)
-        {
-            var devices = new List<string>();
-            using (var trans = db.TransactionManager.StartTransaction())
-            {
-                var plotSetVal = PlotSettingsValidator.Current;
-                var layouts = (DBDictionary)trans.GetObject(db.LayoutDictionaryId, OpenMode.ForRead);
-                foreach (var layoutDe in layouts)
-                {
-                    var layoutId = layoutDe.Value;
-                    var layoutObj = (Layout)trans.GetObject(layoutId, OpenMode.ForRead);
-                    if (layoutObj.LayoutName == "Model")
-                    {
-                        layoutObj.UpgradeOpen();
-                        plotSetVal.RefreshLists(layoutObj);
-                        layoutObj.DowngradeOpen();
-                        System.Collections.Specialized.StringCollection deviceList = plotSetVal.GetPlotDeviceList();
-                        foreach (var dev in deviceList)
-                        {
-                            devices.Add(dev);
-                        }
-                        break;
-                    }
-                }
-                trans.Commit();
-            }
-
-            return devices;
-        }
-
 
         private void CopyCtbs(string targetDir, string ctbDir)
         {
