@@ -1418,6 +1418,7 @@ namespace Plan2Ext
             return nrOfPurged;
         }
 
+
         public static Dictionary<string, string> GetAttributes(_AcDb.BlockReference blockRef)
         {
             Dictionary<string, string> valuePerTag = new Dictionary<string, string>();
@@ -3155,7 +3156,7 @@ namespace Plan2Ext
                 {
                     var br = tr.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
                     if (br == null) continue;
-                    
+
                     var bd = (_AcDb.BlockTableRecord)tr.GetObject(br.BlockTableRecord, _AcDb.OpenMode.ForRead);
                     if (bd.IsFromExternalReference)
                     {
@@ -3168,6 +3169,24 @@ namespace Plan2Ext
             }
 
             return xrefOids;
+        }
+
+        internal static IEnumerable<_AcDb.SymbolTableRecord> GetAllClonedSymbolTablesTableRecords(_AcDb.Database db, _AcDb.ObjectId symbolTableObjectId)
+        {
+            var symbolTableRecords = new List<_AcDb.SymbolTableRecord>();
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var table = transaction.GetObject(symbolTableObjectId, _AcDb.OpenMode.ForRead);
+                var symbolTable = (_AcDb.SymbolTable)table;
+                foreach (var id in symbolTable)
+                {
+                    symbolTableRecords.Add((_AcDb.SymbolTableRecord)transaction.GetObject(id, _AcDb.OpenMode.ForRead).Clone());
+                }
+
+                transaction.Commit();
+            }
+
+            return symbolTableRecords;
         }
     }
 }
