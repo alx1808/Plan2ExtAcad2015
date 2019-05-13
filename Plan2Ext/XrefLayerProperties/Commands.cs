@@ -73,7 +73,7 @@ namespace Plan2Ext.XrefLayerProperties
             }
         }
 
-        internal static void SetLayersState(IEnumerable<LayerManager.LayerTableRecordExt> layersStates)
+        private static void SetLayersState(IEnumerable<LayerManager.LayerTableRecordExt> layersStates)
         {
             // Get the current document and database
             var acDoc = Application.DocumentManager.MdiActiveDocument;
