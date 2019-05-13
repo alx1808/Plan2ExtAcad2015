@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 // ReSharper disable StringLiteralTypo
-
 // ReSharper disable IdentifierTypo
 
 namespace Plan2Ext
 {
-    public static class XrefManager
+    internal static class XrefManager
     {
         public static IEnumerable<string> GetAllXrefNames(Database db)
         {
@@ -69,6 +66,7 @@ namespace Plan2Ext
                 openFileDialog.CheckFileExists = true;
                 openFileDialog.CheckPathExists = true;
                 openFileDialog.Multiselect = false;
+                // ReSharper disable once LocalizableElement
                 openFileDialog.Title = "Xref-Datei";
                 var filter = "DWG" + "|*." + "dwg";
                 openFileDialog.Filter = filter;
@@ -82,92 +80,13 @@ namespace Plan2Ext
                 }
             }
 
-
-            //Document doc = Application.DocumentManager.MdiActiveDocument;
-            //Editor ed = doc.Editor;
-
             using (var db = new Database())
             {
                 db.ReadDwgFile(dwgfilename, System.IO.FileShare.Read, false, null);
-
-                var names = GetAllXrefNames(db);
-                var layerStates = LayerManager.GetClonedLayerTableRecords(db).ToList();
-                var nameStates = names.SelectMany(x => layerStates.Where(s => s.Name.StartsWith(x + "|", StringComparison.OrdinalIgnoreCase)));
-                SetLayersState(nameStates);
-                //var nameStates = names.Select(x => new { Name = x, states = layerStates.Where(s => s.Name.StartsWith(x + "|", StringComparison.OrdinalIgnoreCase)) });
-                //foreach (var nameState in nameStates)
-                //{
-                //    var name = nameState.Name;
-                //    var states = nameState.states;
-
-                //}
-
-                //using (Transaction tx = db.TransactionManager.StartTransaction())
-                //{
-
-                //    ed.WriteMessage("\n---Resolving the XRefs------------------");
-                //    db.ResolveXrefs(true, false);
-                //    XrefGraph xg = db.GetHostDwgXrefGraph(true);
-                //    ed.WriteMessage("\n---XRef's Graph-------------------------");
-                //    ed.WriteMessage("\nCURRENT DRAWING");
-                //    GraphNode root = xg.RootNode;
-                //    PrintChildren(root, "|-------", ed);
-                //    ed.WriteMessage("\n----------------------------------------\n");
-                //}
+                GetAllXrefNames(db);
             }
         }
 
-        internal static void SetLayersState(IEnumerable<LayerManager.LayerTableRecordExt> layersStates)
-        {
-            // Get the current document and database
-            var acDoc = Application.DocumentManager.MdiActiveDocument;
-            var db = acDoc.Database;
-
-            var curLayer = Application.GetSystemVariable("CLAYER").ToString();
-            var layerStates = layersStates.ToArray();
-
-            var clonedLineTypeRecords = Globs.GetAllClonedSymbolTablesTableRecords(db, db.LinetypeTableId)
-                .Cast<LinetypeTableRecord>().ToArray();
-
-            using (var transaction = db.TransactionManager.StartTransaction())
-            {
-                var layTb = (LayerTable)transaction.GetObject(db.LayerTableId, OpenMode.ForRead);
-                foreach (var ltrOid in layTb)
-                {
-                    var ltr = (LayerTableRecord)transaction.GetObject(ltrOid, OpenMode.ForRead);
-
-
-                    var ls = layerStates.FirstOrDefault(x => string.Compare(ltr.Name, x.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                    if (ls == null) continue;
-
-                    ltr.UpgradeOpen();
-                    if (string.Compare(curLayer, ltr.Name, StringComparison.OrdinalIgnoreCase) != 0)
-                    {
-                        ltr.IsOff = ls.IsOff;
-                        ltr.IsFrozen = ls.IsFrozen;
-                    }
-
-                    ltr.IsLocked = ls.IsLocked;
-                    ltr.IsPlottable = ls.IsPlottable;
-                    ltr.Color = ls.Color;
-                    ltr.Description = ls.Description;
-                    ltr.IsHidden = ls.IsHidden;
-                    ltr.IsPlottable = ls.IsPlottable;
-                    ltr.LineWeight = ls.LineWeight;
-                    //ltr.PlotStyleName = ls.PlotStyleName;
-                    ltr.Transparency = ls.TransparencyValue;
-                    if (!string.IsNullOrEmpty(ls.LineTypeName))
-                    {
-                        var lineTypeRecord = clonedLineTypeRecords.FirstOrDefault(x => x.Name == ls.LineTypeName);
-                        if (lineTypeRecord != null)
-                        {
-                            ltr.LinetypeObjectId = lineTypeRecord.ObjectId;
-                        }
-                    }
-                }
-                transaction.Commit();
-            }
-        }
 
 
         [CommandMethod("XrefGraph")]

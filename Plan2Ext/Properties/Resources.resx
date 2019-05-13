@@ -126,4 +126,7 @@
   <data name="LayoutExportNoView" xml:space="preserve">
     <value>Kein Ansichtsfenster gefunden.</value>
   </data>
+  <data name="Commands_Plan2ImportXrefLayerProperties_Datei_für_Xref_Layer_Importwerten" xml:space="preserve">
+    <value>Datei für Xref-Layer-Importwerten</value>
+  </data>
 </root>

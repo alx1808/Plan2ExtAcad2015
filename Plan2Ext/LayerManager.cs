@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 
@@ -10,19 +8,21 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Plan2Ext
 {
-    internal class LayerManager
+    internal static class LayerManager
     {
         public class LayerTableRecordExt : LayerTableRecord
         {
-            public string LineTypeName { get; set; }
-            public Transparency TransparencyValue { get; set; }
+            private string LineTypeName { get; set; }
+            private Transparency TransparencyValue { get; set; }
+            private string DescriptionString { get; set; }
 
             public LayerTableRecordExt(LayerTableRecord ltr, Database db)
             {
                 var layerTableRecord = (LayerTableRecord)ltr.Clone();
                 LineTypeName = GetLineTypeName(db, ltr);
                 Name = layerTableRecord.Name;
-                Description = layerTableRecord.Description;
+                // description doesn't work
+                DescriptionString = layerTableRecord.Description;
                 IsOff = layerTableRecord.IsOff;
                 IsFrozen = layerTableRecord.IsFrozen;
                 IsLocked = layerTableRecord.IsLocked;
@@ -31,16 +31,44 @@ namespace Plan2Ext
                 Description = layerTableRecord.Description;
                 IsHidden = layerTableRecord.IsHidden;
                 LineWeight = layerTableRecord.LineWeight;
-                //Todo PlotStyleName = LayerTableRecord.PlotStyleName;
                 TransparencyValue = layerTableRecord.Transparency;
                 LinetypeObjectId = layerTableRecord.LinetypeObjectId;
+                ViewportVisibilityDefault = layerTableRecord.ViewportVisibilityDefault;
+            }
 
+            public void AssignValues(LayerTableRecord ltr, string curLayer, LinetypeTableRecord[] clonedLineTypeRecords)
+            {
+                if (string.Compare(curLayer, ltr.Name, StringComparison.OrdinalIgnoreCase) != 0)
+                {
+                    ltr.IsOff = IsOff;
+                    ltr.IsFrozen = IsFrozen;
+                }
+
+                ltr.IsLocked = IsLocked;
+                ltr.IsPlottable = IsPlottable;
+                ltr.Color = Color;
+                ltr.Description = DescriptionString;
+                ltr.IsHidden = IsHidden;
+                ltr.IsPlottable = IsPlottable;
+                ltr.LineWeight = LineWeight;
+                //ltr.PlotStyleName = PlotStyleName;
+                ltr.Transparency = TransparencyValue;
+                if (!string.IsNullOrEmpty(LineTypeName))
+                {
+                    var lineTypeRecord = clonedLineTypeRecords.FirstOrDefault(x => x.Name == LineTypeName);
+                    if (lineTypeRecord != null)
+                    {
+                        ltr.LinetypeObjectId = lineTypeRecord.ObjectId;
+                    }
+                }
+
+                ltr.ViewportVisibilityDefault = ViewportVisibilityDefault;
             }
         }
 
-        public static string GetLineTypeName(Database db, LayerTableRecord ltr)
+        private static string GetLineTypeName(Database db, LayerTableRecord ltr)
         {
-            string name = string.Empty;
+            string name;
             using (var transaction = db.TransactionManager.StartTransaction())
             {
                 var linetypeTableRecord = (LinetypeTableRecord)transaction.GetObject(ltr.LinetypeObjectId, OpenMode.ForRead);
@@ -51,23 +79,6 @@ namespace Plan2Ext
             return name;
         }
 
-        public class LayerState
-        {
-            public string Name { get; set; }
-            public bool Off { get; set; }
-            public bool Frozen { get; set; }
-            public bool Locked { get; set; }
-            public Color Color { get; set; }
-            public bool IsPlottable { get; set; }
-            // todo:
-            //public string LineType { get; set; }
-            // lineweight
-            // transparency
-            // plotstyle
-            // newfreeze
-            // description
-
-        }
         public static IEnumerable<LayerTableRecordExt> GetClonedLayerTableRecords(Database db)
         {
             var layerStates = new List<LayerTableRecordExt>();
@@ -84,58 +95,5 @@ namespace Plan2Ext
 
             return layerStates;
         }
-
-        public static IEnumerable<LayerState> GetLayerStates(Database db)
-        {
-            var layerStates = new List<LayerState>();
-            using (var trans = db.TransactionManager.StartTransaction())
-            {
-                var layTb = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
-                foreach (var ltrOid in layTb)
-                {
-                    var ltr = (LayerTableRecord)trans.GetObject(ltrOid, OpenMode.ForRead).Clone();
-                    layerStates.Add(new LayerState()
-                    {
-                        Name = ltr.Name, 
-                        Off = ltr.IsOff, 
-                        Frozen = ltr.IsFrozen, 
-                        Locked = ltr.IsLocked, 
-                        IsPlottable = ltr.IsPlottable, 
-                        Color = ltr.Color,
-                    });
-                }
-                trans.Commit();
-            }
-
-            return layerStates;
-        }
-        //public static void SetLayerStates(Database db, IEnumerable<LayerState> layersState)
-        //{
-        //    var curLayer = _AcAp.Application.GetSystemVariable("CLAYER").ToString();
-
-        //    // Start a transaction
-        //    using (_AcDb.Transaction trans = db.TransactionManager.StartTransaction())
-        //    {
-        //        _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
-        //        foreach (var ltrOid in layTb)
-        //        {
-        //            _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-
-        //            if (string.Compare(curLayer, ltr.Name, StringComparison.OrdinalIgnoreCase) == 0) continue;
-
-        //            LayerState ls;
-        //            if (layersState.LayerStates.TryGetValue(ltr.Name.ToUpperInvariant(), out ls))
-        //            {
-        //                ltr.UpgradeOpen();
-        //                ltr.IsOff = ls.Off;
-        //                ltr.IsFrozen = ls.Frozen;
-        //                ltr.IsLocked = ls.Locked;
-        //                ltr.IsPlottable = ls.IsPlottable;
-        //            }
-        //        }
-        //        trans.Commit();
-        //    }
-        //}
-
     }
 }

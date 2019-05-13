@@ -303,6 +303,7 @@
     </Compile>
     <Compile Include="Vorauswahl\VorauswahlPalette.cs" />
     <Compile Include="WildcardAcad.cs" />
+    <Compile Include="XrefLayerProperties\Commands.cs" />
     <Compile Include="XrefManager.cs" />
     <Compile Include="XrefToExcel\Commands.cs" />
     <Compile Include="XrefToExcel\Engine.cs" />

@@ -61,6 +61,15 @@ namespace Plan2Ext.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Datei für Xref-Layer-Importwerten.
+        /// </summary>
+        internal static string Commands_Plan2ImportXrefLayerProperties_Datei_für_Xref_Layer_Importwerten {
+            get {
+                return ResourceManager.GetString("Commands_Plan2ImportXrefLayerProperties_Datei_für_Xref_Layer_Importwerten", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Layout &apos;{0}&apos; existiert nicht!.
         /// </summary>
         internal static string LayoutDoesntExist {
