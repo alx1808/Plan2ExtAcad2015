@@ -38,6 +38,8 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Autodesk.AutoCAD.ApplicationServices.Core;
+
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
 
@@ -3187,6 +3189,34 @@ namespace Plan2Ext
             }
 
             return symbolTableRecords;
+        }
+
+        public static _AcDb.ObjectId GetEntity(Type type, string prompt)
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var editor = doc.Editor;
+            var msg = prompt;
+            while (true)
+            {
+                var result = editor.GetEntity(msg);
+                switch (result.Status)
+                {
+                    case _AcEd.PromptStatus.Cancel:
+                        return _AcDb.ObjectId.Null;
+                    case _AcEd.PromptStatus.OK:
+                        using (var transaction = doc.TransactionManager.StartTransaction())
+                        {
+                            var entity = transaction.GetObject(result.ObjectId, _AcDb.OpenMode.ForRead);
+                            var entityType = entity.GetType();
+                            transaction.Commit();
+                            if (entityType == type) return result.ObjectId;
+                            msg = "Gewähltes Element hat nicht den Typ " + type.Name + ". " + prompt;
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
         }
     }
 }

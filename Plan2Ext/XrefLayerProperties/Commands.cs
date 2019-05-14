@@ -15,6 +15,7 @@ using Exception = System.Exception;
 
 namespace Plan2Ext.XrefLayerProperties
 {
+    // ReSharper disable once UnusedMember.Global
     public class Commands
     {
         #region log4net Initialization
@@ -28,29 +29,23 @@ namespace Plan2Ext.XrefLayerProperties
             Log.Info("Plan2ImportXrefLayerProperties");
             try
             {
+                string xrefName;
+                if (!GetXrefName(out xrefName)) return;
+
                 string dwgfilename;
-                using (var openFileDialog = new OpenFileDialog())
-                {
-                    openFileDialog.CheckFileExists = true;
-                    openFileDialog.CheckPathExists = true;
-                    openFileDialog.Multiselect = false;
-                    openFileDialog.Title = Resources.Commands_Plan2ImportXrefLayerProperties_Datei_für_Xref_Layer_Importwerten;
-                    var filter = "DWG" + "|*." + "dwg";
-                    openFileDialog.Filter = filter;
-                    if (openFileDialog.ShowDialog() != DialogResult.OK)
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        dwgfilename = openFileDialog.FileName;
-                    }
-                }
+                if (!GetDwgfilename(out dwgfilename)) return;
+
+
                 using (var db = new Database())
                 {
                     db.ReadDwgFile(dwgfilename, FileShare.Read, false, null);
 
-                    var names = XrefManager.GetAllXrefNames(db);
+                    var names = XrefManager.GetAllXrefNames(db).Where(x => string.Compare(xrefName, x, StringComparison.OrdinalIgnoreCase) == 0).ToArray();
+                    if (!names.Any())
+                    {
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Es gibt kein Xref mit Namen {0} in der Zeichnung {1}.", xrefName, dwgfilename));
+                        return;
+                    }
                     var layerStates = LayerManager.GetClonedLayerTableRecords(db).ToList();
                     var nameStates = names.SelectMany(x => layerStates.Where(s => s.Name.StartsWith(x + "|", StringComparison.OrdinalIgnoreCase)));
                     SetLayersState(nameStates);
@@ -71,6 +66,68 @@ namespace Plan2Ext.XrefLayerProperties
                 Log.Error(msg);
                 Application.ShowAlertDialog(msg);
             }
+        }
+
+        private static bool GetDwgfilename(out string dwgfilename)
+        {
+            dwgfilename = string.Empty;
+            while (true)
+            {
+                using (var openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.CheckFileExists = true;
+                    openFileDialog.CheckPathExists = true;
+                    openFileDialog.Multiselect = false;
+                    openFileDialog.Title = Resources.Commands_Plan2ImportXrefLayerProperties_Datei_für_Xref_Layer_Importwerten;
+                    const string filter = "DWG" + "|*." + "dwg";
+                    openFileDialog.Filter = filter;
+                    if (openFileDialog.ShowDialog() != DialogResult.OK)
+                    {
+                        return false;
+                    }
+                    if (string.Compare(Path.GetFullPath(Globs.GetCurrentDwgName()), openFileDialog.FileName,
+                            StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        dwgfilename = openFileDialog.FileName;
+                        return true;
+                    }
+                    Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage("\nImportzeichnung kann nicht die aktuelle Zeichnung sein.");
+                }
+            }
+        }
+
+        private static bool GetXrefName(out string xrefName)
+        {
+            xrefName = string.Empty;
+            while (true)
+            {
+                var oid = Globs.GetEntity(typeof(BlockReference),
+                    "Xref, dessen Layereigenschaften importiert werden sollen, auswählen: ");
+                if (oid == ObjectId.Null) return false;
+                xrefName = GetXrefName(oid);
+                if (string.IsNullOrEmpty(xrefName))
+                {
+                    Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
+                        "\nDas gewählte Element ist kein XRef.");
+                }
+                else break;
+            }
+
+            return true;
+        }
+
+        private static string GetXrefName(ObjectId oid)
+        {
+            var name = string.Empty;
+            using (var transaction = Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+            {
+                var blockReference = (BlockReference)transaction.GetObject(oid, OpenMode.ForRead);
+                var blockTableRecord = (BlockTableRecord)transaction.GetObject(blockReference.BlockTableRecord, OpenMode.ForRead);
+                if (blockTableRecord.IsFromExternalReference) name = blockTableRecord.Name;
+                transaction.Commit();
+            }
+
+            return name;
         }
 
         private static void SetLayersState(IEnumerable<LayerManager.LayerTableRecordExt> layersStates)
