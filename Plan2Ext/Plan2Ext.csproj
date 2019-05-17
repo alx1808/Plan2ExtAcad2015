@@ -131,6 +131,7 @@
     <Compile Include="CenterBlock\Options.cs" />
     <Compile Include="CenterBlock\Palette.cs" />
     <Compile Include="DocumentHandling.cs" />
+    <Compile Include="EditorHelper.cs" />
     <Compile Include="EntityTypeItem.cs" />
     <Compile Include="ETransmit\Commands.cs" />
     <Compile Include="ExtensionMethods.cs" />

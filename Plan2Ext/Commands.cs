@@ -9,6 +9,7 @@ using System.Text;
 using System.Globalization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Autodesk.AutoCAD.ApplicationServices.Core;
 using Microsoft.Win32.TaskScheduler;
 
 #if BRX_APP
@@ -50,42 +51,60 @@ namespace Plan2Ext
 
 
 
+        private static bool inCommand;
 
-        [_AcTrx.CommandMethod("AlxExportLayout")]
-        public static async void AlxExportLayout()
+        [_AcTrx.CommandMethod("Alx")]
+        public static void Alx()
         {
+
+
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcEd.Editor ed = doc.Editor;
             _AcDb.Database db = doc.Database;
 
 
-            //var dwgName1 = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\Hugo";
-            //bool userBreak = await Globs.CallCommandAsync("_.ExportLayout", dwgName1);
 
-            //var dwgName = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\Abdeck.dwg";
-            ////ImportDrawing(dwgName);
-            //Globs.InsertDwg(dwgName, _AcGe.Point3d.Origin,0.0,"hugo");
+            var oid = EditorHelper.Entlast();
+            ed.WriteMessage(oid == _AcDb.ObjectId.Null ? "\nNot found" : oid.Handle.ToString());
 
-            var res = ed.GetSelection();
-            if (res.Status != _AcEd.PromptStatus.OK) return;
-            var objIdArray = res.Value.GetObjectIds();
-            var objectIds = new List<_AcDb.ObjectId>();
-            foreach (var objectId in objIdArray)
-            {
-                objectIds.Add(objectId);
-            }
+            var p3d = new _AcGe.Point3d(2439.05, 1298.36, 0.0);
 
-            var fileName = @"C:\Workspaces\Plan2\Data\Plan2LayoutExport\output.dwg";
-            if (System.IO.File.Exists(fileName)) System.IO.File.Delete(fileName);
-            Globs.Wblock(fileName, objectIds, _AcGe.Point3d.Origin);
-            var blockOid = Globs.InsertDwg(fileName, _AcGe.Point3d.Origin, 0.0, 1.0, "hugo");
-            Globs.Explode(blockOid, false, false);
+            //ed.Command("_.bpoly","2439.05,1298.36,0.0","" );
+            ed.Command("_.bpoly", p3d, "");
 
-
-            ed.WriteMessage("\nfertig.\n");
+            ////var cmd = "(vl-cmdf \"_.bpoly\" '(2439.05 1298.36 0.0) \" \")";
+            ////var cmd = "(vl-cmdf \"_.bpoly\" p \"\") ";
+            //var cmd = "(vl-cmdf \"_.bpoly\" '(2439.05 1298.36 0.0) \"\") ";
+            //doc.CommandEnded += doc_CommandEnded;
+            //doc.CommandCancelled += doc_CommandEnded;
+            //inCommand = true;
+            //ed.Document.SendStringToExecute(cmd, true, false, true);
+            //while (inCommand)
+            //{
+            //    var active = Application.GetSystemVariable("CmdActive");
+            //}
+            //doc.CommandEnded -= doc_CommandEnded;
 
 
+            var oid2 = EditorHelper.Entlast();
+            var ok = (oid != oid2);
+            ed.WriteMessage("Is ok: " + ok);
 
+            //var res = ed.SelectLast();
+            //ed.WriteMessage("\n" + res.Status);
+
+            //var ss = res.Value;
+            //var cnt = ss.Count;
+            //var oids = ss.GetObjectIds();
+            //var oid = oids[0];
+
+
+
+        }
+
+        static void doc_CommandEnded(object sender, _AcAp.CommandEventArgs e)
+        {
+            inCommand = false;
         }
 
         public static void ImportDrawing(string drawingPath)
