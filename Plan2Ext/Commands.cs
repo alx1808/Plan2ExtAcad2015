@@ -67,7 +67,8 @@ namespace Plan2Ext
             var oid = EditorHelper.Entlast();
             ed.WriteMessage(oid == _AcDb.ObjectId.Null ? "\nNot found" : oid.Handle.ToString());
 
-            var p3d = new _AcGe.Point3d(2439.05, 1298.36, 0.0);
+            var p3d = new _AcGe.Point3d(109708.402928399, 329353.555420752, 0);
+            //var p3d = new _AcGe.Point3d(2439.05, 1298.36, 0.0);
 
             //ed.Command("_.bpoly","2439.05,1298.36,0.0","" );
             ed.Command("_.bpoly", p3d, "");
