@@ -1100,6 +1100,23 @@ namespace Plan2Ext
             }
         }
 
+        public static void DrawOrderTop(List<_AcDb.ObjectId> oids, _AcDb.Database db = null)
+        {
+            if (oids == null || oids.Count == 0) return;
+            var oidCollection = new _AcDb.ObjectIdCollection();
+            oids.ForEach(x => oidCollection.Add(x));
+            if (db == null) db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var firstEntity = (_AcDb.Entity)transaction.GetObject(oids[0], _AcDb.OpenMode.ForRead);
+                _AcDb.BlockTableRecord btr =
+                    (_AcDb.BlockTableRecord)transaction.GetObject(firstEntity.BlockId, _AcDb.OpenMode.ForRead);
+                var dot = (_AcDb.DrawOrderTable)transaction.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+                dot.MoveToTop(oidCollection);
+                transaction.Commit();
+            }
+        }
+
         /// <summary>
         /// Draworder to bottom
         /// </summary>
@@ -1125,7 +1142,6 @@ namespace Plan2Ext
 
                 var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
                 dot.MoveToBottom(ids);
-
                 tr.Commit();
             }
         }
@@ -2368,6 +2384,16 @@ namespace Plan2Ext
                 fehlerBlockObj.Layer = layerName;
             }
 
+        }
+
+        internal static void DeleteEnttityWithOid(_AcDb.ObjectId oid)
+        {
+            using (var transaction = _AcAp.Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+            {
+                var entity = transaction.GetObject(oid, _AcDb.OpenMode.ForWrite);
+                entity.Erase(true);
+                transaction.Commit();
+            }
         }
 
         internal static void DeleteHatches(string layerName)

@@ -53,7 +53,7 @@ namespace Plan2Ext
 
         private static bool inCommand;
 
-        [_AcTrx.CommandMethod("Alx")]
+        //[_AcTrx.CommandMethod("Alx")]
         public static void Alx()
         {
 
