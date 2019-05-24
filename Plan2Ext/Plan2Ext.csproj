@@ -138,7 +138,9 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Fenster\Examiner.cs" />
     <Compile Include="Fenster\Searcher.cs" />
+    <Compile Include="GenerateOeffBoundaries\BlockInfo.cs" />
     <Compile Include="GenerateOeffBoundaries\Commands.cs" />
+    <Compile Include="GenerateOeffBoundaries\ConfigurationHandler.cs" />
     <Compile Include="GenerateOeffBoundaries\EntitySearcher.cs" />
     <Compile Include="HoehenPruefung\Commands.cs" />
     <Compile Include="HoehenPruefung\Engine.cs" />
