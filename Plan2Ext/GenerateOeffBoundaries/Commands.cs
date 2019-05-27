@@ -29,6 +29,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
         private Document _document;
         private Database _db;
         private IConfigurationHandler _configurationHandler;
+        private List<ObjectId> _generatedPolylines = new List<ObjectId>();
 
 
         [CommandMethod("Plan2GenerateOeffBoundaries")]
@@ -38,6 +39,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
             Log.Info("Plan2GenerateOeffBoundaries");
             try
             {
+                _generatedPolylines.Clear();
                 _configurationHandler = new ConfigurationHandler();
                 _document = Application.DocumentManager.MdiActiveDocument;
                 _db = _document.Database;
@@ -49,6 +51,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
                     LogInfo(msg);
                     return;
                 }
+
                 if (string.IsNullOrEmpty(_configurationHandler.TuerSchraffLayer))
                 {
                     var msg = "Solid-Schraffurlayer für Türen ist nicht konfiguriert.";
@@ -67,7 +70,10 @@ namespace Plan2Ext.GenerateOeffBoundaries
                     return;
                 }
 
-                var fensterBlockInfos = blockInfos.Where(x => x.Type == BlockInfo.BlockType.Fenster).Select(x => x.InsertPoint);
+                GeneratePolylinesFromHatches(entitySearcher.GetNonOeffHatchesInMs().ToArray());
+
+                var fensterBlockInfos = blockInfos.Where(x => x.Type == BlockInfo.BlockType.Fenster)
+                    .Select(x => x.InsertPoint);
                 _targetLayer = _configurationHandler.TuerSchraffLayer;
                 Globs.CreateLayer(_targetLayer);
                 Globs.SetLayerCurrent(_targetLayer);
@@ -76,7 +82,8 @@ namespace Plan2Ext.GenerateOeffBoundaries
                     CreateBoundary(point3D);
                 }
 
-                var tuerBlockInfos = blockInfos.Where(x => x.Type == BlockInfo.BlockType.Tuer).Select(x => x.InsertPoint);
+                var tuerBlockInfos = blockInfos.Where(x => x.Type == BlockInfo.BlockType.Tuer)
+                    .Select(x => x.InsertPoint);
                 _targetLayer = _configurationHandler.FensterSchraffLayer;
                 Globs.CreateLayer(_targetLayer);
                 Globs.SetLayerCurrent(_targetLayer);
@@ -95,6 +102,55 @@ namespace Plan2Ext.GenerateOeffBoundaries
                     "Fehler in Plan2GenerateOeffBoundaries aufgetreten! {0}", ex.Message);
                 Log.Error(msg);
                 Application.ShowAlertDialog(msg);
+            }
+            finally
+            {
+                DeleteGeneratedPolylines();
+            }
+        }
+
+        private void DeleteGeneratedPolylines()
+        {
+            if (_generatedPolylines.Count == 0) return;
+            using (var transaction = _document.TransactionManager.StartTransaction())
+            {
+                foreach (var generatedPolyline in _generatedPolylines)
+                {
+                    var polyline = (Entity) transaction.GetObject(generatedPolyline, OpenMode.ForWrite);
+                    polyline.Erase(true);
+                }
+                transaction.Commit();
+            }
+        }
+
+        private void GeneratePolylinesFromHatches(ObjectId[] hatches)
+        {
+            foreach (var hatchOid in hatches)
+            {
+                var lastOid = EditorHelper.Entlast();
+                _document.Editor.Command("_.hatchedit", hatchOid, "_B", "_P", "_N");
+                var polylineObjectId = EditorHelper.Entlast();
+                var newEntityCreated = (lastOid != polylineObjectId);
+                if (!newEntityCreated)
+                {
+                    LogWarning(string.Format(CultureInfo.CurrentCulture, "Konnte keine Polylinie für Schraffur '{0}' erzeugen!", hatchOid.Handle.ToString()));
+                }
+                else
+                {
+                    _generatedPolylines.Add(polylineObjectId);
+                    SetPolylineLayerToHatchLayer(polylineObjectId, hatchOid);
+                }
+            }
+        }
+
+        private void SetPolylineLayerToHatchLayer(ObjectId polylineObjectId, ObjectId hatchOid)
+        {
+            using (var transaction = _document.TransactionManager.StartTransaction())
+            {
+                var hatch = (Entity) transaction.GetObject(hatchOid, OpenMode.ForRead);
+                var polyline = (Entity) transaction.GetObject(polylineObjectId, OpenMode.ForWrite);
+                polyline.Layer = hatch.Layer;
+                transaction.Commit();
             }
         }
 
@@ -197,7 +253,13 @@ namespace Plan2Ext.GenerateOeffBoundaries
 
         private void LogInfo(string msg)
         {
+            Log.Info(msg);
             _document.Editor.WriteMessage("\n" + msg);
+        }
+        private void LogWarning(string msg)
+        {
+            Log.Warn(msg);
+            _document.Editor.WriteMessage("\nWarnung: " + msg);
         }
     }
 }

@@ -52,5 +52,31 @@ namespace Plan2Ext.GenerateOeffBoundaries
 
             return blockInfos;
         }
+
+        public IEnumerable<ObjectId> GetNonOeffHatchesInMs()
+        {
+            var hatches = new List<ObjectId>();
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var transaction = doc.TransactionManager.StartTransaction())
+            {
+                var blockTable = (BlockTable)transaction.GetObject(db.BlockTableId, OpenMode.ForRead);
+                var blockTableRecord = (BlockTableRecord)transaction.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                foreach (var oid in blockTableRecord)
+                {
+                    var hatch = transaction.GetObject(oid, OpenMode.ForRead) as Hatch;
+                    if (hatch != null && 
+                        string.Compare(hatch.Layer, _configurationHandler.FensterSchraffLayer, StringComparison.OrdinalIgnoreCase) != 0 &&
+                        string.Compare(hatch.Layer, _configurationHandler.TuerSchraffLayer, StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        hatches.Add(oid);
+                    }
+
+                }
+                transaction.Commit();
+            }
+
+            return hatches;
+        }
     }
 }
