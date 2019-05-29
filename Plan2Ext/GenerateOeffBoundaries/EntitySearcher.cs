@@ -53,6 +53,33 @@ namespace Plan2Ext.GenerateOeffBoundaries
             return blockInfos;
         }
 
+        public IEnumerable<ObjectId> GetInternalPolylineOidsInMs()
+        {
+            Log.Info("GetInternalPolylineOidsInMs");
+            var objectIds = new List<ObjectId>();
+            var internalPolylineLayer = _configurationHandler.InternalPolylineLayer;
+            if (string.IsNullOrEmpty(internalPolylineLayer)) return objectIds;
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var transaction = doc.TransactionManager.StartTransaction())
+            {
+                var blockTable = (BlockTable)transaction.GetObject(db.BlockTableId, OpenMode.ForRead);
+                var blockTableRecord = (BlockTableRecord)transaction.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                foreach (var oid in blockTableRecord)
+                {
+                    var polyline = transaction.GetObject(oid, OpenMode.ForRead) as Polyline;
+                    if (polyline != null && string.Compare(polyline.Layer, internalPolylineLayer, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        objectIds.Add(oid);
+                    }
+
+                }
+                transaction.Commit();
+            }
+
+            return objectIds;
+        }
+
         public IEnumerable<ObjectId> GetNonOeffHatchesInMs()
         {
             var hatches = new List<ObjectId>();

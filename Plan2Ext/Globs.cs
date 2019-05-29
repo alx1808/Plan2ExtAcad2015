@@ -3012,7 +3012,7 @@ namespace Plan2Ext
             _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Document.SendStringToExecute(cmd, true, true, true);
         }
 
-        internal static void CreateLayer(string layerName, _AcCm.Color color = null)
+        internal static void CreateLayer(string layerName, _AcCm.Color color = null, bool? isPlottable = null)
         {
 
             _AcDb.Database db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
@@ -3027,6 +3027,11 @@ namespace Plan2Ext
                     if (color != null)
                     {
                         ltRec.Color = color;
+                    }
+
+                    if (isPlottable != null)
+                    {
+                        ltRec.IsPlottable = isPlottable.Value;
                     }
                     lt.UpgradeOpen();
                     lt.Add(ltRec);

@@ -13,6 +13,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
         List<string> ConfiguredTuerBlockNames { get; }
         string TuerSchraffLayer { get; }
         string FensterSchraffLayer { get; }
+        string InternalPolylineLayer { get; }
     }
 
     internal class ConfigurationHandler : IConfigurationHandler
@@ -40,6 +41,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
 
         private const string TUER_HATCH_LAYER_VARIABLE = "alx_V:ino_tuer_HatchLayer";
         private const string FENSTER_HATCH_LAYER_VARIABLE = "alx_V:ino_fen_HatchLayer";
+        private const string INTENAL_POLYLINE_LAYER_VARIABLE = "alx_V:ino_genOeffBoundaries_InnerPlineLayer";
 
         public ConfigurationHandler()
         {
@@ -58,6 +60,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
 
         public string TuerSchraffLayer { get; private set; }
         public string FensterSchraffLayer { get; private set; }
+        public string InternalPolylineLayer { get; private set; }
 
         private void ReadConfiguration()
         {
@@ -85,6 +88,23 @@ namespace Plan2Ext.GenerateOeffBoundaries
             GetTuerSchraffLayerFromConfig();
 
             GetFensterSchraffLayerFromConfig();
+
+            GetInternalPolylineLayerFromConfig();
+        }
+
+        private void GetInternalPolylineLayerFromConfig()
+        {
+            string value;
+            if (GetFromConfig(out value, INTENAL_POLYLINE_LAYER_VARIABLE))
+            {
+                InternalPolylineLayer = value;
+            }
+            else
+            {
+                Log.Warn(string.Format(CultureInfo.CurrentCulture, "Variable {0} ist nicht konfiguriert!",
+                    INTENAL_POLYLINE_LAYER_VARIABLE));
+                InternalPolylineLayer = "";
+            }
         }
 
         private void GetFensterSchraffLayerFromConfig()
