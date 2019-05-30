@@ -57,8 +57,10 @@ namespace Plan2Ext.GenerateOeffBoundaries
         {
             Log.Info("GetInternalPolylineOidsInMs");
             var objectIds = new List<ObjectId>();
-            var internalPolylineLayer = _configurationHandler.InternalPolylineLayer;
-            if (string.IsNullOrEmpty(internalPolylineLayer)) return objectIds;
+            var internalPolylineLayer = _configurationHandler.InternalPolylineLayers;
+            if (string.IsNullOrEmpty(internalPolylineLayer.Trim())) return objectIds;
+            var wildcardAcad = new WildcardAcad(internalPolylineLayer);
+
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (var transaction = doc.TransactionManager.StartTransaction())
@@ -68,7 +70,8 @@ namespace Plan2Ext.GenerateOeffBoundaries
                 foreach (var oid in blockTableRecord)
                 {
                     var polyline = transaction.GetObject(oid, OpenMode.ForRead) as Polyline;
-                    if (polyline != null && string.Compare(polyline.Layer, internalPolylineLayer, StringComparison.OrdinalIgnoreCase) == 0)
+                    //if (polyline != null && string.Compare(polyline.Layer, internalPolylineLayer, StringComparison.OrdinalIgnoreCase) == 0)
+                    if (polyline != null && wildcardAcad.IsMatch(polyline.Layer))
                     {
                         objectIds.Add(oid);
                     }
