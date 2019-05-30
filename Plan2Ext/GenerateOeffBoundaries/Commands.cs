@@ -24,22 +24,28 @@ namespace Plan2Ext.GenerateOeffBoundaries
         private static readonly ILog Log = LogManager.GetLogger(Convert.ToString((typeof(Commands))));
         #endregion
 
+        #region const
         private const double ZOOM_WIDTH = 10.0;
         private const short FENSTER_LAYER_COLOR = 141;
         private const short TUER_LAYER_COLOR = 42;
         private const string NO_BOUNDARY_ERROR_LAYER_NAME = "_Keine_Umgrenzung_gefunden";
         private const string HATCH_EXISTS_ERROR_LAYER_NAME = "_Schraffur_existiert_bereits";
         private const string BLOCK_IP_ERROR_LAYER_NAME = "_Block_Innerhalb_RaumPolylinie";
+        #endregion
 
+        #region member vars
         private string _targetLayer = "NewLayer";
         private bool _asHatch;
+        private bool _checkOnly;
         private Document _document;
         private Database _db;
         private IConfigurationHandler _configurationHandler;
-        private readonly List<ObjectId> _generatedPolylines = new List<ObjectId>();
+        private readonly List<ObjectId> _generatedPolylinesToDelete = new List<ObjectId>();
         private readonly List<Point3d> _errorLinePositionsNoBoundary = new List<Point3d>();
         private readonly List<Point3d> _errorLinePositionsHatchExists = new List<Point3d>();
         private readonly List<Point3d> _errorLinePositionsBlockInInnerPolyline = new List<Point3d>();
+        private readonly List<ObjectId> _generatedEntities = new List<ObjectId>();
+        #endregion
 
         [CommandMethod("Plan2GenerateOeffBoundaries")]
         // ReSharper disable once UnusedMember.Global
@@ -48,7 +54,8 @@ namespace Plan2Ext.GenerateOeffBoundaries
             Log.Info("Plan2GenerateOeffBoundaries");
             try
             {
-                _generatedPolylines.Clear();
+                _generatedPolylinesToDelete.Clear();
+                _generatedEntities.Clear();
                 _errorLinePositionsHatchExists.Clear();
                 _errorLinePositionsNoBoundary.Clear();
                 _errorLinePositionsBlockInInnerPolyline.Clear();
@@ -72,7 +79,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
                     return;
                 }
 
-                if (!AskUserHatchOrPolyline()) return;
+                if (!AskUserForCheckOnly()) return;
 
                 var entitySearcher = new EntitySearcher(_configurationHandler);
                 var blockInfos = entitySearcher.GetInsertPointsInMs().ToArray();
@@ -117,6 +124,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
             {
                 InsertFehlerLines();
                 DeleteGeneratedPolylines();
+                if (_checkOnly) DeleteGeneratedEntities();
             }
         }
 
@@ -165,13 +173,26 @@ namespace Plan2Ext.GenerateOeffBoundaries
             Globs.LayerOnAndThaw(_targetLayer, unlock: true);
             Globs.SetLayerCurrent(_targetLayer);
         }
+        private void DeleteGeneratedEntities()
+        {
+            if (_generatedEntities.Count == 0) return;
+            using (var transaction = _document.TransactionManager.StartTransaction())
+            {
+                foreach (var objectId in _generatedEntities)
+                {
+                    var entity = (Entity)transaction.GetObject(objectId, OpenMode.ForWrite);
+                    entity.Erase(true);
+                }
+                transaction.Commit();
+            }
+        }
 
         private void DeleteGeneratedPolylines()
         {
-            if (_generatedPolylines.Count == 0) return;
+            if (_generatedPolylinesToDelete.Count == 0) return;
             using (var transaction = _document.TransactionManager.StartTransaction())
             {
-                foreach (var generatedPolyline in _generatedPolylines)
+                foreach (var generatedPolyline in _generatedPolylinesToDelete)
                 {
                     var polyline = (Entity)transaction.GetObject(generatedPolyline, OpenMode.ForWrite);
                     polyline.Erase(true);
@@ -194,7 +215,7 @@ namespace Plan2Ext.GenerateOeffBoundaries
                 }
                 else
                 {
-                    _generatedPolylines.Add(polylineObjectId);
+                    _generatedPolylinesToDelete.Add(polylineObjectId);
                     SetPolylineLayerToHatchLayer(polylineObjectId, hatchOid);
                 }
             }
@@ -209,6 +230,30 @@ namespace Plan2Ext.GenerateOeffBoundaries
                 polyline.Layer = hatch.Layer;
                 transaction.Commit();
             }
+        }
+
+        private bool AskUserForCheckOnly()
+        {
+            var pko =
+                new PromptKeywordOptions(
+                    "\nDurchführen/<Prüfen>: "
+                ) { AllowNone = true };
+            pko.Keywords.Add("Durchführen");
+            pko.Keywords.Add("Prüfen");
+            pko.Keywords.Default = "Prüfen";
+            var pkr = _document.Editor.GetKeywords(pko);
+            if (pkr.Status != PromptStatus.OK)
+                return false;
+            _checkOnly = string.CompareOrdinal(pkr.StringResult, "Prüfen") == 0;
+            if (_checkOnly)
+            {
+                _asHatch = true;
+            }
+            else
+            {
+                if (!AskUserHatchOrPolyline()) return false;
+            }
+            return true;
         }
 
         private bool AskUserHatchOrPolyline()
@@ -267,6 +312,11 @@ namespace Plan2Ext.GenerateOeffBoundaries
                 }
                 Globs.DrawOrderTop(new List<ObjectId> { hatchOid });
                 Globs.DeleteEnttityWithOid(polylineObjectId);
+                _generatedEntities.Add(hatchOid);
+            }
+            else
+            {
+                _generatedEntities.Add(polylineObjectId);
             }
         }
         private bool HatchExistsAt(ObjectId polylineObjectId)
