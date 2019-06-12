@@ -83,6 +83,10 @@
     <Compile Include="AttTrans\Commands.cs" />
     <Compile Include="AttTrans\Engine.cs" />
     <Compile Include="Aufteilung.cs" />
+    <Compile Include="AutoIdVergabeOeff\ConfigurationHandler.cs" />
+    <Compile Include="AutoIdVergabeOeff\EntitySearcher.cs" />
+    <Compile Include="AutoIdVergabeOeff\FensterAttPositions.cs" />
+    <Compile Include="AutoIdVergabeOeff\FensterInfo.cs" />
     <Compile Include="AutoIdVergabe\AutoIdControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
