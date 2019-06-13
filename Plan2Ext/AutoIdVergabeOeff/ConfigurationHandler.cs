@@ -14,6 +14,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
         string ObjectPolygonLayer { get; set; }
         string FenInnenAttName { get; set; }
         string FenAussenAttName { get; set; }
+        string NrAttName { get; set; }
     }
 
     internal class ConfigurationHandler : IConfigurationHandler
@@ -39,6 +40,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             "alx_V:ino_tuerBlock_Rechts",
         };
         private const string OBJECT_POLYGON_LAYER_VARIABLE = "alx_V:ino_autoidoeff_ObjectPolygonLayer";
+        private const string NUMBER_ATT_NAME_VARIABLE = "alx_V:ino_autoidoeff_AttNr";
         private const string FEN_INNEN_ATT_NAME_VARIABLE = "alx_V:ino_zrids_AttInnen";
         private const string FEN_AUSSEN_ATT_NAME_VARIABLE = "alx_V:ino_zrids_AttAussen";
         public ConfigurationHandler()
@@ -59,6 +61,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
         public string ObjectPolygonLayer { get; set; }
         public string FenInnenAttName { get; set; }
         public string FenAussenAttName { get; set; }
+        public string NrAttName { get; set; }
 
         private void ReadConfiguration()
         {
@@ -86,6 +89,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             GetObjectPolygonLayerFromConfig();
             GetFenInnenAttFromConfig();
             GetFenAussenAttFromConfig();
+            GetNrAttFromConfig();
         }
 
         private void GetObjectPolygonLayerFromConfig()
@@ -103,6 +107,20 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
         }
 
+        private void GetNrAttFromConfig()
+        {
+            string value;
+            if (GetFromConfig(out value, NUMBER_ATT_NAME_VARIABLE))
+            {
+                NrAttName = value;
+            }
+            else
+            {
+                Log.Warn(string.Format(CultureInfo.CurrentCulture, "Variable {0} ist nicht konfiguriert!",
+                    NUMBER_ATT_NAME_VARIABLE));
+                NrAttName = "FENSTER_ID";
+            }
+        }
         private void GetFenInnenAttFromConfig()
         {
             string value;

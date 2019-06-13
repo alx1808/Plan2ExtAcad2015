@@ -31,7 +31,9 @@ namespace Plan2Ext.AutoIdVergabeOeff
             {
                 var objectPolygon = (Polyline) transaction.GetObject(objectPolygonId, OpenMode.ForRead);
                 var blockReferences =
+                    // ReSharper disable once AccessToDisposedClosure
                     fensterIds.Select(x => (BlockReference) transaction.GetObject(x, OpenMode.ForRead));
+                // ReSharper disable once AccessToDisposedClosure
                 var fenAndPos = blockReferences.Select(x => new {fen = x, position = CreateFensterAttPositions(x, transaction)});
                 foreach (var fenAndPo in fenAndPos)
                 {
@@ -39,15 +41,15 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     {
                         if (AreaEngine.InPoly(fenAndPo.position.Aussen, objectPolygon))
                         {
-                            fensterInfos.Add(new FensterInfo(){Oid = fenAndPo.fen.ObjectId, Kind =  FensterInfo.KindEnum.InsidePolygon});
+                            fensterInfos.Add(new FensterInfo(){Oid = fenAndPo.fen.ObjectId, Kind =  FensterInfo.KindEnum.InsidePolygon, InsertPoint = fenAndPo.fen.Position});
                         }
-                        else fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OnPolygon });
+                        else fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OnPolygon, InsertPoint = fenAndPo.fen.Position });
                     }
                     else if (AreaEngine.InPoly(fenAndPo.position.Aussen, objectPolygon))
                     {
-                        fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OnPolygon });
+                        fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OnPolygon, InsertPoint = fenAndPo.fen.Position });
                     }
-                    else fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OutsidePolygon });
+                    else fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OutsidePolygon, InsertPoint = fenAndPo.fen.Position });
                 }
                 transaction.Commit();
             }

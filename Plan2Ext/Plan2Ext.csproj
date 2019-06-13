@@ -79,14 +79,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlgebraicArea.cs" />
     <Compile Include="AreaEngine.cs" />
     <Compile Include="AttTrans\Commands.cs" />
     <Compile Include="AttTrans\Engine.cs" />
     <Compile Include="Aufteilung.cs" />
+    <Compile Include="AutoIdVergabeOeff\Commands.cs" />
     <Compile Include="AutoIdVergabeOeff\ConfigurationHandler.cs" />
     <Compile Include="AutoIdVergabeOeff\EntitySearcher.cs" />
+    <Compile Include="AutoIdVergabeOeff\EntitySelector.cs" />
+    <Compile Include="AutoIdVergabeOeff\FenSorter.cs" />
     <Compile Include="AutoIdVergabeOeff\FensterAttPositions.cs" />
     <Compile Include="AutoIdVergabeOeff\FensterInfo.cs" />
+    <Compile Include="AutoIdVergabeOeff\SelectedObjectIds.cs" />
     <Compile Include="AutoIdVergabe\AutoIdControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
