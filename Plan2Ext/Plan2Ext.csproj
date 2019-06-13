@@ -91,6 +91,13 @@
     <Compile Include="AutoIdVergabeOeff\FenSorter.cs" />
     <Compile Include="AutoIdVergabeOeff\FensterAttPositions.cs" />
     <Compile Include="AutoIdVergabeOeff\FensterInfo.cs" />
+    <Compile Include="AutoIdVergabeOeff\MyUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="AutoIdVergabeOeff\MyUserControl.Designer.cs">
+      <DependentUpon>MyUserControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AutoIdVergabeOeff\Palette.cs" />
     <Compile Include="AutoIdVergabeOeff\SelectedObjectIds.cs" />
     <Compile Include="AutoIdVergabe\AutoIdControl.cs">
       <SubType>UserControl</SubType>
@@ -361,6 +368,9 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="AutoIdVergabeOeff\MyUserControl.resx">
+      <DependentUpon>MyUserControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AutoIdVergabe\AutoIdControl.resx">
       <DependentUpon>AutoIdControl.cs</DependentUpon>
     </EmbeddedResource>

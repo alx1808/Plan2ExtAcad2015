@@ -16,21 +16,30 @@ namespace Plan2Ext.AutoIdVergabeOeff
         private static readonly ILog Log = LogManager.GetLogger(Convert.ToString((typeof(GenerateOeffBoundaries.Commands))));
         #endregion
 
+        private static IPalette _Palette;
+
         [CommandMethod("Plan2AutoIdVergabeOeffnungen")]
         // ReSharper disable once UnusedMember.Global
         public void Plan2AutoIdVergabeOeffnungen()
         {
+            if (!OpenRnPalette()) return;
+
             Log.Info("Plan2AutoIdVergabeOeffnungen");
             try
             {
-                var configurationHandler = new ConfigurationHandler();
-                var entitySelector = new EntitySelector(configurationHandler);
-                var selectedObjectsIds = entitySelector.SelectObjectsIds();
-                if (selectedObjectsIds == null) return;
-                var entitySearcher = new EntitySearcher(configurationHandler);
-                var fensterInfos = entitySearcher.GetFensterInfosInMs(selectedObjectsIds.FensterIds, selectedObjectsIds.ObjectPolygonId);
-                var fenSorter = new FenSorter(configurationHandler);
-                fenSorter.Sort(fensterInfos, selectedObjectsIds.ObjectPolygonId);
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                using (doc.LockDocument())
+                {
+                    var configurationHandler = new ConfigurationHandler();
+                    var entitySelector = new EntitySelector(configurationHandler);
+                    var selectedObjectsIds = entitySelector.SelectObjectsIds();
+                    if (selectedObjectsIds == null) return;
+                    var entitySearcher = new EntitySearcher(configurationHandler);
+                    var fensterInfos = entitySearcher.GetFensterInfosInMs(selectedObjectsIds.FensterIds,
+                        selectedObjectsIds.ObjectPolygonId);
+                    var fenSorter = new FenSorter(configurationHandler, _Palette);
+                    fenSorter.Sort(fensterInfos, selectedObjectsIds.ObjectPolygonId);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -43,6 +52,23 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 Log.Error(msg);
                 Application.ShowAlertDialog(msg);
             }
+        }
+        private static bool OpenRnPalette()
+        {
+            if (_Palette == null)
+            {
+                _Palette = new Palette();
+            }
+
+            bool wasOpen = _Palette.Show();
+            if (!wasOpen) return false;
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null) return false;
+            Log.DebugFormat("Dokumentname: {0}.", doc.Name);
+
+            return true;
+
         }
 
     }

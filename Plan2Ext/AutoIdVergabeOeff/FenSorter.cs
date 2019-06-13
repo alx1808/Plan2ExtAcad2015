@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -19,14 +17,18 @@ namespace Plan2Ext.AutoIdVergabeOeff
     class FenSorter
     {
         private readonly ConfigurationHandler _configurationHandler;
+        private readonly IPalette _palette;
+        private int _currentNr;
 
-        public FenSorter(ConfigurationHandler configurationHandler)
+        public FenSorter(ConfigurationHandler configurationHandler, IPalette palette)
         {
             _configurationHandler = configurationHandler;
+            _palette = palette;
         }
 
         public void Sort(IEnumerable<IFensterInfo> fensterInfos, ObjectId objectPolygonId)
         {
+            _currentNr = _palette.FenNr;
             var arr = fensterInfos.ToArray();
             SortAlongObjectPolygon(arr, objectPolygonId);
             try
@@ -38,6 +40,8 @@ namespace Plan2Ext.AutoIdVergabeOeff
             {
                 UcsRestore();
             }
+
+            _palette.FenNr = _currentNr + 1;
         }
 
         private const string TEMP_UCS_NAME = "plan2autoidoeffnungen_temp_ucs";
@@ -105,7 +109,6 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
         private void Renumber(IFensterInfo[] ordered, Transaction transaction)
         {
-            var nr = 0;
             foreach (var fensterInfo in ordered)
             {
                 var blockReference = (BlockReference) transaction.GetObject(fensterInfo.Oid, OpenMode.ForRead);
@@ -116,13 +119,14 @@ namespace Plan2Ext.AutoIdVergabeOeff
                         "Fensterblock mit Handle {0} hat kein Attribut {1}!", blockReference.Handle.ToString(),
                         _configurationHandler.NrAttName));
                 nrAtt.UpgradeOpen();
-                nrAtt.TextString = nr.ToString();
+                nrAtt.TextString = _palette.FenPrefix + _currentNr.ToString().PadLeft(3, '0');
                 nrAtt.DowngradeOpen();
-                nr++;
+                _currentNr++;
             }
         }
 
-        public static double GetDistanceToPoint(Curve curve, Point3d pt)
+        // ReSharper disable once UnusedMember.Local
+        private static double GetDistanceToPoint(Curve curve, Point3d pt)
         {
             var ptOnCurve = curve.GetClosestPointTo(pt, true);
             var ptparam = curve.GetParameterAtPoint(ptOnCurve);
@@ -130,7 +134,8 @@ namespace Plan2Ext.AutoIdVergabeOeff
             var b = curve.GetDistanceAtParameter(curve.StartParam);
             return a - b;
         }
-        public static double GetDistanceToPoint(Curve curve, Point3d pt, Point3d startPoint)
+
+        private static double GetDistanceToPoint(Curve curve, Point3d pt, Point3d startPoint)
         {
             var ptOnCurve = curve.GetClosestPointTo(pt, true);
             var ptparam = curve.GetParameterAtPoint(ptOnCurve);
