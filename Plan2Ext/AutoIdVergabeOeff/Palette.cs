@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.AutoCAD.Windows;
-using Plan2Ext.RaumHoePruefung;
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext.AutoIdVergabeOeff
 {
@@ -13,6 +11,8 @@ namespace Plan2Ext.AutoIdVergabeOeff
         void SetInvisible();
         int FenNr { get; set; }
         string FenPrefix { get; }
+        int TuerNr { get; set; }
+        string TuerPrefix { get; }
         bool Show();
     }
 
@@ -20,7 +20,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
     {
         // We cannot derive from PaletteSet
         // so we contain it
-        static PaletteSet ps;
+        static PaletteSet _Ps;
 
         // We need to make the textbox available
         // via a static member
@@ -33,8 +33,8 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
         public void SetInvisible()
         {
-            if (ps == null) return;
-            if (ps.Visible) ps.Visible = false;
+            if (_Ps == null) return;
+            if (_Ps.Visible) _Ps.Visible = false;
         }
 
         public int FenNr
@@ -60,13 +60,36 @@ namespace Plan2Ext.AutoIdVergabeOeff
             get { return _UserControl.txtFenPrefix.Text; }
         }
 
+        public int TuerNr
+        {
+            get
+            {
+                int nr;
+                if (!int.TryParse(_UserControl.txtTuerNummer.Text, out nr))
+                {
+                    throw new InvalidOperationException("Ungültige Türnummer " + _UserControl.txtTuerNummer.Text);
+                }
+
+                return nr;
+            }
+            set
+            {
+                _UserControl.txtTuerNummer.Text = value.ToString();
+            }
+        }
+
+
+        public string TuerPrefix
+        {
+            get { return _UserControl.txtTuerNummer.Text; }
+        }
 
         public bool Show()
         {
 
-            if (ps == null)
+            if (_Ps == null)
             {
-                ps = new PaletteSet("AutoIdVergabeOeffnungen")
+                _Ps = new PaletteSet("AutoIdVergabeOeffnungen")
                 {
                     Style = PaletteSetStyles.NameEditable |
                             PaletteSetStyles.ShowPropertiesMenu |
@@ -75,16 +98,16 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     MinimumSize = new System.Drawing.Size(170, 164)
                 };
 
-                ps.Add("AutoIdVergabeOeffnungen", _UserControl);
+                _Ps.Add("AutoIdVergabeOeffnungen", _UserControl);
 
-                if (!ps.Visible)
+                if (!_Ps.Visible)
                 {
-                    ps.Visible = true;
+                    _Ps.Visible = true;
                 }
 #if ACAD2013_OR_NEWER
 #if ARX_APP
                 //ps.SetSize(new System.Drawing.Size(210, 164));
-                Plan2Ext.Globs.SetPaletteDockSettings(ps);
+                Globs.SetPaletteDockSettings(_Ps);
 #endif
 #endif
 
@@ -92,9 +115,9 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
             else
             {
-                if (!ps.Visible)
+                if (!_Ps.Visible)
                 {
-                    ps.Visible = true;
+                    _Ps.Visible = true;
                     return false;
                 }
                 return true;

@@ -98,7 +98,10 @@
       <DependentUpon>MyUserControl.cs</DependentUpon>
     </Compile>
     <Compile Include="AutoIdVergabeOeff\Palette.cs" />
+    <Compile Include="AutoIdVergabeOeff\RaumInfo.cs" />
     <Compile Include="AutoIdVergabeOeff\SelectedObjectIds.cs" />
+    <Compile Include="AutoIdVergabeOeff\TuerAttPositions.cs" />
+    <Compile Include="AutoIdVergabeOeff\TuerInfo.cs" />
     <Compile Include="AutoIdVergabe\AutoIdControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -29,7 +29,10 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
                 new TypedValue((int) DxfCode.Operator, "<AND"),
                 new TypedValue((int) DxfCode.Start, "*POLYLINE"),
+                new TypedValue((int) DxfCode.Operator, "<OR"),
                 new TypedValue((int) DxfCode.LayerName, _configurationHandler.ObjectPolygonLayer),
+                new TypedValue((int) DxfCode.LayerName, _configurationHandler.FlaGrenzLayer),
+                new TypedValue((int) DxfCode.Operator, "OR>"),
                 new TypedValue((int) DxfCode.Operator, "AND>"),
 
                 new TypedValue((int) DxfCode.Operator, "<AND"),
@@ -53,15 +56,18 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     {
                         // ReSharper disable once AccessToDisposedClosure
                         var objects = idArray.Select(x => transaction.GetObject(x, OpenMode.ForRead)).ToArray();
-                        selectedObjectIds.FensterIds.AddRange(objects.Where(IsFensterBlock).Select(x => x.ObjectId));
-                        // todo: add türen
-                        var objectPolygons = objects.Where(x => x is Polyline).Select(x => x.ObjectId).ToArray();
+                        var objectPolygons = objects.Where(x => x is Polyline && string.Compare(_configurationHandler.ObjectPolygonLayer, ((Entity)x).Layer, StringComparison.OrdinalIgnoreCase) == 0).Select(x => x.ObjectId).ToArray();
                         if (objectPolygons.Length != 1)
                         {
                             throw new InvalidOperationException("Ungültige Anzahl von ObjektPolygonen: " +
                                                                 objectPolygons.Length);
                         }
                         else selectedObjectIds.ObjectPolygonId = objectPolygons[0];
+                        selectedObjectIds.FlaGrenzIds.AddRange(objects.Where(IsFlaGrenz).Select(x => x.ObjectId));
+                        selectedObjectIds.FensterIds.AddRange(objects.Where(IsFensterBlock).Select(x => x.ObjectId));
+                        selectedObjectIds.TuerIds.AddRange(objects.Where(IsTuerBlock).Select(x => x.ObjectId));
+                        selectedObjectIds.RaumBlockIds.AddRange(objects.Where(IsRaumBlock).Select(x => x.ObjectId));
+
                     }
                     finally
                     {
@@ -73,14 +79,37 @@ namespace Plan2Ext.AutoIdVergabeOeff
             return selectedObjectIds;
         }
 
+        private bool IsFlaGrenz(DBObject dbObject)
+        {
+            var poly = dbObject as Polyline;
+            if (poly == null) return false;
+            return string.Compare(_configurationHandler.FlaGrenzLayer, poly.Layer,
+                       StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        private bool IsRaumBlock(DBObject dbObject)
+        {
+            var blockReference = dbObject as BlockReference;
+            if (blockReference == null) return false;
+            return string.Compare(_configurationHandler.RaumBlockName, blockReference.Name,
+                       StringComparison.OrdinalIgnoreCase) == 0;
+
+        }
         private bool IsFensterBlock(DBObject dbObject)
         {
             var blockReference = dbObject as BlockReference;
             if (blockReference == null) return false;
             var fenBlockName = _configurationHandler.ConfiguredFensterBlockNames.FirstOrDefault(x =>
                 string.Compare(x, blockReference.Name, StringComparison.OrdinalIgnoreCase) == 0);
-            if (fenBlockName == null) return false;
-            return true;
+            return fenBlockName != null;
+        }
+        private bool IsTuerBlock(DBObject dbObject)
+        {
+            var blockReference = dbObject as BlockReference;
+            if (blockReference == null) return false;
+            var tuerBlockName = _configurationHandler.ConfiguredTuerBlockNames.FirstOrDefault(x =>
+                string.Compare(x, blockReference.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            return tuerBlockName != null;
         }
     }
 }

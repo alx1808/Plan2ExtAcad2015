@@ -57,6 +57,56 @@ namespace Plan2Ext.AutoIdVergabeOeff
             return fensterInfos;
         }
 
+        public IEnumerable<ITuerInfo> GetTuerInfosInMs(IEnumerable<ObjectId> raumBlockIds, IEnumerable<ObjectId> flaGrenzIds, IEnumerable<ObjectId> tuerIds, ObjectId objectPolygonId)
+        {
+            Log.Info("GetTuerInfosInMs");
+
+            // ReSharper disable once CollectionNeverQueried.Local
+            var raumInfos = new List<RaumInfo>();
+
+            var raumBlockIdsList = new List<ObjectId>();
+            raumBlockIdsList.AddRange(raumBlockIds);
+
+
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            ITuerInfo[] tuerInfos;
+            using (var transaction = doc.TransactionManager.StartTransaction())
+            {
+                tuerInfos = GetTuerInfos(tuerIds, transaction).ToArray();
+                var restlicheTuerInfos = new List<ITuerInfo>();
+                restlicheTuerInfos.AddRange(tuerInfos);
+                foreach (var flaGrenzId in flaGrenzIds)
+                {
+                    raumInfos.Add(new RaumInfo(flaGrenzId, raumBlockIdsList, restlicheTuerInfos));
+                }
+
+                if (restlicheTuerInfos.Count > 0)
+                {
+                    foreach (var raumInfo in raumInfos)
+                    {
+                        raumInfo.FindTuerInfosViaInnenAtt(restlicheTuerInfos);
+                    }
+                }
+
+                transaction.Commit();
+            }
+
+            return tuerInfos;
+        }
+
+        private IEnumerable<ITuerInfo> GetTuerInfos(IEnumerable<ObjectId> tuerIds, Transaction transaction)
+        {
+            var tuerinfos = new List<ITuerInfo>();
+            var tuerObjs = tuerIds.Select(x => (BlockReference)transaction.GetObject(x, OpenMode.ForRead)).ToArray();
+            foreach (var tuerObj in tuerObjs)
+            {
+                var tuerAttPositions = new TuerAttPositions(tuerObj, transaction, _configurationHandler);
+                tuerinfos.Add(new TuerInfo(){AttAussenInsertPoint = tuerAttPositions.Aussen, AttInnenInsertPoint  =  tuerAttPositions.Innen, Oid = tuerObj.ObjectId, Handle = tuerObj.Handle.ToString()});
+            }
+
+            return tuerinfos;
+        }
+
         private IFensterAttPositions CreateFensterAttPositions(BlockReference x, Transaction transaction)
         {
             return new FensterAttPositions(x, transaction, _configurationHandler);

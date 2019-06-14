@@ -10,6 +10,7 @@ using Exception = System.Exception;
 
 namespace Plan2Ext.AutoIdVergabeOeff
 {
+    // ReSharper disable once UnusedMember.Global
     public class Commands
     {
         #region log4net Initialization
@@ -37,6 +38,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     var entitySearcher = new EntitySearcher(configurationHandler);
                     var fensterInfos = entitySearcher.GetFensterInfosInMs(selectedObjectsIds.FensterIds,
                         selectedObjectsIds.ObjectPolygonId);
+                    var tuerInfos = entitySearcher.GetTuerInfosInMs(selectedObjectsIds.RaumBlockIds,selectedObjectsIds.FlaGrenzIds, selectedObjectsIds.TuerIds, selectedObjectsIds.ObjectPolygonId);
                     var fenSorter = new FenSorter(configurationHandler, _Palette);
                     fenSorter.Sort(fensterInfos, selectedObjectsIds.ObjectPolygonId);
                 }

@@ -8,15 +8,15 @@ using Autodesk.AutoCAD.Geometry;
 
 namespace Plan2Ext.AutoIdVergabeOeff
 {
-    internal interface IFensterAttPositions
+    internal interface ITuerAttPositions
     {
         Point3d Innen { get; }
         Point3d Aussen { get; }
     }
 
-    internal class FensterAttPositions : IFensterAttPositions
+    internal class TuerAttPositions : ITuerAttPositions
     {
-        public FensterAttPositions(BlockReference blockReference, Transaction transaction,
+        public TuerAttPositions(BlockReference blockReference, Transaction transaction,
             IConfigurationHandler configurationHandler)
         {
             var attributes = Globs.GetAttributEntities(blockReference, transaction);
@@ -24,15 +24,15 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 string.Compare(x.Tag, configurationHandler.InnenAttName, StringComparison.OrdinalIgnoreCase) == 0);
             if (innen == null)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Fenster mit Handle {0} hat kein Attribut {1}!", blockReference.Handle.ToString(), configurationHandler.InnenAttName));
+                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Tuer mit Handle {0} hat kein Attribut {1}!", blockReference.Handle.ToString(), configurationHandler.InnenAttName));
             }
             var aussen = attributes.FirstOrDefault(x =>
                 string.Compare(x.Tag, configurationHandler.AussenAttName, StringComparison.OrdinalIgnoreCase) == 0);
-            if (aussen== null)
+            if (aussen == null)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Fenster mit Handle {0} hat kein Attribut {1}!", blockReference.Handle.ToString(), configurationHandler.AussenAttName));
+                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Tuer mit Handle {0} hat kein Attribut {1}!", blockReference.Handle.ToString(), configurationHandler.AussenAttName));
             }
-            
+
             Innen = GetCenterPosition(innen);
             Aussen = GetCenterPosition(aussen);
         }

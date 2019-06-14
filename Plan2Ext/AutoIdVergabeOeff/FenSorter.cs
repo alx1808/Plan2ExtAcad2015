@@ -16,7 +16,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
 {
     class FenSorter
     {
-        private readonly ConfigurationHandler _configurationHandler;
+        private readonly IConfigurationHandler _configurationHandler;
         private readonly IPalette _palette;
         private int _currentNr;
 
