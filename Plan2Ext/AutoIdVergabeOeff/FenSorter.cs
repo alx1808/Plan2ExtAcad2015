@@ -14,7 +14,7 @@ using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace Plan2Ext.AutoIdVergabeOeff
 {
-    class FenSorter
+    class FenSorter : Sorter
     {
         private readonly IConfigurationHandler _configurationHandler;
         private readonly IPalette _palette;
@@ -42,23 +42,6 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
 
             _palette.FenNr = _currentNr + 1;
-        }
-
-        private const string TEMP_UCS_NAME = "plan2autoidoeffnungen_temp_ucs";
-
-        private void UcsRestore()
-        {
-            var ed = Application.DocumentManager.MdiActiveDocument.Editor;
-            ed.Command("_.UCS", "_R", TEMP_UCS_NAME);
-            ed.Command("_.UCS", "_D", TEMP_UCS_NAME);
-        }
-
-        private void UcsToAnsicht()
-        {
-            var ed = Application.DocumentManager.MdiActiveDocument.Editor;
-            ed.Command("_.UCS", "_D", TEMP_UCS_NAME);
-            ed.Command("_.UCS", "_S", TEMP_UCS_NAME);
-            ed.Command("_.UCS", "_V");
         }
 
         private void SortFromLeftToRight(IFensterInfo[] fensterInfos)
@@ -113,11 +96,11 @@ namespace Plan2Ext.AutoIdVergabeOeff
             {
                 var blockReference = (BlockReference) transaction.GetObject(fensterInfo.Oid, OpenMode.ForRead);
                 var nrAtt = Globs.GetAttributEntities(blockReference, transaction).FirstOrDefault(x =>
-                    string.Compare(x.Tag, _configurationHandler.NrAttName, StringComparison.OrdinalIgnoreCase) == 0);
+                    string.Compare(x.Tag, _configurationHandler.FenNrAttName, StringComparison.OrdinalIgnoreCase) == 0);
                 if (nrAtt == null)
                     throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
                         "Fensterblock mit Handle {0} hat kein Attribut {1}!", blockReference.Handle.ToString(),
-                        _configurationHandler.NrAttName));
+                        _configurationHandler.FenNrAttName));
                 nrAtt.UpgradeOpen();
                 nrAtt.TextString = _palette.FenPrefix + _currentNr.ToString().PadLeft(3, '0');
                 nrAtt.DowngradeOpen();

@@ -14,9 +14,11 @@ namespace Plan2Ext.AutoIdVergabeOeff
         string ObjectPolygonLayer { get; }
         string InnenAttName { get; }
         string AussenAttName { get; }
-        string NrAttName { get; }
+        string FenNrAttName { get; }
+        string TuerNrAttName { get; }
         string RaumBlockName { get; }
         string FlaGrenzLayer { get; }
+        string RaumIdAttName { get;  }
     }
 
     internal class ConfigurationHandler : IConfigurationHandler
@@ -44,11 +46,16 @@ namespace Plan2Ext.AutoIdVergabeOeff
         // todo:
         private const string OBJECT_POLYGON_LAYER_VARIABLE = "alx_V:ino_autoidoeff_ObjectPolygonLayer";
         // todo:
-        private const string NUMBER_ATT_NAME_VARIABLE = "alx_V:ino_autoidoeff_AttNr";
+        private const string FEN_NUMBER_ATT_NAME_VARIABLE = "alx_V:ino_autoidoeff_FenNrAtt";
+        // todo:
+        private const string TUER_NUMBER_ATT_NAME_VARIABLE = "alx_V:ino_autoidoeff_TuerNrAtt";
+        // todo:
+        private const string RAUMBLOCK_ID_ATT_NAME_VARIABLE = "alx_V:ino_rbIdAttName";
         private const string FEN_INNEN_ATT_NAME_VARIABLE = "alx_V:ino_zrids_AttInnen";
         private const string FEN_AUSSEN_ATT_NAME_VARIABLE = "alx_V:ino_zrids_AttAussen";
         private const string FLA_GRENZ_LAYER_ATT_NAME_VARIABLE = "alx_V:ino_fglayer";
         private const string RAUMBLOCK_NAME_ATT_NAME_VARIABLE = "alx_V:ino_rbName";
+        
         public ConfigurationHandler()
         {
             ReadConfiguration();
@@ -67,9 +74,11 @@ namespace Plan2Ext.AutoIdVergabeOeff
         public string ObjectPolygonLayer { get; private set; }
         public string InnenAttName { get; private set; }
         public string AussenAttName { get; private set; }
-        public string NrAttName { get; private set; }
+        public string FenNrAttName { get; private set; }
+        public string TuerNrAttName { get; private set; }
         public string FlaGrenzLayer { get; private set; }
         public string RaumBlockName { get; private set; }
+        public string RaumIdAttName { get; private set; }
         private void ReadConfiguration()
         {
             foreach (var blockNamesVariable in _configuredFensterBlockNamesVariables)
@@ -96,11 +105,27 @@ namespace Plan2Ext.AutoIdVergabeOeff
             GetObjectPolygonLayerFromConfig();
             GetFenInnenAttFromConfig();
             GetFenAussenAttFromConfig();
-            GetNrAttFromConfig();
+            GetFenNrAttFromConfig();
+            GetTuerNrAttFromConfig();
             GetFlaGrenzLayerFromConfig();
             GetRaumBlockNameFromConfig();
+            GetRaumIdAttNameFromConfig();
         }
 
+        private void GetRaumIdAttNameFromConfig()
+        {
+            string value;
+            if (GetFromConfig(out value, RAUMBLOCK_ID_ATT_NAME_VARIABLE))
+            {
+                RaumIdAttName = value;
+            }
+            else
+            {
+                Log.Warn(string.Format(CultureInfo.CurrentCulture, "Variable {0} ist nicht konfiguriert!",
+                    RAUMBLOCK_ID_ATT_NAME_VARIABLE));
+                RaumIdAttName = "RAUM_ID";
+            }
+        }
         private void GetRaumBlockNameFromConfig()
         {
             string value;
@@ -144,19 +169,33 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 ObjectPolygonLayer = "B_HB_RA_IDGE_G";
             }
         }
-
-        private void GetNrAttFromConfig()
+        private void GetTuerNrAttFromConfig()
         {
             string value;
-            if (GetFromConfig(out value, NUMBER_ATT_NAME_VARIABLE))
+            if (GetFromConfig(out value, TUER_NUMBER_ATT_NAME_VARIABLE))
             {
-                NrAttName = value;
+                TuerNrAttName = value;
             }
             else
             {
                 Log.Warn(string.Format(CultureInfo.CurrentCulture, "Variable {0} ist nicht konfiguriert!",
-                    NUMBER_ATT_NAME_VARIABLE));
-                NrAttName = "FENSTER_ID";
+                    TUER_NUMBER_ATT_NAME_VARIABLE));
+                TuerNrAttName = "TUER_ID";
+            }
+        }
+
+        private void GetFenNrAttFromConfig()
+        {
+            string value;
+            if (GetFromConfig(out value, FEN_NUMBER_ATT_NAME_VARIABLE))
+            {
+                FenNrAttName = value;
+            }
+            else
+            {
+                Log.Warn(string.Format(CultureInfo.CurrentCulture, "Variable {0} ist nicht konfiguriert!",
+                    FEN_NUMBER_ATT_NAME_VARIABLE));
+                FenNrAttName = "FENSTER_ID";
             }
         }
         private void GetFenInnenAttFromConfig()

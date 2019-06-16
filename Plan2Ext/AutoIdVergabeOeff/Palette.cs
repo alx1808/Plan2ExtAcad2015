@@ -81,7 +81,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
         public string TuerPrefix
         {
-            get { return _UserControl.txtTuerNummer.Text; }
+            get { return _UserControl.txtTuerPrefix.Text; }
         }
 
         public bool Show()
