@@ -11,6 +11,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
         ObjectId RaumblockId { get; set; }
         string Handle { get; set; }
         Point3d AttInnenInsertPoint { get; set; }
+        Point3d InsertPoint { get; set; }
     }
 
     internal class TuerInfo : ITuerInfo
@@ -18,6 +19,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
         public ObjectId Oid { get; set; }
         public Point3d AttAussenInsertPoint { get; set; }
         public Point3d AttInnenInsertPoint { get; set; }
+        public Point3d InsertPoint { get; set; }
         public ObjectId RaumblockId { get; set; }
         public string Handle { get; set; }
     }

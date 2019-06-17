@@ -101,7 +101,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             foreach (var tuerObj in tuerObjs)
             {
                 var tuerAttPositions = new TuerAttPositions(tuerObj, transaction, _configurationHandler);
-                tuerinfos.Add(new TuerInfo(){AttAussenInsertPoint = tuerAttPositions.Aussen, AttInnenInsertPoint  =  tuerAttPositions.Innen, Oid = tuerObj.ObjectId, Handle = tuerObj.Handle.ToString()});
+                tuerinfos.Add(new TuerInfo(){InsertPoint = tuerObj.Position, AttAussenInsertPoint = tuerAttPositions.Aussen, AttInnenInsertPoint  =  tuerAttPositions.Innen, Oid = tuerObj.ObjectId, Handle = tuerObj.Handle.ToString()});
             }
 
             return tuerinfos;

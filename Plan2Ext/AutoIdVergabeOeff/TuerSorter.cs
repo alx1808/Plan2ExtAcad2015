@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autodesk.AutoCAD.ApplicationServices.Core;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext.AutoIdVergabeOeff
 {
@@ -30,8 +31,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             try
             {
                 UcsToAnsicht();
-                // todo:
-                //SortFromLeftToRight(arr);
+                SortFromLeftToRight(arr);
             }
             finally
             {
@@ -39,9 +39,26 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
 
             _palette.TuerNr = _currentNr + 1;
-
-
         }
+
+        private void SortFromLeftToRight(ITuerInfo[] tuerInfos)
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var tuerInfosWithoutRaumblock = tuerInfos.Where(x => x.RaumblockId.IsNull).ToArray();
+            NrFromLeftToRight(doc, tuerInfosWithoutRaumblock);
+        }
+
+        private void NrFromLeftToRight(Document doc, ITuerInfo[] tuerInfos)
+        {
+            using (var transaction = doc.TransactionManager.StartTransaction())
+            {
+                var ordered = tuerInfos.OrderBy(x => Globs.TransWcsUcs(x.InsertPoint).X).ToArray();
+                Renumber(ordered, transaction);
+
+                transaction.Commit();
+            }
+        }
+
 
         private void SortTuerenInRaum(ITuerInfo[] tuerInfos)
         {
@@ -50,9 +67,6 @@ namespace Plan2Ext.AutoIdVergabeOeff
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
 
-
-                //var bounds = curve.Bounds;
-                //var startPoint = new Point3d(bounds.Value.MinPoint.X, bounds.Value.MaxPoint.Y, 0.0);
                 var ordered = raumTuerInfos.OrderBy(x => GetCompareValueFromRaumblock(x.RaumblockId,transaction)).ToArray();
                 Renumber(ordered, transaction);
 
@@ -60,7 +74,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
         }
 
-        private string GetCompareValueFromRaumblock(ObjectId argRaumblockId, Transaction transaction)
+        private object GetCompareValueFromRaumblock(ObjectId argRaumblockId, Transaction transaction)
         {
             var raumblockRef = (BlockReference) transaction.GetObject(argRaumblockId, OpenMode.ForRead);
             var nrAtt = Globs.GetAttributEntities(raumblockRef, transaction).FirstOrDefault(x =>
@@ -70,7 +84,15 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     "Raumblock mit Handle {0} hat kein Attribut {1}!", raumblockRef.Handle.ToString(),
                     _configurationHandler.RaumIdAttName));
 
-            return nrAtt.TextString;
+            var arr = nrAtt.TextString.Split(new[] {'-'});
+            var val = arr[arr.Length - 1];
+            int i;
+            if (int.TryParse(val, out i))
+            {
+                return i;
+            }
+
+            return 0; // nrAtt.TextString;
         }
 
         private void Renumber(ITuerInfo[] ordered, Transaction transaction)
