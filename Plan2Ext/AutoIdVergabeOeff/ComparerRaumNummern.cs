@@ -26,7 +26,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 var valY = arrY[i];
                 int intValX, intValY;
 
-                var comp = 0;
+                int comp;
                 if (int.TryParse(valX, out intValX) && int.TryParse(valY, out intValY))
                 {
                     comp = intValX.CompareTo(intValY);
