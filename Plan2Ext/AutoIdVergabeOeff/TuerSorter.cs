@@ -15,12 +15,14 @@ namespace Plan2Ext.AutoIdVergabeOeff
     {
         private readonly IConfigurationHandler _configurationHandler;
         private readonly IPalette _palette;
+        private readonly IComparer<string> _raumNummernComparer;
         private int _currentNr;
 
-        public TuerSorter(ConfigurationHandler configurationHandler, IPalette palette)
+        public TuerSorter(ConfigurationHandler configurationHandler, IPalette palette, IComparer<string> raumNummernComparer)
         {
             _configurationHandler = configurationHandler;
             _palette = palette;
+            _raumNummernComparer = raumNummernComparer;
         }
 
         public void Sort(IEnumerable<ITuerInfo> tuerInfos)
@@ -60,39 +62,36 @@ namespace Plan2Ext.AutoIdVergabeOeff
         }
 
 
+        private class TuerInfoAndCompareValue
+        {
+            public ITuerInfo TuerInfo { get; set; }
+            public string CompareValue { get; set; }
+        }
+
         private void SortTuerenInRaum(ITuerInfo[] tuerInfos)
         {
             var raumTuerInfos = tuerInfos.Where(x => !x.RaumblockId.IsNull).ToArray();
             var doc = Application.DocumentManager.MdiActiveDocument;
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
-
-                var ordered = raumTuerInfos.OrderBy(x => GetCompareValueFromRaumblock(x.RaumblockId,transaction)).ToArray();
+                if (transaction == null) throw new InvalidOperationException("Transcation is null!");
+                var tinfoAndCompareValues = raumTuerInfos.Select(x => new TuerInfoAndCompareValue(){TuerInfo = x, CompareValue = GetCompareValueFromRaumblock(x.RaumblockId, transaction)}).ToArray();
+                var ordered = tinfoAndCompareValues.OrderBy(x => x.CompareValue, _raumNummernComparer).Select(x => x.TuerInfo).ToArray();
                 Renumber(ordered, transaction);
-
                 transaction.Commit();
             }
         }
 
-        private object GetCompareValueFromRaumblock(ObjectId argRaumblockId, Transaction transaction)
+        private string GetCompareValueFromRaumblock(ObjectId argRaumblockId, Transaction transaction)
         {
-            var raumblockRef = (BlockReference) transaction.GetObject(argRaumblockId, OpenMode.ForRead);
+            var raumblockRef = (BlockReference)transaction.GetObject(argRaumblockId, OpenMode.ForRead);
             var nrAtt = Globs.GetAttributEntities(raumblockRef, transaction).FirstOrDefault(x =>
                 string.Compare(x.Tag, _configurationHandler.RaumIdAttName, StringComparison.OrdinalIgnoreCase) == 0);
             if (nrAtt == null)
                 throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
                     "Raumblock mit Handle {0} hat kein Attribut {1}!", raumblockRef.Handle.ToString(),
                     _configurationHandler.RaumIdAttName));
-
-            var arr = nrAtt.TextString.Split(new[] {'-'});
-            var val = arr[arr.Length - 1];
-            int i;
-            if (int.TryParse(val, out i))
-            {
-                return i;
-            }
-
-            return 0; // nrAtt.TextString;
+            return nrAtt.TextString;
         }
 
         private void Renumber(ITuerInfo[] ordered, Transaction transaction)

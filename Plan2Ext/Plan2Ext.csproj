@@ -85,6 +85,7 @@
     <Compile Include="AttTrans\Engine.cs" />
     <Compile Include="Aufteilung.cs" />
     <Compile Include="AutoIdVergabeOeff\Commands.cs" />
+    <Compile Include="AutoIdVergabeOeff\ComparerRaumNummern.cs" />
     <Compile Include="AutoIdVergabeOeff\ConfigurationHandler.cs" />
     <Compile Include="AutoIdVergabeOeff\EntitySearcher.cs" />
     <Compile Include="AutoIdVergabeOeff\EntitySelector.cs" />

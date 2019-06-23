@@ -43,13 +43,9 @@ namespace Plan2Ext.AutoIdVergabeOeff
             "alx_V:ino_tuerBlock_Links",
             "alx_V:ino_tuerBlock_Rechts",
         };
-        // todo:
         private const string OBJECT_POLYGON_LAYER_VARIABLE = "alx_V:ino_autoidoeff_ObjectPolygonLayer";
-        // todo:
         private const string FEN_NUMBER_ATT_NAME_VARIABLE = "alx_V:ino_autoidoeff_FenNrAtt";
-        // todo:
         private const string TUER_NUMBER_ATT_NAME_VARIABLE = "alx_V:ino_autoidoeff_TuerNrAtt";
-        // todo:
         private const string RAUMBLOCK_ID_ATT_NAME_VARIABLE = "alx_V:ino_rbIdAttName";
         private const string FEN_INNEN_ATT_NAME_VARIABLE = "alx_V:ino_zrids_AttInnen";
         private const string FEN_AUSSEN_ATT_NAME_VARIABLE = "alx_V:ino_zrids_AttAussen";

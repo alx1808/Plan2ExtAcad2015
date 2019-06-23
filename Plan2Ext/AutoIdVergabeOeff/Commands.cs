@@ -41,7 +41,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     var tuerInfos = entitySearcher.GetTuerInfosInMs(selectedObjectsIds.RaumBlockIds,selectedObjectsIds.FlaGrenzIds, selectedObjectsIds.TuerIds, selectedObjectsIds.ObjectPolygonId);
                     var fenSorter = new FenSorter(configurationHandler, _Palette);
                     fenSorter.Sort(fensterInfos, selectedObjectsIds.ObjectPolygonId);
-                    var tuerSorter = new TuerSorter(configurationHandler, _Palette);
+                    var tuerSorter = new TuerSorter(configurationHandler, _Palette, new ComparerRaumNummern("-"));
                     tuerSorter.Sort(tuerInfos);
                 }
             }
