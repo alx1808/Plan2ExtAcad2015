@@ -36,13 +36,23 @@ namespace Plan2Ext.AutoIdVergabeOeff
                     var selectedObjectsIds = entitySelector.SelectObjectsIds();
                     if (selectedObjectsIds == null) return;
                     var entitySearcher = new EntitySearcher(configurationHandler);
-                    var fensterInfos = entitySearcher.GetFensterInfosInMs(selectedObjectsIds.FensterIds,
-                        selectedObjectsIds.ObjectPolygonId);
-                    var tuerInfos = entitySearcher.GetTuerInfosInMs(selectedObjectsIds.RaumBlockIds,selectedObjectsIds.FlaGrenzIds, selectedObjectsIds.TuerIds, selectedObjectsIds.ObjectPolygonId);
-                    var fenSorter = new FenSorter(configurationHandler, _Palette);
-                    fenSorter.Sort(fensterInfos, selectedObjectsIds.ObjectPolygonId);
-                    var tuerSorter = new TuerSorter(configurationHandler, _Palette, new ComparerRaumNummern("-"));
-                    tuerSorter.Sort(tuerInfos);
+
+                    if (_Palette.KindOfStart == KindOfStartEnum.Alle || _Palette.KindOfStart == KindOfStartEnum.Fenster)
+                    {
+                        var fensterInfos = entitySearcher.GetFensterInfosInMs(selectedObjectsIds.FensterIds,
+                            selectedObjectsIds.ObjectPolygonId);
+                        var fenSorter = new FenSorter(configurationHandler, _Palette);
+                        fenSorter.Sort(fensterInfos, selectedObjectsIds.ObjectPolygonId);
+                    }
+
+                    if (_Palette.KindOfStart == KindOfStartEnum.Alle || _Palette.KindOfStart == KindOfStartEnum.Tueren)
+                    {
+                        var tuerInfos = entitySearcher.GetTuerInfosInMs(selectedObjectsIds.RaumBlockIds,
+                            selectedObjectsIds.FlaGrenzIds, selectedObjectsIds.TuerIds,
+                            selectedObjectsIds.ObjectPolygonId);
+                        var tuerSorter = new TuerSorter(configurationHandler, _Palette, new ComparerRaumNummern("-"));
+                        tuerSorter.Sort(tuerInfos);
+                    }
                 }
             }
             catch (OperationCanceledException)

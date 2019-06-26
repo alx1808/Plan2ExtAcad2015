@@ -41,7 +41,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 UcsRestore();
             }
 
-            _palette.FenNr = _currentNr + 1;
+            _palette.FenNr = _currentNr;
         }
 
         private void SortFromLeftToRight(IFensterInfo[] fensterInfos)

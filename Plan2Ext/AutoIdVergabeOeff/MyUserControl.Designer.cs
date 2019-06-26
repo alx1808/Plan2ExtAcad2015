@@ -39,6 +39,8 @@
             this.txtTuerNummer = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.txtTuerPrefix = new System.Windows.Forms.TextBox();
+            this.btnStartTueren = new System.Windows.Forms.Button();
+            this.btnStartAlle = new System.Windows.Forms.Button();
             this.grpFenster.SuspendLayout();
             this.grpTuer.SuspendLayout();
             this.SuspendLayout();
@@ -53,7 +55,7 @@
             this.grpFenster.Controls.Add(this.txtFenPrefix);
             this.grpFenster.Location = new System.Drawing.Point(3, 3);
             this.grpFenster.Name = "grpFenster";
-            this.grpFenster.Size = new System.Drawing.Size(209, 81);
+            this.grpFenster.Size = new System.Drawing.Size(251, 81);
             this.grpFenster.TabIndex = 0;
             this.grpFenster.TabStop = false;
             this.grpFenster.Text = "Fenster";
@@ -73,7 +75,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFenNummer.Location = new System.Drawing.Point(73, 45);
             this.txtFenNummer.Name = "txtFenNummer";
-            this.txtFenNummer.Size = new System.Drawing.Size(130, 20);
+            this.txtFenNummer.Size = new System.Drawing.Size(172, 20);
             this.txtFenNummer.TabIndex = 3;
             this.txtFenNummer.Text = "1";
             this.txtFenNummer.TextChanged += new System.EventHandler(this.txtFenNummer_TextChanged);
@@ -93,17 +95,17 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFenPrefix.Location = new System.Drawing.Point(73, 19);
             this.txtFenPrefix.Name = "txtFenPrefix";
-            this.txtFenPrefix.Size = new System.Drawing.Size(130, 20);
+            this.txtFenPrefix.Size = new System.Drawing.Size(172, 20);
             this.txtFenPrefix.TabIndex = 1;
             // 
             // btnStart
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.Location = new System.Drawing.Point(137, 177);
+            this.btnStart.Location = new System.Drawing.Point(11, 177);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 1;
-            this.btnStart.Text = "Start";
+            this.btnStart.Text = "Start Fenster";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
@@ -117,7 +119,7 @@
             this.grpTuer.Controls.Add(this.txtTuerPrefix);
             this.grpTuer.Location = new System.Drawing.Point(3, 90);
             this.grpTuer.Name = "grpTuer";
-            this.grpTuer.Size = new System.Drawing.Size(209, 81);
+            this.grpTuer.Size = new System.Drawing.Size(251, 81);
             this.grpTuer.TabIndex = 4;
             this.grpTuer.TabStop = false;
             this.grpTuer.Text = "Türen";
@@ -137,7 +139,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtTuerNummer.Location = new System.Drawing.Point(73, 45);
             this.txtTuerNummer.Name = "txtTuerNummer";
-            this.txtTuerNummer.Size = new System.Drawing.Size(130, 20);
+            this.txtTuerNummer.Size = new System.Drawing.Size(172, 20);
             this.txtTuerNummer.TabIndex = 3;
             this.txtTuerNummer.Text = "1";
             // 
@@ -156,18 +158,43 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtTuerPrefix.Location = new System.Drawing.Point(73, 19);
             this.txtTuerPrefix.Name = "txtTuerPrefix";
-            this.txtTuerPrefix.Size = new System.Drawing.Size(130, 20);
+            this.txtTuerPrefix.Size = new System.Drawing.Size(172, 20);
             this.txtTuerPrefix.TabIndex = 1;
+            // 
+            // btnStartTueren
+            // 
+            this.btnStartTueren.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStartTueren.Location = new System.Drawing.Point(92, 177);
+            this.btnStartTueren.Name = "btnStartTueren";
+            this.btnStartTueren.Size = new System.Drawing.Size(75, 23);
+            this.btnStartTueren.TabIndex = 5;
+            this.btnStartTueren.Text = "Start Türen";
+            this.btnStartTueren.UseVisualStyleBackColor = true;
+            this.btnStartTueren.Click += new System.EventHandler(this.btnStartTueren_Click);
+            // 
+            // btnStartAlle
+            // 
+            this.btnStartAlle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStartAlle.Location = new System.Drawing.Point(173, 177);
+            this.btnStartAlle.Name = "btnStartAlle";
+            this.btnStartAlle.Size = new System.Drawing.Size(75, 23);
+            this.btnStartAlle.TabIndex = 6;
+            this.btnStartAlle.Text = "Start alle";
+            this.btnStartAlle.UseVisualStyleBackColor = true;
+            this.btnStartAlle.Click += new System.EventHandler(this.btnStartAlle_Click);
             // 
             // MyUserControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnStartAlle);
+            this.Controls.Add(this.btnStartTueren);
             this.Controls.Add(this.grpTuer);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.grpFenster);
+            this.MinimumSize = new System.Drawing.Size(248, 306);
             this.Name = "MyUserControl";
-            this.Size = new System.Drawing.Size(215, 449);
+            this.Size = new System.Drawing.Size(257, 342);
             this.grpFenster.ResumeLayout(false);
             this.grpFenster.PerformLayout();
             this.grpTuer.ResumeLayout(false);
@@ -189,5 +216,7 @@
         internal System.Windows.Forms.TextBox txtTuerNummer;
         private System.Windows.Forms.Label label4;
         internal System.Windows.Forms.TextBox txtTuerPrefix;
+        private System.Windows.Forms.Button btnStartTueren;
+        private System.Windows.Forms.Button btnStartAlle;
     }
 }

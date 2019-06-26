@@ -40,7 +40,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 UcsRestore();
             }
 
-            _palette.TuerNr = _currentNr + 1;
+            _palette.TuerNr = _currentNr;
         }
 
         private void SortFromLeftToRight(ITuerInfo[] tuerInfos)
