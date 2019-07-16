@@ -314,7 +314,7 @@ namespace Plan2Ext.CalcArea
 
         private void HandleControls()
         {
-            if (string.IsNullOrEmpty(txtBlockname.Text) || string.IsNullOrEmpty(txtAttribute.Text) || string.IsNullOrEmpty(txtFG.Text) || string.IsNullOrEmpty(txtAG.Text))
+            if (string.IsNullOrEmpty(txtBlockname.Text) || string.IsNullOrEmpty(txtAttribute.Text) || string.IsNullOrEmpty(txtFG.Text))
                 btnCalcArea.Enabled = false;
             else btnCalcArea.Enabled = true;
         }
