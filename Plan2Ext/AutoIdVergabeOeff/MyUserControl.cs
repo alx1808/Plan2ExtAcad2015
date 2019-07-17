@@ -3,11 +3,16 @@ using System.Globalization;
 using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 // ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Plan2Ext.AutoIdVergabeOeff
 {
     public partial class MyUserControl : UserControl
     {
+        #region log4net Initialization
+        // ReSharper disable once UnusedMember.Local
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(MyUserControl))));
+        #endregion
 
         public KindOfStartEnum KindOfStart { get; set; }
 
@@ -15,6 +20,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
         {
             InitializeComponent();
         }
+
 
         private void txtFenNummer_TextChanged(object sender, EventArgs e)
         {
@@ -78,7 +84,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
         }
 
-        public static void CancelCommand()
+        private static void CancelCommand()
         {
             Application.DocumentManager.MdiActiveDocument.SendStringToExecute("\x1B", true, false, true);
             Application.DocumentManager.MdiActiveDocument.SendStringToExecute("\x1B", true, false, true);

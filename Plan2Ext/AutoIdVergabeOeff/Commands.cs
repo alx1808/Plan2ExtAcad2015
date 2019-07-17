@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
@@ -18,6 +19,74 @@ namespace Plan2Ext.AutoIdVergabeOeff
         #endregion
 
         private static IPalette _Palette;
+        private class DocumentInfo
+        {
+            private int _fenNr = 1;
+            private int _tuerNr = 1;
+            public int FenNr
+            {
+                get { return _fenNr; }
+                set { _fenNr = value; }
+            }
+
+            public int TuerNr
+            {
+                get { return _tuerNr; }
+                set { _tuerNr = value; }
+            }
+        }
+
+        private static readonly Dictionary<Document, DocumentInfo> DocumentInfoPerDocument = new Dictionary<Document, DocumentInfo>();
+
+
+        static Commands()
+        {
+
+            InitDocEvents();
+        }
+
+        private static void InitDocEvents()
+        {
+            try
+            {
+                var dc = Application.DocumentManager;
+                dc.DocumentToBeDeactivated += dc_DocumentToBeDeactivated;
+                dc.DocumentActivated += dc_DocumentActivated;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+            }
+        }
+
+        private static void dc_DocumentToBeDeactivated(object sender, DocumentCollectionEventArgs e)
+        {
+            if (_Palette == null) return;
+            var documentInfo = GetDocumentInfo(e);
+            documentInfo.FenNr = _Palette.FenNr;
+            documentInfo.TuerNr = _Palette.TuerNr;
+        }
+
+        private static void dc_DocumentActivated(object sender, DocumentCollectionEventArgs e)
+        {
+            if (_Palette == null) return;
+            var documentInfo = GetDocumentInfo(e);
+            _Palette.FenNr = documentInfo.FenNr;
+            _Palette.TuerNr = documentInfo.TuerNr;
+        }
+
+        private static DocumentInfo GetDocumentInfo(DocumentCollectionEventArgs e)
+        {
+            DocumentInfo documentInfo;
+            if (!DocumentInfoPerDocument.TryGetValue(e.Document, out documentInfo))
+            {
+                documentInfo = new DocumentInfo();
+                DocumentInfoPerDocument.Add(e.Document, documentInfo);
+            }
+
+            return documentInfo;
+        }
+
 
         [CommandMethod("Plan2AutoIdVergabeOeffnungen")]
         // ReSharper disable once UnusedMember.Global

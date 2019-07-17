@@ -75,6 +75,11 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
             set
             {
+                //_UserControl.txtTuerNummer.Invoke((MethodInvoker)delegate
+                //{
+                //     Running on the UI thread
+                //    _UserControl.txtTuerNummer.Text = value.ToString();
+                //});
                 _UserControl.txtTuerNummer.Text = value.ToString();
             }
         }
