@@ -14,7 +14,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(MyUserControl))));
         #endregion
 
-        public KindOfStartEnum KindOfStart { get; set; }
+        public KindOfStartEnum KindOfStart { get; private set; }
 
         public MyUserControl()
         {
@@ -88,6 +88,28 @@ namespace Plan2Ext.AutoIdVergabeOeff
         {
             Application.DocumentManager.MdiActiveDocument.SendStringToExecute("\x1B", true, false, true);
             Application.DocumentManager.MdiActiveDocument.SendStringToExecute("\x1B", true, false, true);
+        }
+
+        private bool _eindeutigkeitShield;
+        private void btnEindeutigkeit_Click(object sender, EventArgs e)
+        {
+            if (_eindeutigkeitShield) return;
+            try
+            {
+                _eindeutigkeitShield = true;
+
+                Globs.CancelCommand();
+
+                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2AutoIdVergabeOeffnungenEindeutigkeit ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                Application.ShowAlertDialog(ex.Message);
+            }
+            finally
+            {
+                _eindeutigkeitShield = false;
+            }
         }
     }
 }

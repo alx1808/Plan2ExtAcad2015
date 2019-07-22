@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
 using log4net;
@@ -17,6 +18,9 @@ namespace Plan2Ext.AutoIdVergabeOeff
         #region log4net Initialization
         private static readonly ILog Log = LogManager.GetLogger(Convert.ToString((typeof(GenerateOeffBoundaries.Commands))));
         #endregion
+
+
+        private const string NOT_UNIQUE_ID_LAYER = "_IdNichtEindeutig";
 
         private static IPalette _Palette;
         private class DocumentInfo
@@ -101,10 +105,11 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 using (doc.LockDocument())
                 {
                     var configurationHandler = new ConfigurationHandler();
-                    var entitySelector = new EntitySelector(configurationHandler);
+                    var entityFilter = new EntityFilter(configurationHandler);
+                    var entitySelector = new EntitySelector(configurationHandler, entityFilter);
                     var selectedObjectsIds = entitySelector.SelectObjectsIds();
                     if (selectedObjectsIds == null) return;
-                    var entitySearcher = new EntitySearcher(configurationHandler);
+                    var entitySearcher = new EntitySearcher(configurationHandler, entityFilter);
 
                     if (_Palette.KindOfStart == KindOfStartEnum.Alle || _Palette.KindOfStart == KindOfStartEnum.Fenster)
                     {
@@ -136,6 +141,56 @@ namespace Plan2Ext.AutoIdVergabeOeff
                 Application.ShowAlertDialog(msg);
             }
         }
+
+        [CommandMethod("Plan2AutoIdVergabeOeffnungenEindeutigkeit")]
+        // ReSharper disable once UnusedMember.Global
+        public static void Plan2AutoIdVergabeOeffnungenEindeutigkeit()
+        {
+            try
+            {
+
+                if (!OpenRnPalette()) return;
+
+                Globs.DeleteFehlerLines(NOT_UNIQUE_ID_LAYER);
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                using (doc.LockDocument())
+                {
+                    var configurationHandler = new ConfigurationHandler();
+                    var entityFilter = new EntityFilter(configurationHandler);
+                    var entitySearcher = new EntitySearcher(configurationHandler, entityFilter);
+                    var uniqueCheckInfos = entitySearcher.GetUniqueCheckInfosInMs().ToArray();
+
+                    var uniqueCheckInfosFenster =
+                        uniqueCheckInfos.Where(x => x.Kind == UniqueCheckInfo.KindEnum.Fenster);
+                    var grouped = uniqueCheckInfosFenster.GroupBy(x => x.Id);
+                    foreach (var group in grouped)
+                    {
+                        if (group.Count() > 1)
+                        {
+                            Globs.InsertFehlerLines(group.Select(x => x.InsertPoint).ToList(), NOT_UNIQUE_ID_LAYER);
+                        }
+                    }
+                    
+                    var uniqueCheckInfosTuer =
+                        uniqueCheckInfos.Where(x => x.Kind == UniqueCheckInfo.KindEnum.Tuer);
+                    grouped = uniqueCheckInfosTuer.GroupBy(x => x.Id);
+                    foreach (var group in grouped)
+                    {
+                        if (group.Count() > 1)
+                        {
+                            Globs.InsertFehlerLines(group.Select(x => x.InsertPoint).ToList(), NOT_UNIQUE_ID_LAYER);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2AutoIdVergabeOeffnungenEindeutigkeit aufgetreten! {0}", ex.Message));
+            }
+        }
+
+
         private static bool OpenRnPalette()
         {
             if (_Palette == null)

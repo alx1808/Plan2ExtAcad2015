@@ -12,14 +12,62 @@ namespace Plan2Ext.AutoIdVergabeOeff
     internal class EntitySearcher
     {
         private readonly IConfigurationHandler _configurationHandler;
+        private readonly IEntityFilter _entityFilter;
 
         #region log4net Initialization
         private static readonly ILog Log = LogManager.GetLogger(Convert.ToString((typeof(GenerateOeffBoundaries.EntitySearcher))));
         #endregion
 
-        public EntitySearcher(IConfigurationHandler configurationHandler)
+        public EntitySearcher(IConfigurationHandler configurationHandler, IEntityFilter entityFilter)
         {
             _configurationHandler = configurationHandler;
+            _entityFilter = entityFilter;
+        }
+
+        public IEnumerable<IUniqueCheckInfo> GetUniqueCheckInfosInMs()
+        {
+            Log.Info("GetFensterInfosInMs");
+            var uniqueCheckInfos = new List<IUniqueCheckInfo>();
+
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            using (var transaction = doc.TransactionManager.StartTransaction())
+            {
+                var blockTable = (BlockTable) transaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead);
+                var blockTableRecord = (BlockTableRecord)transaction.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                foreach (var oid in blockTableRecord)
+                {
+                    var o = transaction.GetObject(oid, OpenMode.ForRead);
+                    if (_entityFilter.IsFensterBlock(o))
+                    {
+                        var blockReference = (BlockReference) o;
+                        uniqueCheckInfos.Add(new UniqueCheckInfo() { Id = GetFenNr(blockReference, transaction), InsertPoint = blockReference.Position, Kind = UniqueCheckInfo.KindEnum.Fenster});
+                    }
+                    else if (_entityFilter.IsTuerBlock(o))
+                    {
+                        var blockReference = (BlockReference)o;
+                        uniqueCheckInfos.Add(new UniqueCheckInfo() { Id = GetTuerNr(blockReference, transaction), InsertPoint = blockReference.Position, Kind = UniqueCheckInfo.KindEnum.Tuer});
+                    }
+                }
+
+                transaction.Commit();
+            }
+
+            return uniqueCheckInfos;
+        }
+
+        private string GetFenNr(BlockReference blockReference, Transaction transaction)
+        {
+            var nrAtt = Globs.GetAttributEntities(blockReference, transaction).FirstOrDefault(x =>
+                string.Compare(x.Tag, _configurationHandler.FenNrAttName, StringComparison.OrdinalIgnoreCase) == 0);
+            if (nrAtt == null) return string.Empty;
+            return nrAtt.TextString;
+        }
+        private string GetTuerNr(BlockReference blockReference, Transaction transaction)
+        {
+            var nrAtt = Globs.GetAttributEntities(blockReference, transaction).FirstOrDefault(x =>
+                string.Compare(x.Tag, _configurationHandler.TuerNrAttName, StringComparison.OrdinalIgnoreCase) == 0);
+            if (nrAtt == null) return string.Empty;
+            return nrAtt.TextString;
         }
 
         public IEnumerable<IFensterInfo> GetFensterInfosInMs(IEnumerable<ObjectId> fensterIds, ObjectId objectPolygonId)

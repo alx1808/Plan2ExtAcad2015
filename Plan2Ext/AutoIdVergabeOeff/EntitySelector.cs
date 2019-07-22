@@ -12,10 +12,12 @@ namespace Plan2Ext.AutoIdVergabeOeff
     internal class EntitySelector
     {
         private readonly IConfigurationHandler _configurationHandler;
+        private readonly IEntityFilter _entityFilter;
 
-        public EntitySelector(IConfigurationHandler configurationHandler)
+        public EntitySelector(IConfigurationHandler configurationHandler, IEntityFilter entityFilter)
         {
             _configurationHandler = configurationHandler;
+            _entityFilter = entityFilter;
         }
 
         public SelectedObjectIds SelectObjectsIds()
@@ -64,8 +66,8 @@ namespace Plan2Ext.AutoIdVergabeOeff
                         }
                         else selectedObjectIds.ObjectPolygonId = objectPolygons[0];
                         selectedObjectIds.FlaGrenzIds.AddRange(objects.Where(IsFlaGrenz).Select(x => x.ObjectId));
-                        selectedObjectIds.FensterIds.AddRange(objects.Where(IsFensterBlock).Select(x => x.ObjectId));
-                        selectedObjectIds.TuerIds.AddRange(objects.Where(IsTuerBlock).Select(x => x.ObjectId));
+                        selectedObjectIds.FensterIds.AddRange(objects.Where(_entityFilter.IsFensterBlock).Select(x => x.ObjectId));
+                        selectedObjectIds.TuerIds.AddRange(objects.Where(_entityFilter.IsTuerBlock).Select(x => x.ObjectId));
                         selectedObjectIds.RaumBlockIds.AddRange(objects.Where(IsRaumBlock).Select(x => x.ObjectId));
 
                     }
@@ -95,21 +97,21 @@ namespace Plan2Ext.AutoIdVergabeOeff
                        StringComparison.OrdinalIgnoreCase) == 0;
 
         }
-        private bool IsFensterBlock(DBObject dbObject)
-        {
-            var blockReference = dbObject as BlockReference;
-            if (blockReference == null) return false;
-            var fenBlockName = _configurationHandler.ConfiguredFensterBlockNames.FirstOrDefault(x =>
-                string.Compare(x, blockReference.Name, StringComparison.OrdinalIgnoreCase) == 0);
-            return fenBlockName != null;
-        }
-        private bool IsTuerBlock(DBObject dbObject)
-        {
-            var blockReference = dbObject as BlockReference;
-            if (blockReference == null) return false;
-            var tuerBlockName = _configurationHandler.ConfiguredTuerBlockNames.FirstOrDefault(x =>
-                string.Compare(x, blockReference.Name, StringComparison.OrdinalIgnoreCase) == 0);
-            return tuerBlockName != null;
-        }
+        //private bool IsFensterBlock(DBObject dbObject)
+        //{
+        //    var blockReference = dbObject as BlockReference;
+        //    if (blockReference == null) return false;
+        //    var fenBlockName = _configurationHandler.ConfiguredFensterBlockNames.FirstOrDefault(x =>
+        //        string.Compare(x, blockReference.Name, StringComparison.OrdinalIgnoreCase) == 0);
+        //    return fenBlockName != null;
+        //}
+        //private bool IsTuerBlock(DBObject dbObject)
+        //{
+        //    var blockReference = dbObject as BlockReference;
+        //    if (blockReference == null) return false;
+        //    var tuerBlockName = _configurationHandler.ConfiguredTuerBlockNames.FirstOrDefault(x =>
+        //        string.Compare(x, blockReference.Name, StringComparison.OrdinalIgnoreCase) == 0);
+        //    return tuerBlockName != null;
+        //}
     }
 }

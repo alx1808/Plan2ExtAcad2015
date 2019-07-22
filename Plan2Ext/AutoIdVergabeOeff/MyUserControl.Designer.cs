@@ -41,8 +41,11 @@
             this.txtTuerPrefix = new System.Windows.Forms.TextBox();
             this.btnStartTueren = new System.Windows.Forms.Button();
             this.btnStartAlle = new System.Windows.Forms.Button();
+            this.grpExamine = new System.Windows.Forms.GroupBox();
+            this.btnEindeutigkeit = new System.Windows.Forms.Button();
             this.grpFenster.SuspendLayout();
             this.grpTuer.SuspendLayout();
+            this.grpExamine.SuspendLayout();
             this.SuspendLayout();
             // 
             // grpFenster
@@ -183,10 +186,35 @@
             this.btnStartAlle.UseVisualStyleBackColor = true;
             this.btnStartAlle.Click += new System.EventHandler(this.btnStartAlle_Click);
             // 
+            // grpExamine
+            // 
+            this.grpExamine.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpExamine.Controls.Add(this.btnEindeutigkeit);
+            this.grpExamine.Location = new System.Drawing.Point(3, 211);
+            this.grpExamine.Name = "grpExamine";
+            this.grpExamine.Size = new System.Drawing.Size(251, 57);
+            this.grpExamine.TabIndex = 13;
+            this.grpExamine.TabStop = false;
+            this.grpExamine.Text = "Prüfen";
+            // 
+            // btnEindeutigkeit
+            // 
+            this.btnEindeutigkeit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnEindeutigkeit.Location = new System.Drawing.Point(6, 19);
+            this.btnEindeutigkeit.Name = "btnEindeutigkeit";
+            this.btnEindeutigkeit.Size = new System.Drawing.Size(239, 23);
+            this.btnEindeutigkeit.TabIndex = 0;
+            this.btnEindeutigkeit.Text = "Eindeutigkeit";
+            this.btnEindeutigkeit.UseVisualStyleBackColor = true;
+            this.btnEindeutigkeit.Click += new System.EventHandler(this.btnEindeutigkeit_Click);
+            // 
             // MyUserControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.grpExamine);
             this.Controls.Add(this.btnStartAlle);
             this.Controls.Add(this.btnStartTueren);
             this.Controls.Add(this.grpTuer);
@@ -199,6 +227,7 @@
             this.grpFenster.PerformLayout();
             this.grpTuer.ResumeLayout(false);
             this.grpTuer.PerformLayout();
+            this.grpExamine.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -218,5 +247,7 @@
         internal System.Windows.Forms.TextBox txtTuerPrefix;
         private System.Windows.Forms.Button btnStartTueren;
         private System.Windows.Forms.Button btnStartAlle;
+        private System.Windows.Forms.GroupBox grpExamine;
+        private System.Windows.Forms.Button btnEindeutigkeit;
     }
 }

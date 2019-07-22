@@ -87,6 +87,7 @@
     <Compile Include="AutoIdVergabeOeff\Commands.cs" />
     <Compile Include="AutoIdVergabeOeff\ComparerRaumNummern.cs" />
     <Compile Include="AutoIdVergabeOeff\ConfigurationHandler.cs" />
+    <Compile Include="AutoIdVergabeOeff\EntityFilter.cs" />
     <Compile Include="AutoIdVergabeOeff\EntitySearcher.cs" />
     <Compile Include="AutoIdVergabeOeff\EntitySelector.cs" />
     <Compile Include="AutoIdVergabeOeff\FenSorter.cs" />
@@ -106,6 +107,7 @@
     <Compile Include="AutoIdVergabeOeff\TuerAttPositions.cs" />
     <Compile Include="AutoIdVergabeOeff\TuerInfo.cs" />
     <Compile Include="AutoIdVergabeOeff\TuerSorter.cs" />
+    <Compile Include="AutoIdVergabeOeff\UniqueCheckInfo.cs" />
     <Compile Include="AutoIdVergabe\AutoIdControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
