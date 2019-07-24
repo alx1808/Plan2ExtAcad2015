@@ -70,7 +70,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             var ed = doc.Editor;
             var result = ed.GetPoint("Startpunkt:");
             if (result.Status != PromptStatus.OK) return;
-            var startPoint = result.Value;
+            var startPoint = Globs.TransUcsWcs(result.Value);
             var fensOnPoly = fensterInfos.Where(x => x.Kind == FensterInfo.KindEnum.OnPolygon).ToArray();
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
