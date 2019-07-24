@@ -58,7 +58,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
         public string FenPrefix
         {
-            get { return _UserControl.txtFenPrefix.Text; }
+            get { return _UserControl.txtPrefix.Text + "-F"; }
         }
 
         public int TuerNr
@@ -87,7 +87,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
         public string TuerPrefix
         {
-            get { return _UserControl.txtTuerPrefix.Text; }
+            get { return _UserControl.txtPrefix.Text + "-T"; }
         }
 
         public KindOfStartEnum KindOfStart
