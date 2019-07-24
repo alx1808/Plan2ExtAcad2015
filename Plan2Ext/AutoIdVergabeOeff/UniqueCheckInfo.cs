@@ -7,18 +7,11 @@ namespace Plan2Ext.AutoIdVergabeOeff
     {
         string Id { get; }
         Point3d InsertPoint { get; }
-        UniqueCheckInfo.KindEnum Kind { get; }
     }
 
     internal class UniqueCheckInfo : IUniqueCheckInfo
     {
         public string Id { get; set; }
         public Point3d InsertPoint { get; set; }
-        public KindEnum Kind { get; set; }
-        public enum KindEnum
-        {
-            Fenster,
-            Tuer,
-        }
     }
 }

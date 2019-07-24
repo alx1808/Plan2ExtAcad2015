@@ -43,6 +43,7 @@
             this.btnStartAlle = new System.Windows.Forms.Button();
             this.grpExamine = new System.Windows.Forms.GroupBox();
             this.btnEindeutigkeit = new System.Windows.Forms.Button();
+            this.btnEindeutigkeitTuer = new System.Windows.Forms.Button();
             this.grpFenster.SuspendLayout();
             this.grpTuer.SuspendLayout();
             this.grpExamine.SuspendLayout();
@@ -58,7 +59,7 @@
             this.grpFenster.Controls.Add(this.txtFenPrefix);
             this.grpFenster.Location = new System.Drawing.Point(3, 3);
             this.grpFenster.Name = "grpFenster";
-            this.grpFenster.Size = new System.Drawing.Size(251, 81);
+            this.grpFenster.Size = new System.Drawing.Size(242, 81);
             this.grpFenster.TabIndex = 0;
             this.grpFenster.TabStop = false;
             this.grpFenster.Text = "Fenster";
@@ -78,7 +79,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFenNummer.Location = new System.Drawing.Point(73, 45);
             this.txtFenNummer.Name = "txtFenNummer";
-            this.txtFenNummer.Size = new System.Drawing.Size(172, 20);
+            this.txtFenNummer.Size = new System.Drawing.Size(163, 20);
             this.txtFenNummer.TabIndex = 3;
             this.txtFenNummer.Text = "1";
             this.txtFenNummer.TextChanged += new System.EventHandler(this.txtFenNummer_TextChanged);
@@ -98,13 +99,13 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtFenPrefix.Location = new System.Drawing.Point(73, 19);
             this.txtFenPrefix.Name = "txtFenPrefix";
-            this.txtFenPrefix.Size = new System.Drawing.Size(172, 20);
+            this.txtFenPrefix.Size = new System.Drawing.Size(163, 20);
             this.txtFenPrefix.TabIndex = 1;
             // 
             // btnStart
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.Location = new System.Drawing.Point(11, 177);
+            this.btnStart.Location = new System.Drawing.Point(2, 177);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 1;
@@ -122,7 +123,7 @@
             this.grpTuer.Controls.Add(this.txtTuerPrefix);
             this.grpTuer.Location = new System.Drawing.Point(3, 90);
             this.grpTuer.Name = "grpTuer";
-            this.grpTuer.Size = new System.Drawing.Size(251, 81);
+            this.grpTuer.Size = new System.Drawing.Size(242, 81);
             this.grpTuer.TabIndex = 4;
             this.grpTuer.TabStop = false;
             this.grpTuer.Text = "Türen";
@@ -142,7 +143,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtTuerNummer.Location = new System.Drawing.Point(73, 45);
             this.txtTuerNummer.Name = "txtTuerNummer";
-            this.txtTuerNummer.Size = new System.Drawing.Size(172, 20);
+            this.txtTuerNummer.Size = new System.Drawing.Size(163, 20);
             this.txtTuerNummer.TabIndex = 3;
             this.txtTuerNummer.Text = "1";
             // 
@@ -161,13 +162,13 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtTuerPrefix.Location = new System.Drawing.Point(73, 19);
             this.txtTuerPrefix.Name = "txtTuerPrefix";
-            this.txtTuerPrefix.Size = new System.Drawing.Size(172, 20);
+            this.txtTuerPrefix.Size = new System.Drawing.Size(163, 20);
             this.txtTuerPrefix.TabIndex = 1;
             // 
             // btnStartTueren
             // 
             this.btnStartTueren.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStartTueren.Location = new System.Drawing.Point(92, 177);
+            this.btnStartTueren.Location = new System.Drawing.Point(83, 177);
             this.btnStartTueren.Name = "btnStartTueren";
             this.btnStartTueren.Size = new System.Drawing.Size(75, 23);
             this.btnStartTueren.TabIndex = 5;
@@ -178,7 +179,7 @@
             // btnStartAlle
             // 
             this.btnStartAlle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStartAlle.Location = new System.Drawing.Point(173, 177);
+            this.btnStartAlle.Location = new System.Drawing.Point(164, 177);
             this.btnStartAlle.Name = "btnStartAlle";
             this.btnStartAlle.Size = new System.Drawing.Size(75, 23);
             this.btnStartAlle.TabIndex = 6;
@@ -190,25 +191,36 @@
             // 
             this.grpExamine.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpExamine.Controls.Add(this.btnEindeutigkeitTuer);
             this.grpExamine.Controls.Add(this.btnEindeutigkeit);
             this.grpExamine.Location = new System.Drawing.Point(3, 211);
             this.grpExamine.Name = "grpExamine";
-            this.grpExamine.Size = new System.Drawing.Size(251, 57);
+            this.grpExamine.Size = new System.Drawing.Size(242, 86);
             this.grpExamine.TabIndex = 13;
             this.grpExamine.TabStop = false;
-            this.grpExamine.Text = "Prüfen";
+            this.grpExamine.Text = "Eindeutigkeit prüfen";
             // 
             // btnEindeutigkeit
             // 
-            this.btnEindeutigkeit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEindeutigkeit.Location = new System.Drawing.Point(6, 19);
+            this.btnEindeutigkeit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnEindeutigkeit.Location = new System.Drawing.Point(80, 19);
             this.btnEindeutigkeit.Name = "btnEindeutigkeit";
-            this.btnEindeutigkeit.Size = new System.Drawing.Size(239, 23);
+            this.btnEindeutigkeit.Size = new System.Drawing.Size(75, 23);
             this.btnEindeutigkeit.TabIndex = 0;
-            this.btnEindeutigkeit.Text = "Eindeutigkeit";
+            this.btnEindeutigkeit.Text = "Fenster";
             this.btnEindeutigkeit.UseVisualStyleBackColor = true;
             this.btnEindeutigkeit.Click += new System.EventHandler(this.btnEindeutigkeit_Click);
+            // 
+            // btnEindeutigkeitTuer
+            // 
+            this.btnEindeutigkeitTuer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnEindeutigkeitTuer.Location = new System.Drawing.Point(161, 19);
+            this.btnEindeutigkeitTuer.Name = "btnEindeutigkeitTuer";
+            this.btnEindeutigkeitTuer.Size = new System.Drawing.Size(75, 23);
+            this.btnEindeutigkeitTuer.TabIndex = 1;
+            this.btnEindeutigkeitTuer.Text = "Türen";
+            this.btnEindeutigkeitTuer.UseVisualStyleBackColor = true;
+            this.btnEindeutigkeitTuer.Click += new System.EventHandler(this.btnEindeutigkeitTuer_Click);
             // 
             // MyUserControl
             // 
@@ -222,7 +234,7 @@
             this.Controls.Add(this.grpFenster);
             this.MinimumSize = new System.Drawing.Size(248, 306);
             this.Name = "MyUserControl";
-            this.Size = new System.Drawing.Size(257, 342);
+            this.Size = new System.Drawing.Size(248, 306);
             this.grpFenster.ResumeLayout(false);
             this.grpFenster.PerformLayout();
             this.grpTuer.ResumeLayout(false);
@@ -249,5 +261,6 @@
         private System.Windows.Forms.Button btnStartAlle;
         private System.Windows.Forms.GroupBox grpExamine;
         private System.Windows.Forms.Button btnEindeutigkeit;
+        private System.Windows.Forms.Button btnEindeutigkeitTuer;
     }
 }

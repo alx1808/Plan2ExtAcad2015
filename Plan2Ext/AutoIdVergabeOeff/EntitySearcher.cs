@@ -24,28 +24,42 @@ namespace Plan2Ext.AutoIdVergabeOeff
             _entityFilter = entityFilter;
         }
 
-        public IEnumerable<IUniqueCheckInfo> GetUniqueCheckInfosInMs()
+        public enum UniqueCheckinfoKindEnum
+        {
+            Fenster,
+            Tuer,
+        }
+
+        public IEnumerable<IUniqueCheckInfo> GetUniqueCheckInfosInMs(UniqueCheckinfoKindEnum checkinfoKind)
         {
             Log.Info("GetFensterInfosInMs");
             var uniqueCheckInfos = new List<IUniqueCheckInfo>();
 
+            Func<BlockReference, Transaction, string> getIdFunc;
+            Func<DBObject, bool> filterFunc;
+            if (checkinfoKind == UniqueCheckinfoKindEnum.Fenster)
+            {
+                filterFunc = _entityFilter.IsFensterBlock;
+                getIdFunc = GetFenNr;
+            }
+            else
+            {
+                filterFunc = _entityFilter.IsTuerBlock;
+                getIdFunc = GetTuerNr;
+            }
+
             var doc = Application.DocumentManager.MdiActiveDocument;
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
-                var blockTable = (BlockTable) transaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead);
+                var blockTable = (BlockTable)transaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead);
                 var blockTableRecord = (BlockTableRecord)transaction.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForRead);
                 foreach (var oid in blockTableRecord)
                 {
                     var o = transaction.GetObject(oid, OpenMode.ForRead);
-                    if (_entityFilter.IsFensterBlock(o))
-                    {
-                        var blockReference = (BlockReference) o;
-                        uniqueCheckInfos.Add(new UniqueCheckInfo() { Id = GetFenNr(blockReference, transaction), InsertPoint = blockReference.Position, Kind = UniqueCheckInfo.KindEnum.Fenster});
-                    }
-                    else if (_entityFilter.IsTuerBlock(o))
+                    if (filterFunc(o))
                     {
                         var blockReference = (BlockReference)o;
-                        uniqueCheckInfos.Add(new UniqueCheckInfo() { Id = GetTuerNr(blockReference, transaction), InsertPoint = blockReference.Position, Kind = UniqueCheckInfo.KindEnum.Tuer});
+                        uniqueCheckInfos.Add(new UniqueCheckInfo() { Id = getIdFunc(blockReference, transaction), InsertPoint = blockReference.Position });
                     }
                 }
 
@@ -77,19 +91,19 @@ namespace Plan2Ext.AutoIdVergabeOeff
             var doc = Application.DocumentManager.MdiActiveDocument;
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
-                var objectPolygon = (Polyline) transaction.GetObject(objectPolygonId, OpenMode.ForRead);
+                var objectPolygon = (Polyline)transaction.GetObject(objectPolygonId, OpenMode.ForRead);
                 var blockReferences =
                     // ReSharper disable once AccessToDisposedClosure
-                    fensterIds.Select(x => (BlockReference) transaction.GetObject(x, OpenMode.ForRead));
+                    fensterIds.Select(x => (BlockReference)transaction.GetObject(x, OpenMode.ForRead));
                 // ReSharper disable once AccessToDisposedClosure
-                var fenAndPos = blockReferences.Select(x => new {fen = x, position = CreateFensterAttPositions(x, transaction)});
+                var fenAndPos = blockReferences.Select(x => new { fen = x, position = CreateFensterAttPositions(x, transaction) });
                 foreach (var fenAndPo in fenAndPos)
                 {
                     if (AreaEngine.InPoly(fenAndPo.position.Innen, objectPolygon))
                     {
                         if (AreaEngine.InPoly(fenAndPo.position.Aussen, objectPolygon))
                         {
-                            fensterInfos.Add(new FensterInfo(){Oid = fenAndPo.fen.ObjectId, Kind =  FensterInfo.KindEnum.InsidePolygon, InsertPoint = fenAndPo.fen.Position});
+                            fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.InsidePolygon, InsertPoint = fenAndPo.fen.Position });
                         }
                         else fensterInfos.Add(new FensterInfo() { Oid = fenAndPo.fen.ObjectId, Kind = FensterInfo.KindEnum.OnPolygon, InsertPoint = fenAndPo.fen.Position });
                     }
@@ -149,7 +163,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
             foreach (var tuerObj in tuerObjs)
             {
                 var tuerAttPositions = new TuerAttPositions(tuerObj, transaction, _configurationHandler);
-                tuerinfos.Add(new TuerInfo(){InsertPoint = tuerObj.Position, AttAussenInsertPoint = tuerAttPositions.Aussen, AttInnenInsertPoint  =  tuerAttPositions.Innen, Oid = tuerObj.ObjectId, Handle = tuerObj.Handle.ToString()});
+                tuerinfos.Add(new TuerInfo() { InsertPoint = tuerObj.Position, AttAussenInsertPoint = tuerAttPositions.Aussen, AttInnenInsertPoint = tuerAttPositions.Innen, Oid = tuerObj.ObjectId, Handle = tuerObj.Handle.ToString() });
             }
 
             return tuerinfos;

@@ -21,6 +21,7 @@ namespace Plan2Ext.AutoIdVergabeOeff
 
 
         private const string NOT_UNIQUE_ID_LAYER = "_IdNichtEindeutig";
+        private const string EMPTY_ID_LAYER = "_IdIstLeer";
 
         private static IPalette _Palette;
         private class DocumentInfo
@@ -142,51 +143,63 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
         }
 
-        [CommandMethod("Plan2AutoIdVergabeOeffnungenEindeutigkeit")]
+        [CommandMethod("Plan2AutoIdVergabeOeffEindeutigkeitFenster")]
         // ReSharper disable once UnusedMember.Global
-        public static void Plan2AutoIdVergabeOeffnungenEindeutigkeit()
+        public static void Plan2AutoIdVergabeOeffEindeutigkeitFenster()
         {
             try
             {
-
-                if (!OpenRnPalette()) return;
-
-                Globs.DeleteFehlerLines(NOT_UNIQUE_ID_LAYER);
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-                using (doc.LockDocument())
-                {
-                    var configurationHandler = new ConfigurationHandler();
-                    var entityFilter = new EntityFilter(configurationHandler);
-                    var entitySearcher = new EntitySearcher(configurationHandler, entityFilter);
-                    var uniqueCheckInfos = entitySearcher.GetUniqueCheckInfosInMs().ToArray();
-
-                    var uniqueCheckInfosFenster =
-                        uniqueCheckInfos.Where(x => x.Kind == UniqueCheckInfo.KindEnum.Fenster);
-                    var grouped = uniqueCheckInfosFenster.GroupBy(x => x.Id);
-                    foreach (var group in grouped)
-                    {
-                        if (group.Count() > 1)
-                        {
-                            Globs.InsertFehlerLines(group.Select(x => x.InsertPoint).ToList(), NOT_UNIQUE_ID_LAYER);
-                        }
-                    }
-                    
-                    var uniqueCheckInfosTuer =
-                        uniqueCheckInfos.Where(x => x.Kind == UniqueCheckInfo.KindEnum.Tuer);
-                    grouped = uniqueCheckInfosTuer.GroupBy(x => x.Id);
-                    foreach (var group in grouped)
-                    {
-                        if (group.Count() > 1)
-                        {
-                            Globs.InsertFehlerLines(group.Select(x => x.InsertPoint).ToList(), NOT_UNIQUE_ID_LAYER);
-                        }
-                    }
-                }
+                CheckEindeutigkeit(EntitySearcher.UniqueCheckinfoKindEnum.Fenster);
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Message, ex);
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2AutoIdVergabeOeffnungenEindeutigkeit aufgetreten! {0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2AutoIdVergabeOeffEindeutigkeitFenster aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        [CommandMethod("Plan2AutoIdVergabeOeffEindeutigkeitTuer")]
+        // ReSharper disable once UnusedMember.Global
+        public static void Plan2AutoIdVergabeOeffEindeutigkeitTuer()
+        {
+            try
+            {
+                CheckEindeutigkeit(EntitySearcher.UniqueCheckinfoKindEnum.Tuer);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2AutoIdVergabeOeffEindeutigkeitTuer aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        private static void CheckEindeutigkeit(EntitySearcher.UniqueCheckinfoKindEnum kind)
+        {
+            if (!OpenRnPalette()) return;
+
+            Globs.DeleteFehlerLines(NOT_UNIQUE_ID_LAYER);
+            Globs.DeleteFehlerLines(EMPTY_ID_LAYER);
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            using (doc.LockDocument())
+            {
+                var configurationHandler = new ConfigurationHandler();
+                var entityFilter = new EntityFilter(configurationHandler);
+                var entitySearcher = new EntitySearcher(configurationHandler, entityFilter);
+                var uniqueCheckInfos = entitySearcher.GetUniqueCheckInfosInMs(kind).ToArray();
+                var empty = uniqueCheckInfos.Where(x => x.Id.Trim() == string.Empty).ToArray();
+                var notEmpty = uniqueCheckInfos.Where(x => x.Id.Trim() != string.Empty).ToArray();
+
+                var grouped = notEmpty.GroupBy(x => x.Id);
+                foreach (var group in grouped)
+                {
+                    if (@group.Count() > 1)
+                    {
+                        Globs.InsertFehlerLines(@group.Select(x => x.InsertPoint).ToList(), NOT_UNIQUE_ID_LAYER);
+                    }
+                }
+
+                if (empty.Any())
+                    Globs.InsertFehlerLines(empty.Select(x => x.InsertPoint).ToList(), EMPTY_ID_LAYER);
             }
         }
 

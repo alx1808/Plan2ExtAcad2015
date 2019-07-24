@@ -90,17 +90,17 @@ namespace Plan2Ext.AutoIdVergabeOeff
             Application.DocumentManager.MdiActiveDocument.SendStringToExecute("\x1B", true, false, true);
         }
 
-        private bool _eindeutigkeitShield;
+        private bool _eindeutigkeitFensterShield;
         private void btnEindeutigkeit_Click(object sender, EventArgs e)
         {
-            if (_eindeutigkeitShield) return;
+            if (_eindeutigkeitFensterShield) return;
             try
             {
-                _eindeutigkeitShield = true;
+                _eindeutigkeitFensterShield = true;
 
                 Globs.CancelCommand();
 
-                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2AutoIdVergabeOeffnungenEindeutigkeit ", true, false, false);
+                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2AutoIdVergabeOeffEindeutigkeitFenster ", true, false, false);
             }
             catch (Exception ex)
             {
@@ -108,7 +108,29 @@ namespace Plan2Ext.AutoIdVergabeOeff
             }
             finally
             {
-                _eindeutigkeitShield = false;
+                _eindeutigkeitFensterShield = false;
+            }
+        }
+
+        private bool _eindeutigkeitTuerShield;
+        private void btnEindeutigkeitTuer_Click(object sender, EventArgs e)
+        {
+            if (_eindeutigkeitTuerShield) return;
+            try
+            {
+                _eindeutigkeitTuerShield = true;
+
+                Globs.CancelCommand();
+
+                Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2AutoIdVergabeOeffEindeutigkeitTuer ", true, false, false);
+            }
+            catch (Exception ex)
+            {
+                Application.ShowAlertDialog(ex.Message);
+            }
+            finally
+            {
+                _eindeutigkeitTuerShield = false;
             }
         }
     }
