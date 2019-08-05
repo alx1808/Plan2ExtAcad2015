@@ -89,6 +89,19 @@ namespace Plan2Ext
 
         #endregion
 
+        internal static string AskKeywordFromUser(string question, string[] words, int defaultWordIndex = -1, bool allowArbitraryInput = false)
+        {
+            var pko = new _AcEd.PromptKeywordOptions("") {Message = question, AllowNone = false};
+            foreach (var word in words)
+            {
+                pko.Keywords.Add(word);
+            }
+            if (defaultWordIndex >= 0) pko.Keywords.Default = words[defaultWordIndex];
+            pko.AllowArbitraryInput = allowArbitraryInput;
+            var pr = Application.DocumentManager.MdiActiveDocument.Editor.GetKeywords(pko);
+            return pr.Status != _AcEd.PromptStatus.OK ? null : pr.StringResult;
+        }
+
         internal static void SetPaletteDockSettings(_AcWnd.PaletteSet paletteSet)
         {
             paletteSet.DockEnabled = _AcWnd.DockSides.Left | _AcWnd.DockSides.Right;

@@ -1,8 +1,13 @@
 ﻿using System.Globalization;
+using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+using Exception = Autodesk.AutoCAD.Runtime.Exception;
+
+// ReSharper disable CommentTypo
 
 // ReSharper disable StringLiteralTypo
 
@@ -156,6 +161,59 @@ namespace Plan2Ext.LayTrans
             {
                 Log.Error(ex.Message, ex);
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayTrans aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Laytrans with commandline options instead of fileselection via dialog
+        /// </summary>
+        [CommandMethod("Plan2LayTrans2")]
+        // ReSharper disable once UnusedMember.Global
+        public static void Plan2LayTrans2()
+        {
+            try
+            {
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                using (doc.LockDocument())
+                {
+
+                    var fileNames = new[] { "CARLO_AUF_PLAN2", "NORM_AUF_PLAN2", "PLAN2_AUF_CARLO", "PLAN2_AUF_NORM" };
+                    var keywords = new[] {"Carloplan2", "Normplan2", "Plan2carlo", "pLan2norm"};
+
+                    var keyword = Globs.AskKeywordFromUser("Layerkonfiguration", keywords);
+                    if (keyword== null) return;
+
+                    var fn = fileNames[keywords.ToList().IndexOf(keyword)];
+                    fn += ".xlsx";
+                    string fileName;
+                    try
+                    {
+                        fileName = HostApplicationServices.Current.FindFile(fn, doc.Database, FindFileHint.Default);
+                    }
+                    catch (Exception)
+                    {
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Datei {0} wurde nicht gefunden!", keyword));
+                        return;
+                    }
+
+                    var engine = new Engine();
+                    var ok = engine.LayTrans(fileName);
+                    if (!ok)
+                    {
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in LayTrans2!"));
+                    }
+                    else
+                    {
+                        var msg = string.Format(CultureInfo.CurrentCulture, "LayTrans2 für {0} wurde erfolgreich beendet.", fn);
+                        Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(msg);
+                        Log.Info(msg);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayTrans2 aufgetreten! {0}", ex.Message));
             }
         }
     }
