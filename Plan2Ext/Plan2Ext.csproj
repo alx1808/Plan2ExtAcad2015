@@ -93,6 +93,7 @@
     <Compile Include="AutoIdVergabeOeff\FenSorter.cs" />
     <Compile Include="AutoIdVergabeOeff\FensterAttPositions.cs" />
     <Compile Include="AutoIdVergabeOeff\FensterInfo.cs" />
+    <Compile Include="BlockInfo\GetsFromUser.cs" />
     <Compile Include="AutoIdVergabeOeff\MyUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -121,12 +122,15 @@
     <Compile Include="AutoIdVergabe\ExcelExport.cs" />
     <Compile Include="AutoIdVergabe\Globs.cs" />
     <Compile Include="AutoIdVergabe\ZuweisungsInfo.cs" />
+    <Compile Include="BlockInfo\BsLegende.cs" />
     <Compile Include="BlockInfo\Commands.cs" />
     <Compile Include="BlockInfo\Excelizer.cs" />
     <Compile Include="BlockInfo\FwLegende.cs" />
     <Compile Include="BlockInfo\IRowProvider.cs" />
     <Compile Include="BlockInfo\LayoutBlockNameFactory.cs" />
     <Compile Include="BlockInfo\LayoutBlockRowProvider.cs" />
+    <Compile Include="BlockInfo\LegendInserter.cs" />
+    <Compile Include="BlockInfo\ProtoDwgInfo.cs" />
     <Compile Include="BlockInfo\SingleBlockNameRowProvider.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
     <Compile Include="BlockToExcel\BlockToExcel2.cs" />
