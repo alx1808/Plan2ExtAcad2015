@@ -44,7 +44,7 @@ namespace Plan2Ext.BlockInfo
 
                 Application.SetSystemVariable("OSMODE", 0);
 
-                var prototypedwgName = GetPrototypedwgName(ed);
+                var prototypedwgName = GetPrototypedwgName();
                 if (prototypedwgName == null) return;
 
                 _GetsFromUser.GetNrOfVerticalBlockElements(ed, ref _NrOfVerticalBlockElements);
@@ -79,32 +79,13 @@ namespace Plan2Ext.BlockInfo
             }
         }
 
-        private static string GetPrototypedwgName(Editor ed)
+        private static string GetPrototypedwgName()
         {
-            var pKeyOpts = new PromptKeywordOptions("") { Message = "\nPrototyp für Legende eingeben Kav/Norm/<Carlo>: " };
-            pKeyOpts.Keywords.Add("Kav");
-            pKeyOpts.Keywords.Add("Norm");
-            pKeyOpts.Keywords.Add("Carlo");
-            pKeyOpts.AllowNone = true;
+            var fileNames = new[] { "FW_LEGENDE_KAV.dwg", "FW_LEGENDE_NORM.dwg", "FW_LEGENDE_CARLO.dwg" };
+            var keywords = new[] { "Kav", "Norm", "Carlo" };
 
-            PromptResult pKeyRes = ed.GetKeywords(pKeyOpts);
-            if (pKeyRes.Status == PromptStatus.None || pKeyRes.StringResult == "Carlo")
-            {
-                return "FW_LEGENDE_CARLO.dwg";
-            }
-            if (pKeyRes.Status == PromptStatus.OK)
-            {
-                if (pKeyRes.StringResult == "Norm")
-                {
-                    return "FW_LEGENDE_NORM.dwg";
-                }
-                else
-                {
-                    return "FW_LEGENDE_KAV.dwg";
-                }
-            }
-
-            return null;
+            var keyWord = Globs.AskKeywordFromUser("Prototyp für Legende eingeben", keywords, 2);
+            return keyWord == null ? null : fileNames[keywords.ToList().IndexOf(keyWord)];
         }
 
         private static void Plan2FwLegendeAll(string prototypedwgName)

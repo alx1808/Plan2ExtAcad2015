@@ -19,9 +19,16 @@ namespace Plan2Ext.BlockInfo
         #endregion
 
         // todo: get values from ds
-        private static readonly List<string> BlocksIgnored = new List<string>() {  };
+        private static readonly List<string> BlocksIgnored = new List<string>();
         // todo: get values from ds
-        private static readonly List<string> BlocksAlwaysInLegend = new List<string>() { };
+        private static readonly List<string> BlocksAlwaysInLegend = new List<string>()
+        {
+            "PLK_BS_BA_FWKL_PROTO",
+            "PLK_BS_AL_NORDPFEIL",
+            "PLK_BS_AL_MASSSTABLEISTE_PROTO",
+            "PLK_BS_BA_BRANDABSCHNITTSGRENZE",
+            "PLK_BS_BA_RAUCHSCHÜRZE"
+        };
         private const string LEGEND_BLOCK_PREFIX = "PLK_";
         private const double VERTICAL_DISTANCE = 7.8104;
         private const double HORIZONTAL_DISTANCE = 10.0;
