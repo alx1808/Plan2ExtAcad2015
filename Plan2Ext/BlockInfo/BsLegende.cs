@@ -18,9 +18,20 @@ namespace Plan2Ext.BlockInfo
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(BsLegende))));
         #endregion
 
-        // todo: get values from ds
-        private static readonly List<string> BlocksIgnored = new List<string>();
-        // todo: get values from ds
+        private static readonly List<string> BlocksIgnored = new List<string>()
+        {
+            "BS_RA_RAUMBLOCk",
+            "BS_AL_MASSSTABLEISTE_*",
+            "BS_AL_RASTER_*",
+            "BS_AL_SIEHE_PLAN",
+            "BS_AL_NORDPFEIL",
+            "BS_AL_PLANKOPF",
+            "BS_AL_PLANKOPF_*",
+            "BS_RA_RAUMBLOCK",
+            "BS_AL_LEGENDE_BS_MELDERGRUPPE",
+            "BS_AL_LEGENDE_BS_MELDER",
+            "BS_AL_LOGO_*",
+        };
         private static readonly List<string> BlocksAlwaysInLegend = new List<string>()
         {
             "PLK_BS_BA_FWKL_PROTO",
@@ -38,6 +49,7 @@ namespace Plan2Ext.BlockInfo
         private static IGetsFromUser _GetsFromUser;
         private static IProtoDwgInfo _ProtoDwgInfo;
         private static ILegendInserter _LegendInserter;
+        private static WildcardAcad[] _BlocksIgnoredWildcards;
 
 
         [CommandMethod("Plan2BsLegende")]
@@ -51,6 +63,7 @@ namespace Plan2Ext.BlockInfo
                 _GetsFromUser = new GetsFromUser();
                 _ProtoDwgInfo = new ProtoDwgInfo();
                 _LegendInserter = new LegendInserter(VERTICAL_DISTANCE, HORIZONTAL_DISTANCE, FRAME_OFFSET);
+                _BlocksIgnoredWildcards = BlocksIgnored.Select(x => new WildcardAcad(x)).ToArray();
 
                 var prototypedwgName = GetPrototypedwgName();
                 if (prototypedwgName == null) return;
@@ -141,10 +154,15 @@ namespace Plan2Ext.BlockInfo
         private static HashSet<string> GetLegendBlockNames(List<string> blockNames)
         {
             var blToLegendBlockNames =
-                blockNames.Where(x => !BlocksIgnored.Contains(x)).Select(x => LEGEND_BLOCK_PREFIX + x).ToList();
+                blockNames.Where(x => !IsIgnoredBlock(x)).Select(x => LEGEND_BLOCK_PREFIX + x).ToList();
             var legendBlockNames = new HashSet<string>(blToLegendBlockNames);
             legendBlockNames.UnionWith(BlocksAlwaysInLegend);
             return legendBlockNames;
+        }
+
+        private static bool IsIgnoredBlock(string name)
+        {
+            return _BlocksIgnoredWildcards.Any(x => x.IsMatch(name));
         }
 
     }

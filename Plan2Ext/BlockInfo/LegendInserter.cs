@@ -4,23 +4,21 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
 
 namespace Plan2Ext.BlockInfo
 {
     internal interface ILegendInserter
     {
-        double VerticalDistance { get; set; }
-        double HorizontalDistance { get; set; }
-        double FrameOffset { get; set; }
         void InsertLegend(List<string> blocksInProtodwg, HashSet<string> legendBlockNames, string prototypedwgName, Point3d positionWcs, Transaction transaction, double scaleFactor, int nrOfVerticalBlockElements);
     }
 
     internal class LegendInserter : ILegendInserter
     {
-
-        public double VerticalDistance { get; set; }
-        public double HorizontalDistance { get; set; }
-        public double FrameOffset { get; set; }
+        private double VerticalDistance { get; set; }
+        private double HorizontalDistance { get; set; }
+        private double FrameOffset { get; set; }
         public LegendInserter(double verticalDistance, double horizontalDistance, double frameOffset)
         {
             VerticalDistance = verticalDistance;
@@ -61,6 +59,8 @@ namespace Plan2Ext.BlockInfo
                     else positionUcs += new Vector3d(0, verticalIncrement, 0);
                 }
             }
+
+            if (ucsPointList.Count <= 0) return;
 
             // frame
             var framePointsUcs = Boundings.GetRectanglePointsFromBounding(buffer: FrameOffset * scaleFactor, pts: ucsPointList);
