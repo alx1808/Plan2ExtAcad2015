@@ -1,11 +1,11 @@
-﻿using System;
+﻿// ReSharper disable CommentTypo
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 //using Autodesk.AutoCAD.Runtime;
 //using Autodesk.AutoCAD.DatabaseServices;
 //using Autodesk.AutoCAD.ApplicationServices;
 using System.Globalization;
+using Autodesk.AutoCAD.ApplicationServices.Core;
 using Plan2Ext.Configuration;
 
 #if BRX_APP
@@ -22,36 +22,29 @@ using _AcBrx = Bricscad.Runtime;
 using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
 #elif ARX_APP
-  using _AcAp = Autodesk.AutoCAD.ApplicationServices;
-  using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
-  using _AcCm = Autodesk.AutoCAD.Colors;
-  using _AcDb = Autodesk.AutoCAD.DatabaseServices;
-  using _AcEd = Autodesk.AutoCAD.EditorInput;
-  using _AcGe = Autodesk.AutoCAD.Geometry;
-  using _AcGi = Autodesk.AutoCAD.GraphicsInterface;
-  using _AcGs = Autodesk.AutoCAD.GraphicsSystem;
-  using _AcPl = Autodesk.AutoCAD.PlottingServices;
-  using _AcBrx = Autodesk.AutoCAD.Runtime;
-  using _AcTrx = Autodesk.AutoCAD.Runtime;
-  using _AcWnd = Autodesk.AutoCAD.Windows;
+using _AcAp = Autodesk.AutoCAD.ApplicationServices;
+using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
+using _AcCm = Autodesk.AutoCAD.Colors;
+using _AcDb = Autodesk.AutoCAD.DatabaseServices;
+using _AcEd = Autodesk.AutoCAD.EditorInput;
+using _AcGe = Autodesk.AutoCAD.Geometry;
+using _AcGi = Autodesk.AutoCAD.GraphicsInterface;
+using _AcGs = Autodesk.AutoCAD.GraphicsSystem;
+using _AcPl = Autodesk.AutoCAD.PlottingServices;
+using _AcBrx = Autodesk.AutoCAD.Runtime;
+using _AcTrx = Autodesk.AutoCAD.Runtime;
+using _AcWnd = Autodesk.AutoCAD.Windows;
+// ReSharper disable StringLiteralTypo
 #endif
 
 
 namespace Plan2Ext
 {
+    // ReSharper disable once UnusedMember.Global
     public class Config
     {
-
         #region log4net Initialization
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Config))));
-        static Config()
-        {
-            if (log4net.LogManager.GetRepository(System.Reflection.Assembly.GetExecutingAssembly()).Configured == false)
-            {
-                log4net.Config.XmlConfigurator.ConfigureAndWatch(new System.IO.FileInfo(System.IO.Path.Combine(new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).DirectoryName, "_log4net.config")));
-            }
-
-        }
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Config))));
         #endregion
 
         #region Member Variables
@@ -59,6 +52,7 @@ namespace Plan2Ext
         #endregion
 
         [_AcTrx.LispFunction("NetSetPlan2Config")]
+        // ReSharper disable once UnusedMember.Global
         public static _AcDb.ResultBuffer NetSetPlan2Config(_AcDb.ResultBuffer rb)
         {
             try
@@ -69,8 +63,8 @@ namespace Plan2Ext
                 string current = "";
                 if (!GetArgs2(rb, ref current, existingConfigs))
                 {
-                    log.Error("No valid configlist!");
-
+                    Log.Error("No valid configlist!");
+                    return null;
                 }
 
                 using (SetConfigForm frm = new SetConfigForm(current, existingConfigs))
@@ -86,11 +80,63 @@ namespace Plan2Ext
                     }
 
                 }
-
             }
             catch (System.Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2Config aufgetreten!\n{0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2Config aufgetreten!\n{0}", ex.Message));
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Commandline-Version
+        /// </summary>
+        /// <param name="rb"></param>
+        /// <returns></returns>
+        [_AcTrx.LispFunction("NetSetPlan2ConfigCl")]
+        // ReSharper disable once UnusedMember.Global
+        public static _AcDb.ResultBuffer NetSetPlan2ConfigCl(_AcDb.ResultBuffer rb)
+        {
+            try
+            {
+                TheConfiguration.Loaded = false;
+
+                List<string> existingConfigs = new List<string>();
+                string current = "";
+                if (!GetArgs2(rb, ref current, existingConfigs))
+                {
+                    Log.Error("No valid configlist!");
+                    return null;
+                }
+
+                var editor = Application.DocumentManager.MdiActiveDocument.Editor;
+                editor.WriteMessage("\nExistierende Konfigurationen:");
+                foreach (var existingConfig in existingConfigs)
+                {
+                    editor.WriteMessage("\n" + existingConfig);
+                }
+
+                var promptStringOptions = new _AcEd.PromptStringOptions("\nKonfiguration")
+                {
+                    AllowSpaces = true, DefaultValue = current, UseDefaultValue = true
+                };
+                var result = editor.GetString(promptStringOptions);
+                if (result.Status != _AcEd.PromptStatus.OK) return null;
+                var value = result.StringResult;
+
+                var existingConfigsUc = existingConfigs.Select(x => x.ToUpperInvariant()).ToList();
+                if (!existingConfigsUc.Contains(value.ToUpperInvariant()))
+                {
+                    editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Konfiguration '{0}' existiert nicht!", value));
+                    return null;
+                }
+
+                return new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, value));
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2ConfigCl aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -111,11 +157,11 @@ namespace Plan2Ext
             }
 
             return true;
-
         }
 
 
         [_AcTrx.LispFunction("ConfigPlan2")]
+        // ReSharper disable once UnusedMember.Global
         public static _AcDb.ResultBuffer ConfigPlan2(_AcDb.ResultBuffer rb)
         {
             try
@@ -132,7 +178,7 @@ namespace Plan2Ext
             }
             catch (System.Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in ConfigPlan2 aufgetreten!\n{0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in ConfigPlan2 aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -143,9 +189,5 @@ namespace Plan2Ext
             _AcDb.TypedValue[] values = rb.AsArray();
             _FileName = values[0].Value.ToString();
         }
-
     }
-
-
-
 }
