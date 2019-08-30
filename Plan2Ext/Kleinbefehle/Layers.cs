@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
+using System.Text.RegularExpressions;
+
 
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
@@ -31,8 +34,6 @@ using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcLm = Autodesk.AutoCAD.LayerManager;
-using System.Globalization;
-using System.Text.RegularExpressions;
 #endif
 
 namespace Plan2Ext.Kleinbefehle

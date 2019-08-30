@@ -60,7 +60,7 @@ namespace Plan2Ext.Nummerierung
                     Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptEntityResult per = ed.GetNestedEntity("\nPrefix-Text wählen: ");
+                    PromptEntityResult per = ed.GetNestedEntityEx("\nPrefix-Text wählen: ");
                     if (per.Status == PromptStatus.OK)
                     {
                         Transaction tr = doc.TransactionManager.StartTransaction();
@@ -122,8 +122,7 @@ namespace Plan2Ext.Nummerierung
                             tr.Commit();
                         }
 
-                        per = ed.GetNestedEntity("\nAttribut wählen: ");
-
+                        per = ed.GetNestedEntityEx("\nAttribut wählen: ");
                         if (per.Status == PromptStatus.OK)
                         {
 

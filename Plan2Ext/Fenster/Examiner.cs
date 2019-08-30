@@ -1,4 +1,6 @@
-﻿#if BRX_APP
+﻿using System.Globalization;
+
+#if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
@@ -25,7 +27,6 @@ using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcLm = Autodesk.AutoCAD.LayerManager;
-using System.Globalization;
 #endif
 
 using System;

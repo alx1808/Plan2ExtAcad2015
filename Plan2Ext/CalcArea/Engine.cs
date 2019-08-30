@@ -240,7 +240,7 @@ namespace Plan2Ext.CalcArea
             if (res.Status != _AcEd.PromptStatus.OK) return new List<_AcDb.ObjectId>();
 
 #if BRX_APP
-            SelectionSet ss = res.Value;
+            _AcEd.SelectionSet ss = res.Value;
 #else
             using (_AcEd.SelectionSet ss = res.Value)
 #endif

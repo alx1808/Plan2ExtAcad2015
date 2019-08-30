@@ -210,7 +210,7 @@ namespace Plan2Ext.AutoIdVergabe
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    _AcEd.PromptNestedEntityResult per = ed.GetNestedEntity("\nRaumblock wählen: ");
+                    _AcEd.PromptNestedEntityResult per = ed.GetNestedEntityEx("\nRaumblock wählen: ");
 
                     if (per.Status == _AcEd.PromptStatus.OK)
                     {
@@ -231,7 +231,7 @@ namespace Plan2Ext.AutoIdVergabe
                             tr.Commit();
                         }
 
-                        per = ed.GetNestedEntity("\nTürschild-Attribut wählen: ");
+                        per = ed.GetNestedEntityEx("\nTürschild-Attribut wählen: ");
                         if (per.Status != _AcEd.PromptStatus.OK) return;
                         using (var tr = doc.TransactionManager.StartTransaction())
                         {
@@ -244,7 +244,7 @@ namespace Plan2Ext.AutoIdVergabe
                             tr.Commit();
                         }
 
-                        per = ed.GetNestedEntity("ID-Attribut wählen: ");
+                        per = ed.GetNestedEntityEx("ID-Attribut wählen: ");
                         if (per.Status != _AcEd.PromptStatus.OK) return;
                         using (var tr = doc.TransactionManager.StartTransaction())
                         {
@@ -288,13 +288,8 @@ namespace Plan2Ext.AutoIdVergabe
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    _AcEd.PromptNestedEntityOptions peo = new _AcEd.PromptNestedEntityOptions("\nPolylinie wählen: ");
-                    //peo.SetRejectMessage("\nDas gewählte Element ist keine Polylinie.");
-                    //peo.AddAllowedClass(typeof(Polyline), true);
-                    //peo.AddAllowedClass(typeof(Polyline2d), true);
-                    //peo.AddAllowedClass(typeof(Polyline3d), true);
 
-                    _AcEd.PromptEntityResult per = ed.GetNestedEntity(peo);
+                    _AcEd.PromptEntityResult per = ed.GetNestedEntityEx("\nPolylinie wählen: ");
 
                     if (per.Status == _AcEd.PromptStatus.OK)
                     {
@@ -349,38 +344,6 @@ namespace Plan2Ext.AutoIdVergabe
 
                     SetAssignmentsDict();
                     _AutoIdPalette.SetLvZuweisungen();
-
-                    //bool attSelected = false;
-                    //while (!attSelected)
-                    //{
-                    //    PromptNestedEntityOptions peo = new PromptNestedEntityOptions("\nZu-Raum-ID-Attribut wählen: ");
-                    //    PromptNestedEntityResult per = ed.GetNestedEntity(peo);
-
-                    //    if (per.Status == _AcEd.PromptStatus.OK)
-                    //    {
-
-                    //        using (var tr = doc.TransactionManager.StartTransaction())
-                    //        {
-                    //            DBObject obj = tr.GetObject(per.ObjectId, _AcDb.OpenMode.ForRead);
-                    //            _AcDb.AttributeReference attRef = obj as _AcDb.AttributeReference;
-                    //            if (attRef != null)
-                    //            {
-                    //                attSelected = true;
-                    //                opts.SetZuRaumIdAtt(attRef.Tag);
-                    //            }
-                    //            else
-                    //            {
-                    //                ed.WriteMessage("\nDas gewählte Element ist kein Attribut.");
-                    //            }
-
-                    //            tr.Commit();
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        break;
-                    //    }
-                    //}
                 }
             }
             catch (System.Exception ex)

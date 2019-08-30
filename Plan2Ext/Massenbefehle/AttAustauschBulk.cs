@@ -456,7 +456,7 @@ namespace Plan2Ext.Massenbefehle
             bool found = false;
             bname = string.Empty;
             attributeName = string.Empty;
-            _AcEd.PromptNestedEntityResult per = ed.GetNestedEntity("\n" + msg);
+            _AcEd.PromptNestedEntityResult per = ed.GetNestedEntityEx("\n" + msg);
             if (per.Status == _AcEd.PromptStatus.OK)
             {
                 using (var tr = doc.TransactionManager.StartTransaction())

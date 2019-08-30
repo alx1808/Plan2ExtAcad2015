@@ -170,7 +170,7 @@ namespace Plan2Ext.HoehenPruefung
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptNestedEntityResult per = ed.GetNestedEntity("\nHöhenkotenblock wählen: ");
+                    PromptNestedEntityResult per = ed.GetNestedEntityEx("\nHöhenkotenblock wählen: ");
 
                     if (per.Status == PromptStatus.OK)
                     {
@@ -190,7 +190,7 @@ namespace Plan2Ext.HoehenPruefung
                             tr.Commit();
                         }
 
-                        per = ed.GetNestedEntity("\nHöhen-Attribut wählen: ");
+                        per = ed.GetNestedEntityEx("\nHöhen-Attribut wählen: ");
                         if (per.Status != PromptStatus.OK) return;
                         using (var tr = doc.TransactionManager.StartTransaction())
                         {
@@ -202,11 +202,8 @@ namespace Plan2Ext.HoehenPruefung
 
                             tr.Commit();
                         }
-
-
                     }
                 }
-
             }
             catch (System.Exception ex)
             {
@@ -266,7 +263,7 @@ namespace Plan2Ext.HoehenPruefung
                     //peo.AddAllowedClass(typeof(Polyline2d), true);
                     //peo.AddAllowedClass(typeof(Polyline3d), true);
 
-                    PromptEntityResult per = ed.GetNestedEntity(peo);
+                    PromptEntityResult per = ed.GetNestedEntityEx("\nPolylinie wählen: ");
 
                     if (per.Status == PromptStatus.OK)
                     {

@@ -186,7 +186,7 @@ namespace Plan2Ext.CalcArea
             attName = string.Empty;
             fgLayer = string.Empty;
             abzLayer = "$$$ABZUGLAYER$$$";
-            PromptNestedEntityResult per = ed.GetNestedEntity("\nM2-Attribut wählen: ");
+            PromptNestedEntityResult per = ed.GetNestedEntityEx("\nM2-Attribut wählen: ");
             if (per.Status == PromptStatus.OK)
             {
                 using (var tr = doc.TransactionManager.StartTransaction())
@@ -310,7 +310,7 @@ namespace Plan2Ext.CalcArea
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptEntityResult per = ed.GetNestedEntity("\nHöhenattribut wählen: ");
+                    PromptEntityResult per = ed.GetNestedEntityEx("\nHöhenattribut wählen: ");
                     if (per.Status == PromptStatus.OK)
                     {
                         using (Transaction tr = doc.TransactionManager.StartTransaction())
@@ -325,7 +325,7 @@ namespace Plan2Ext.CalcArea
 
                         }
                     }
-                    per = ed.GetNestedEntity("\nVolumsattribut wählen: ");
+                    per = ed.GetNestedEntityEx("\nVolumsattribut wählen: ");
                     if (per.Status == PromptStatus.OK)
                     {
                         using (Transaction tr = doc.TransactionManager.StartTransaction())

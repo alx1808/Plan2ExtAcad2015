@@ -191,7 +191,7 @@ namespace Plan2Ext.RaumHoePruefung
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptNestedEntityResult per = ed.GetNestedEntity("\nRaumblock wählen: ");
+                    PromptNestedEntityResult per = ed.GetNestedEntityEx("\nRaumblock wählen: ");
 
                     if (per.Status == PromptStatus.OK)
                     {
@@ -211,7 +211,7 @@ namespace Plan2Ext.RaumHoePruefung
                             tr.Commit();
                         }
 
-                        per = ed.GetNestedEntity("\nHöhen-Attribut wählen: ");
+                        per = ed.GetNestedEntityEx("\nHöhen-Attribut wählen: ");
                         if (per.Status != PromptStatus.OK) return;
                         using (var tr = doc.TransactionManager.StartTransaction())
                         {
@@ -281,13 +281,8 @@ namespace Plan2Ext.RaumHoePruefung
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    PromptNestedEntityOptions peo = new PromptNestedEntityOptions("\nPolylinie wählen: ");
-                    //peo.SetRejectMessage("\nDas gewählte Element ist keine Polylinie.");
-                    //peo.AddAllowedClass(typeof(Polyline), true);
-                    //peo.AddAllowedClass(typeof(Polyline2d), true);
-                    //peo.AddAllowedClass(typeof(Polyline3d), true);
 
-                    PromptEntityResult per = ed.GetNestedEntity(peo);
+                    PromptEntityResult per = ed.GetNestedEntityEx("\nPolylinie wählen: ");
 
                     if (per.Status == PromptStatus.OK)
                     {

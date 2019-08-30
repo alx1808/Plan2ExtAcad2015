@@ -1,11 +1,8 @@
 ﻿// ReSharper disable CommentTypo
+// ReSharper disable StringLiteralTypo
 using System.Collections.Generic;
 using System.Linq;
-//using Autodesk.AutoCAD.Runtime;
-//using Autodesk.AutoCAD.DatabaseServices;
-//using Autodesk.AutoCAD.ApplicationServices;
 using System.Globalization;
-using Autodesk.AutoCAD.ApplicationServices.Core;
 using Plan2Ext.Configuration;
 
 #if BRX_APP
@@ -34,7 +31,9 @@ using _AcPl = Autodesk.AutoCAD.PlottingServices;
 using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
-// ReSharper disable StringLiteralTypo
+using Autodesk.AutoCAD.ApplicationServices.Core;
+
+
 #endif
 
 
@@ -83,7 +82,7 @@ namespace Plan2Ext
             }
             catch (System.Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2Config aufgetreten!\n{0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2Config aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -110,7 +109,7 @@ namespace Plan2Ext
                     return null;
                 }
 
-                var editor = Application.DocumentManager.MdiActiveDocument.Editor;
+                var editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
                 editor.WriteMessage("\nExistierende Konfigurationen:");
                 foreach (var existingConfig in existingConfigs)
                 {
@@ -136,7 +135,7 @@ namespace Plan2Ext
             }
             catch (System.Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2ConfigCl aufgetreten!\n{0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2ConfigCl aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -178,7 +177,7 @@ namespace Plan2Ext
             }
             catch (System.Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in ConfigPlan2 aufgetreten!\n{0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in ConfigPlan2 aufgetreten!\n{0}", ex.Message));
 
             }
             return null;

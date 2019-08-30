@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-//using Autodesk.AutoCAD.Runtime;
-//using Autodesk.AutoCAD.DatabaseServices;
-//using Autodesk.AutoCAD.EditorInput;
 using System.Globalization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Autodesk.AutoCAD.ApplicationServices.Core;
+//using Autodesk.AutoCAD.ApplicationServices.Core;
 using Microsoft.Win32.TaskScheduler;
 
 #if BRX_APP
@@ -53,6 +50,7 @@ namespace Plan2Ext
 
         private static bool inCommand;
 
+		/*
         //[_AcTrx.CommandMethod("Alx")]
         public static void Alx()
         {
@@ -107,7 +105,7 @@ namespace Plan2Ext
         {
             inCommand = false;
         }
-
+		*/
         public static void ImportDrawing(string drawingPath)
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
@@ -1262,17 +1260,17 @@ namespace Plan2Ext
             }
         }
 
-        [_AcTrx.CommandMethod("HelloWorld")]
-        public static void HelloWorld()
-        {
-            System.Windows.Forms.MessageBox.Show("Hello World!");
-        }
-        [_AcTrx.LispFunction("helloWorld")]
-        public static bool helloWorld(_AcDb.ResultBuffer args)
-        {
-            _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor; ed.WriteMessage('\n' + "Hello World!" + '\n');
-            return true;
-        }
+        //[_AcTrx.CommandMethod("HelloWorld")]
+        //public static void HelloWorld()
+        //{
+        //    System.Windows.Forms.MessageBox.Show("Hello World!");
+        //}
+        //[_AcTrx.LispFunction("helloWorld")]
+        //public static bool helloWorld(_AcDb.ResultBuffer args)
+        //{
+        //    _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor; ed.WriteMessage('\n' + "Hello World!" + '\n');
+        //    return true;
+        //}
 
         private int _test = -1;
 

@@ -1,17 +1,11 @@
-﻿//using Autodesk.AutoCAD.DatabaseServices;
-//using Autodesk.AutoCAD.Runtime;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
-//using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
 using _AcDb = Teigha.DatabaseServices;
 using _AcEd = Bricscad.EditorInput;
@@ -22,8 +16,9 @@ using _AcPl = Bricscad.PlottingServices;
 using _AcBrx = Bricscad.Runtime;
 using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
-using _AcIntCom = BricscadDb;
-using _AcInt = BricscadApp;
+//using _AcIntCom = BricscadDb;
+//using _AcInt = BricscadApp;
+// ReSharper disable StringLiteralTypo
 #elif ARX_APP
   using _AcAp = Autodesk.AutoCAD.ApplicationServices;
   using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
@@ -125,8 +120,28 @@ namespace Plan2Ext
 
         private static void GetConfiguration()
         {
+
+//#if BRX_APP
+//	        //var sym = Bricscad.Global.Editor.GetLispSymbol("alx_V:Ino_ConfigFileName");
+			
+//			using (var rb = new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, "c:Plan2CurrentConfig")))
+//			{
+//				_AcDb.ResultBuffer res = Bricscad.Global.Editor.Invoke(rb);
+//				if (res != null)
+//				{
+//					_CurrentConfig = res.AsArray()[0].Value.ToString();
+//					res.Dispose();
+//				}
+//				else
+//				{
+//					throw new InvalidOperationException("Konnte Konfigurationsdateiname nicht ermitteln!");
+//				}
+//			}
+//			//_CurrentConfig = _AcDb.HostApplicationServices.Current.FindFile("Plan2.cfg",_AcAp.Application.DocumentManager.MdiActiveDocument.Database, _AcDb.FindFileHint.Default);
+//#else
             _CurrentConfig = string.Empty;
-            using (var rb = new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, "c:Plan2CurrentConfig")))
+
+			using (var rb = new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, "c:Plan2CurrentConfig")))
             {
                 int stat = 0;
                 _AcDb.ResultBuffer res = CADDZone.AutoCAD.Samples.AcedInvokeSample.InvokeLisp(rb, ref stat);
@@ -140,9 +155,9 @@ namespace Plan2Ext
                     throw new InvalidOperationException("Konnte Konfigurationsdateiname nicht ermitteln!");
                 }
             }
-        }
-
-    }
+//#endif
+		}
+	}
 
     internal class Category
     {
@@ -164,9 +179,9 @@ namespace Plan2Ext
 
     internal class ConfigVar
     {
-        #region Constants
+#region Constants
         public const string TRENN = "|";
-        #endregion
+#endregion
 
         public string Category { get; set; }
         public string Description { get; set; }
@@ -212,10 +227,5 @@ namespace Plan2Ext
                     throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Ungültiger Typ in Configvar {0}\\{1}: '{2}'!", Category, Description, VarType));
             }
         }
-
-
-
     }
-
-
 }

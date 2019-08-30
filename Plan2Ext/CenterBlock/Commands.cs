@@ -122,7 +122,7 @@ namespace Plan2Ext.CenterBlock
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
 #endif
 
-                    _AcEd.PromptNestedEntityResult per = ed.GetNestedEntity("\nBlock wählen: ");
+                    _AcEd.PromptNestedEntityResult per = ed.GetNestedEntityEx("\nBlock wählen: ");
 
                     if (per.Status == _AcEd.PromptStatus.OK)
                     {

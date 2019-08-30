@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿// ReSharper disable CommentTypo
+using System;
 //using Autodesk.AutoCAD.Runtime;
 //using Autodesk.AutoCAD.DatabaseServices;
 //using Autodesk.AutoCAD.Windows;
@@ -21,6 +19,7 @@ using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
 using _AcIntCom = BricscadDb;
 using _AcInt = BricscadApp;
+// ReSharper disable InconsistentNaming
 #elif ARX_APP
   using _AcAp = Autodesk.AutoCAD.ApplicationServices;
   using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
@@ -41,10 +40,12 @@ using _AcInt = Autodesk.AutoCAD.Interop;
 
 namespace Plan2Ext
 {
-    public class LispFileDialogs
+	// ReSharper disable once UnusedMember.Global
+	public class LispFileDialogs
     {
 
         [_AcTrx.LispFunction("SaveFileDialog")]
+        // ReSharper disable once UnusedMember.Global
         public static _AcDb.TypedValue LispSaveFileDialog(_AcDb.ResultBuffer args)
         {
             if (args == null) return new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil);
@@ -66,6 +67,7 @@ namespace Plan2Ext
 
         
         [_AcTrx.LispFunction("OpenFileDialog")]
+        // ReSharper disable once UnusedMember.Global
         public static _AcDb.ResultBuffer LispOpenFileDialog(_AcDb.ResultBuffer args)
         {
             if (args == null) return new _AcDb.ResultBuffer(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Nil));
@@ -115,6 +117,7 @@ namespace Plan2Ext
             {
                 System.Windows.Forms.OpenFileDialog ofd = new System.Windows.Forms.OpenFileDialog();
                 ofd.CheckFileExists = true;
+                // ReSharper disable once LocalizableElement
                 ofd.Filter = Ext + "|*." + Ext;
                 ofd.Multiselect = Multiple;
                 ofd.Title = Title;
@@ -186,8 +189,7 @@ namespace Plan2Ext
             {
                 if (array[3].TypeCode == (int)_AcBrx.LispDataType.T_atom)
                 {
-                    if (array[3].Value == null) Multiple = false;
-                    else Multiple = (bool)array[3].Value;
+	                Multiple = true;
                 }
             }
 

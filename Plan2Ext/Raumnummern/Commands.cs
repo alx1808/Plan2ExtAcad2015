@@ -1,15 +1,11 @@
-﻿
-//using Autodesk.AutoCAD.ApplicationServices;
-//using Autodesk.AutoCAD.DatabaseServices;
-//using Autodesk.AutoCAD.EditorInput;
-//using Autodesk.AutoCAD.Runtime;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+// ReSharper disable IdentifierTypo
 
 #if BRX_APP
 using Bricscad.ApplicationServices;
@@ -17,6 +13,7 @@ using Teigha.DatabaseServices;
 using Bricscad.EditorInput;
 using Bricscad.Runtime;
 using Teigha.Runtime;
+using Bricscad.Internal;
 
 #elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
@@ -31,7 +28,7 @@ namespace Plan2Ext.Raumnummern
     public class Commands
     {
         #region log4net Initialization
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         static Commands()
         {
             if (log4net.LogManager.GetRepository(System.Reflection.Assembly.GetExecutingAssembly()).Configured == false)
@@ -248,20 +245,31 @@ namespace Plan2Ext.Raumnummern
 
                 var oidL = Utils.EntLast();
                 Application.SetSystemVariable("ATTREQ", 0);
-                bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
+#if BRX_APP
+	            bool userBreak = Plan2Ext.Globs.CallCommand("_.INSERT", PFEILBLOCKNAME, "\\", 1, 1, "\\");
+#else
+				bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
+#endif
                 if (userBreak) return;
                 var oid = Utils.EntLast();
                 var topNr = opts.TopNr;
                 SetTopNr(doc.Database, oid, topNr, "TOP");
 
                 var vctrU = Plan2Ext.Globs.GetViewCtrW();
-                //var vctrU = Plan2Ext.Globs.TransWcsUcs(vctr);
-                ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
+#if BRX_APP
+	            Plan2Ext.Globs.CallCommand("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
+#else
+				ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
+#endif
                 if (userBreak) return;
                 oid = Utils.EntLast();
                 SetTopBlockNr(doc.Database, oid, topNr, TOPBLOCK_TOPNR_ATTNAME);
-                userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
-                IncrementTopNr();
+#if BRX_APP
+	            userBreak = Plan2Ext.Globs.CallCommand("_.MOVE", "_L", "", vctrU, "\\");
+#else
+				userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
+#endif
+				IncrementTopNr();
 
             }
             catch (System.Exception ex)
@@ -298,7 +306,7 @@ namespace Plan2Ext.Raumnummern
             }
             catch (System.Exception ex)
             {
-                log.Error(string.Format(CultureInfo.CurrentCulture, "Fehler beim Ändern der Attribute: {0}", ex.Message), ex);
+                Log.Error(string.Format(CultureInfo.CurrentCulture, "Fehler beim Ändern der Attribute: {0}", ex.Message), ex);
                 ok = false;
 
             }
@@ -333,7 +341,7 @@ namespace Plan2Ext.Raumnummern
             }
             catch (System.Exception ex)
             {
-                log.Error(string.Format(CultureInfo.CurrentCulture, "Fehler beim Ändern der Attribute: {0}", ex.Message), ex);
+                Log.Error(string.Format(CultureInfo.CurrentCulture, "Fehler beim Ändern der Attribute: {0}", ex.Message), ex);
                 ok = false;
 
             }
@@ -356,7 +364,7 @@ namespace Plan2Ext.Raumnummern
 
 #endif
 
-        private static void IncrementTopNr()
+				private static void IncrementTopNr()
         {
             var topNr = Globs.TheRnOptions.TopNr;
             var newTopNr = IncrementNumberInString(topNr);
@@ -525,7 +533,7 @@ namespace Plan2Ext.Raumnummern
                             tr.Commit();
                         }
 
-                        per = ed.GetNestedEntity("\nNummer-Attribut wählen: ");
+                        per = ed.GetNestedEntityEx("\nNummer-Attribut wählen: ");
                         if (per.Status == PromptStatus.OK)
                         {
                             tr = doc.TransactionManager.StartTransaction();
@@ -540,7 +548,7 @@ namespace Plan2Ext.Raumnummern
                                 tr.Commit();
                             }
                         }
-                        per = ed.GetNestedEntity("\nFlächen-Attribut wählen: ");
+                        per = ed.GetNestedEntityEx("\nFlächen-Attribut wählen: ");
                         if (per.Status == PromptStatus.OK)
                         {
                             tr = doc.TransactionManager.StartTransaction();
@@ -857,12 +865,12 @@ namespace Plan2Ext.Raumnummern
         [LispFunction("Plan2Raumnummern")]
         public static object Plan2Raumnummern(ResultBuffer rb)
         {
-            log.Debug("--------------------------------------------------------------------------------");
-            log.Debug("Plan2Raumnummern");
+            Log.Debug("--------------------------------------------------------------------------------");
+            Log.Debug("Plan2Raumnummern");
             try
             {
                 Document doc = Application.DocumentManager.MdiActiveDocument;
-                log.DebugFormat("Dokumentname: {0}.", doc.Name);
+                Log.DebugFormat("Dokumentname: {0}.", doc.Name);
 
                 if (_RnPalette == null)
                 {
@@ -901,7 +909,7 @@ namespace Plan2Ext.Raumnummern
 
             Document doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return false;
-            log.DebugFormat("Dokumentname: {0}.", doc.Name);
+            Log.DebugFormat("Dokumentname: {0}.", doc.Name);
 
             if (Globs.TheRnOptions == null) return false;
             else return true;

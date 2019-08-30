@@ -17,6 +17,7 @@ using _AcAp = Bricscad.ApplicationServices;
 using Teigha.DatabaseServices;
 using Bricscad.EditorInput;
 using _AcBrx = Bricscad.Runtime;
+// ReSharper disable StringLiteralTypo
 #elif ARX_APP
   using _AcAp = Autodesk.AutoCAD.ApplicationServices;
   using Autodesk.AutoCAD.DatabaseServices;
@@ -146,7 +147,7 @@ namespace Plan2Ext.CalcArea
                         tr.Commit();
                     }
 
-                    per = ed.GetNestedEntity("\nFlächen-Attribut wählen: ");
+                    per = ed.GetNestedEntityEx("\nFlächen-Attribut wählen <Return für Keines>: ");
                     if (per.Status == PromptStatus.OK)
                     {
 
@@ -160,9 +161,13 @@ namespace Plan2Ext.CalcArea
                             tr.Commit();
                         }
                     }
+                    else if (per.Status == PromptStatus.None)
+                    {
+                        txtAttribute.Text = "";
+                    }
 
                     txtPeriAtt.Text = "";
-                    per = ed.GetNestedEntity("\nUmfang-Attribut wählen: ");
+                    per = ed.GetNestedEntityEx("\nUmfang-Attribut wählen: <Return für Keines>");
                     if (per.Status == PromptStatus.OK)
                     {
                         tr = doc.TransactionManager.StartTransaction();
@@ -174,6 +179,10 @@ namespace Plan2Ext.CalcArea
                             txtPeriAtt.Text = ar.Tag;
                             tr.Commit();
                         }
+                    }
+                    else if (per.Status == PromptStatus.None)
+                    {
+                        txtPeriAtt.Text = "";
                     }
                 }
             }

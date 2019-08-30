@@ -403,8 +403,7 @@ namespace Plan2Ext.Massenbefehle
             _AttributeName = string.Empty;
             _AttributeValue = string.Empty;
 
-            _AcEd.PromptNestedEntityResult per = ed.GetNestedEntity("\nZu änderndes Attribut wählen: ");
-
+            _AcEd.PromptNestedEntityResult per = ed.GetNestedEntityEx("\nZu änderndes Attribut wählen: ");
             if (per.Status == _AcEd.PromptStatus.OK)
             {
                 using (var tr = doc.TransactionManager.StartTransaction())

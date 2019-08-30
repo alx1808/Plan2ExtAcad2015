@@ -357,7 +357,8 @@ namespace Plan2Ext
 
         internal static Dictionary<_AcDb.ObjectId, FgRbStructure> GetFgRbStructs(string rbName, string fgLayer, string afLayer, _AcDb.Database db)
         {
-            NrOfOverlaps = 0;
+	        Dictionary<_AcDb.ObjectId, FgRbStructure> fgRbStructure = null;
+			NrOfOverlaps = 0;
             OrphanRaumblocks.Clear();
 
             var structs = new Dictionary<_AcDb.ObjectId, FgRbStructureInTrans>();
@@ -407,10 +408,12 @@ namespace Plan2Ext
                         OrphanRaumblocks.Add(rb.Id);
                     }
                 }
+                fgRbStructure = AsFgRbStructs(structs);
 
-                tr.Commit();
+				tr.Commit();
             }
-            return AsFgRbStructs(structs);
+
+            return fgRbStructure;
         }
 
         private static Dictionary<_AcDb.ObjectId, FgRbStructure> AsFgRbStructs(Dictionary<_AcDb.ObjectId, FgRbStructureInTrans> fgRbStructsInTrans)

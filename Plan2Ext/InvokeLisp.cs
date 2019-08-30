@@ -25,8 +25,8 @@ using _AcPl = Bricscad.PlottingServices;
 using _AcBrx = Bricscad.Runtime;
 using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
-using _AcIntCom = BricscadDb;
-using _AcInt = BricscadApp;
+//using _AcIntCom = BricscadDb;
+//using _AcInt = BricscadApp;
 #elif ARX_APP
   using _AcAp = Autodesk.AutoCAD.ApplicationServices;
   using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
@@ -84,10 +84,10 @@ namespace CADDZone.AutoCAD.Samples
 
         const String IMPORT_FILE_NAME = "accore.dll";
 #else
-            const String IMPORT_FILE_NAME = "acad.exe";
+		const String IMPORT_FILE_NAME = "acad.exe";
 #endif
 
-        [System.Security.SuppressUnmanagedCodeSecurity]
+		[System.Security.SuppressUnmanagedCodeSecurity]
         [DllImport(IMPORT_FILE_NAME, CallingConvention = CallingConvention.Cdecl)]
         extern static private int acedInvoke(IntPtr args, out IntPtr result);
 
@@ -95,15 +95,20 @@ namespace CADDZone.AutoCAD.Samples
 
         public static _AcDb.ResultBuffer InvokeLisp(_AcDb.ResultBuffer args, ref int stat)
         {
-            IntPtr rb = IntPtr.Zero;
+#if BRX_APP
+	        stat = RTNORM;
+	        return Bricscad.Global.Editor.Invoke(args);
+#else
+	        IntPtr rb = IntPtr.Zero;
             stat = acedInvoke(args.UnmanagedObject, out rb);
             if (stat == (int)_AcEd.PromptStatus.OK && rb != IntPtr.Zero)
                 return (_AcDb.ResultBuffer)
                _AcTrx.DisposableWrapper.Create(typeof(_AcDb.ResultBuffer), rb, true);
             return null;
-        }
+#endif
+		}
 
-        static void PrintResbuf(_AcDb.ResultBuffer rb)
+		static void PrintResbuf(_AcDb.ResultBuffer rb)
         {
             string s = "\n-----------------------------";
             foreach (_AcDb.TypedValue val in rb)
