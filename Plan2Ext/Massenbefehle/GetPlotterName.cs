@@ -1,32 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+// ReSharper disable IdentifierTypo
 
 namespace Plan2Ext.Massenbefehle
 {
     public partial class GetPlotterName : Form
     {
-        private List<string> _PlotterNames;
+        private readonly List<string> _plotterNames;
 
         public GetPlotterName(List<string> list)
         {
             InitializeComponent();
 
-            this._PlotterNames = list;
+            _plotterNames = list;
             InitPlotterNameList();
         }
 
         private void InitPlotterNameList()
         {
             lstPlotterNames.Items.Clear();
-            if (_PlotterNames.Count == 0) return;
-            foreach (var pn in _PlotterNames)
+            if (_plotterNames.Count == 0) return;
+            foreach (var pn in _plotterNames)
             {
                 lstPlotterNames.Items.Add(pn);
             }
@@ -38,7 +33,7 @@ namespace Plan2Ext.Massenbefehle
             get
             {
                 if (lstPlotterNames.Items.Count == 0) return string.Empty;
-                return _PlotterNames[lstPlotterNames.SelectedIndex];
+                return _plotterNames[lstPlotterNames.SelectedIndex];
             }
         }
         public bool NoPlotterInModelspace
@@ -51,14 +46,14 @@ namespace Plan2Ext.Massenbefehle
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            this.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
     }
 }

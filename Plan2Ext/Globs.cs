@@ -117,7 +117,7 @@ namespace Plan2Ext
 							rb.Add(new _AcDb.TypedValue((int) _AcBrx.LispDataType.Double, Convert.ToDouble(o)));
 							break;
 						default:
-							throw new InvalidOperationException($"Datatype {tpName} not supported!");
+							throw new InvalidOperationException( string.Format("Datatype {0} not supported!",tpName));
 
 					}
 				}
