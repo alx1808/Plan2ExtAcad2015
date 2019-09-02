@@ -28,9 +28,11 @@ namespace Plan2Ext.LayTrans
     {
         #region log4net Initialization
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
-        #endregion
+		#endregion
 
-        //[CommandMethod("Plan2LayTransExport")]
+#if ARX_APP
+        [CommandMethod("Plan2LayTransExport")]
+#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTransExport()
         {
@@ -62,7 +64,9 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        //[CommandMethod("Plan2LayTransExportBulk", CommandFlags.Session)]
+#if ARX_APP
+        [CommandMethod("Plan2LayTransExportBulk", CommandFlags.Session)]
+#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTransExportBulk()
         {
@@ -102,7 +106,9 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        //[CommandMethod("Plan2LayTransExportWithNrElements")]
+#if ARX_APP
+        [CommandMethod("Plan2LayTransExportWithNrElements")]
+#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTransExportWithNrElements()
         {
@@ -132,7 +138,9 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        //[CommandMethod("Plan2LayTrans")]
+#if ARX_APP
+        [CommandMethod("Plan2LayTrans")]
+#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTrans()
         {
@@ -173,10 +181,12 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        /// <summary>
-        /// Laytrans with commandline options instead of fileselection via dialog
-        /// </summary>
-        //[CommandMethod("Plan2LayTrans2")]
+		/// <summary>
+		/// Laytrans with commandline options instead of fileselection via dialog
+		/// </summary>
+#if ARX_APP
+        [CommandMethod("Plan2LayTrans2")]
+#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTrans2()
         {

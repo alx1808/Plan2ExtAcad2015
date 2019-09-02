@@ -1,6 +1,5 @@
 ﻿#if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
-//using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
 using _AcDb = Teigha.DatabaseServices;
 using _AcEd = Bricscad.EditorInput;
@@ -30,12 +29,10 @@ using _AcInt = Autodesk.AutoCAD.Interop;
 #endif
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Globalization;
 // ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
+// ReSharper disable StringLiteralTypo
 
 
 namespace Plan2Ext.Plot
@@ -43,10 +40,10 @@ namespace Plan2Ext.Plot
     public static class Extensions
     {
         #region log4net Initialization
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Extensions))));
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(Extensions))));
         #endregion
 
-        public static bool ContainsIgnoreUc(this System.Collections.Specialized.StringCollection coll, ref string key)
+        private static bool ContainsIgnoreUc(this System.Collections.Specialized.StringCollection coll, ref string key)
         {
             foreach (var k in coll)
             {
@@ -74,13 +71,13 @@ namespace Plan2Ext.Plot
 
                     if (devs.ContainsIgnoreUc(ref device))
                     {
-                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
+                        Log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
                         psv.SetPlotConfigurationName(ps, device, null);
                         psv.RefreshLists(ps);
                     }
                     else
                     {
-                        log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);
+                        Log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);
                     }
                 }
 
@@ -92,7 +89,7 @@ namespace Plan2Ext.Plot
                     var mns = psv.GetCanonicalMediaNameList(ps);
                     if (mns.ContainsIgnoreUc(ref mediaName))
                     {
-                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze PageSize '{0}' für Layout '{1}'.", mediaName, lay.LayoutName);
+                        Log.InfoFormat(CultureInfo.CurrentCulture, "Setze PageSize '{0}' für Layout '{1}'.", mediaName, lay.LayoutName);
                         psv.SetCanonicalMediaName(ps, mediaName);
                     }
                     else
@@ -100,12 +97,12 @@ namespace Plan2Ext.Plot
                         string canonicalMediaName = LocaleToCanonicalMediaName(psv, ps, mediaName);
                         if (!string.IsNullOrEmpty(canonicalMediaName))
                         {
-                            log.InfoFormat(CultureInfo.CurrentCulture, "Setze PageSize '{0}' für Layout '{1}'.", canonicalMediaName, lay.LayoutName);
+                            Log.InfoFormat(CultureInfo.CurrentCulture, "Setze PageSize '{0}' für Layout '{1}'.", canonicalMediaName, lay.LayoutName);
                             psv.SetCanonicalMediaName(ps, canonicalMediaName);
                         }
                         else
                         {
-                            log.WarnFormat(CultureInfo.CurrentCulture, "Size '{0}' existiert nicht!", mediaName);
+                            Log.WarnFormat(CultureInfo.CurrentCulture, "Size '{0}' existiert nicht!", mediaName);
                         }
                     }
                 }
@@ -114,18 +111,18 @@ namespace Plan2Ext.Plot
                 var ssl = psv.GetPlotStyleSheetList();
                 if (string.IsNullOrEmpty(styleSheet) || ssl.ContainsIgnoreUc(ref styleSheet))
                 {
-                    log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName);
+                    Log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName);
                     psv.SetCurrentStyleSheet(ps, styleSheet);
                 }
                 else
                 {
-                    log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", styleSheet);
+                    Log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", styleSheet);
                 }
 
                 // Copy the PlotSettings data back to the Layout
                 if (scaleNumerator.HasValue && scaleDenominator.HasValue)
                 {
-                    log.InfoFormat(CultureInfo.CurrentCulture, "Setze Scale '{0}:{2}' für Layout '{1}'.", scaleNumerator.Value.ToString(), lay.LayoutName, scaleDenominator.Value.ToString());
+                    Log.InfoFormat(CultureInfo.CurrentCulture, "Setze Scale '{0}:{2}' für Layout '{1}'.", scaleNumerator.Value.ToString(CultureInfo.InvariantCulture), lay.LayoutName, scaleDenominator.Value.ToString(CultureInfo.InvariantCulture));
                     _AcDb.CustomScale cs = new _AcDb.CustomScale(scaleNumerator.Value, scaleDenominator.Value);
 
                     if (ps.PlotPaperUnits != _AcDb.PlotPaperUnit.Millimeters)
@@ -149,11 +146,8 @@ namespace Plan2Ext.Plot
                         case 270:
                             pRot = _AcDb.PlotRotation.Degrees270;
                             break;
-                        case 0:
-                        default:
-                            break;
                     }
-                    log.InfoFormat(CultureInfo.CurrentCulture, "Setze Rotation '{0}' für Layout '{1}'.", pRot.ToString(), lay.LayoutName);
+                    Log.InfoFormat(CultureInfo.CurrentCulture, "Setze Rotation '{0}' für Layout '{1}'.", pRot.ToString(), lay.LayoutName);
                     psv.SetPlotRotation(ps, pRot);
                 }
 
@@ -164,8 +158,8 @@ namespace Plan2Ext.Plot
                     {
                         if (ps.PlotWindowArea.ToString() == "((0,0),(0,0))")
                         {
-                            _AcDb.Extents2d e2d = new _AcDb.Extents2d(0.0, 0.0, 10.0, 10.0);
-                            psv.SetPlotWindowArea(ps, e2d);
+                            _AcDb.Extents2d e2D = new _AcDb.Extents2d(0.0, 0.0, 10.0, 10.0);
+                            psv.SetPlotWindowArea(ps, e2D);
                         }
                         psv.SetPlotType(ps, _AcDb.PlotType.Window);
                     }
@@ -173,7 +167,7 @@ namespace Plan2Ext.Plot
                 }
                 catch (Exception ex)
                 {
-                    log.ErrorFormat(CultureInfo.CurrentCulture, "Fehler beim Setzen von PlotType auf FENSTER! {0}", ex.Message);
+                    Log.ErrorFormat(CultureInfo.CurrentCulture, "Fehler beim Setzen von PlotType auf FENSTER! {0}", ex.Message);
                 }
 
                 var upgraded = false;
@@ -192,6 +186,7 @@ namespace Plan2Ext.Plot
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static void SetPlotSettingsStyleSheet(this _AcDb.Layout lay, string styleSheet)
         {
             using (var ps = new _AcDb.PlotSettings(lay.ModelType))
@@ -204,12 +199,12 @@ namespace Plan2Ext.Plot
                 var ssl = psv.GetPlotStyleSheetList();
                 if (string.IsNullOrEmpty(styleSheet) || ssl.ContainsIgnoreUc(ref styleSheet))
                 {
-                    log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName);
+                    Log.InfoFormat(CultureInfo.CurrentCulture, "Setze StyleSheet '{0}' für Layout '{1}'.", styleSheet, lay.LayoutName);
                     psv.SetCurrentStyleSheet(ps, styleSheet);
                 }
                 else
                 {
-                    log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", styleSheet);
+                    Log.WarnFormat(CultureInfo.CurrentCulture, "Stylesheet '{0}' existiert nicht!", styleSheet);
                 }
 
                 var upgraded = false;
@@ -228,6 +223,7 @@ namespace Plan2Ext.Plot
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static void SetPlotSettingsDevice(this _AcDb.Layout lay, string device)
         {
             using (var ps = new _AcDb.PlotSettings(lay.ModelType))
@@ -243,13 +239,13 @@ namespace Plan2Ext.Plot
 
                     if (deviceList.ContainsIgnoreUc(ref device))
                     {
-                        log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
+                        Log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
                         psv.SetPlotConfigurationName(ps, device, null);
                         psv.RefreshLists(ps);
                     }
                     else
                     {
-                        log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);
+                        Log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);
                     }
                 }
 
@@ -291,24 +287,30 @@ namespace Plan2Ext.Plot
 
     }
 
+    // ReSharper disable once UnusedMember.Global
     public class PlotSettingsForLayout
     {
         #region log4net Initialization
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(PlotSettingsForLayout))));
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(Convert.ToString((typeof(PlotSettingsForLayout))));
         #endregion
 
         [_AcTrx.LispFunction("Plan2OpenPlotSettings")]
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedParameter.Global
         public static void OpenPlotSettings(_AcDb.ResultBuffer rb)
         {
             try
             {
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plot ", true, false, false);
-            }
+#if BRX_APP
+	            _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("_CPAGESETUP ", true, false, false);
+#else
+				_AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plot ", true, false, false);
+#endif
+			}
             catch (Exception ex)
             {
-                log.Error(ex.Message, ex);
+                Log.Error(ex.Message, ex);
             }
-
         }
 
         /// <summary>
@@ -319,6 +321,7 @@ namespace Plan2Ext.Plot
         /// </param>
         /// <returns></returns>
         [_AcTrx.LispFunction("Plan2SetPlotSettings")]
+        // ReSharper disable once UnusedMember.Global
         public static bool SetPlotSettings(_AcDb.ResultBuffer rb)
         {
             try
@@ -341,7 +344,7 @@ namespace Plan2Ext.Plot
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message, ex);
+                Log.Error(ex.Message, ex);
                 return false;
             }
         }
@@ -354,6 +357,7 @@ namespace Plan2Ext.Plot
         /// </param>
         /// <returns></returns>
         [_AcTrx.LispFunction("Plan2GetPlotSettings")]
+        // ReSharper disable once UnusedMember.Global
         public static _AcDb.ResultBuffer GetPlotSettings(_AcDb.ResultBuffer rb)
         {
             try
@@ -374,20 +378,22 @@ namespace Plan2Ext.Plot
 
                 GetPlotSettings(loName, out device, out pageSize, out styleSheet, out scaleUnits, out scaleNumerator, out scaleDenominator, out rotation);
 
-                _AcDb.ResultBuffer rbRet = new _AcDb.ResultBuffer();
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, device));
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, pageSize));
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Text, styleSheet));
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Int16, scaleUnits));
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Double, scaleNumerator));
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Double, scaleDenominator));
-                rbRet.Add(new _AcDb.TypedValue((int)_AcBrx.LispDataType.Int16, rotation));
+                _AcDb.ResultBuffer rbRet = new _AcDb.ResultBuffer
+                {
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Text, device),
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Text, pageSize),
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Text, styleSheet),
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Int16, scaleUnits),
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Double, scaleNumerator),
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Double, scaleDenominator),
+	                new _AcDb.TypedValue((int) _AcBrx.LispDataType.Int16, rotation)
+                };
 
                 return rbRet;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message, ex);
+                Log.Error(ex.Message, ex);
                 return null;
             }
         }
@@ -396,7 +402,6 @@ namespace Plan2Ext.Plot
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database db = doc.Database;
-            _AcEd.Editor ed = doc.Editor;
             _AcDb.LayoutManager layoutMgr = _AcDb.LayoutManager.Current;
 
             var layoutId = layoutMgr.GetLayoutId(loName);
@@ -440,7 +445,6 @@ namespace Plan2Ext.Plot
         {
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database db = doc.Database;
-            _AcEd.Editor ed = doc.Editor;
             _AcDb.LayoutManager layoutMgr = _AcDb.LayoutManager.Current;
 
             var layoutId = layoutMgr.GetLayoutId(loName);
@@ -467,11 +471,12 @@ namespace Plan2Ext.Plot
                 if (arr.Length > index)
                 {
                     var tp = arr[index];
-                    if (tp.TypeCode != (short)_AcTrx.LispDataType.Nil) val = tp.Value.ToString();
+                    if (tp.TypeCode != (short)_AcBrx.LispDataType.Nil) val = tp.Value.ToString();
                 }
             }
             catch (Exception)
             {
+	            // ignored
             }
         }
         private static void TolerantGet(_AcDb.TypedValue[] arr, out double? val, int index)
@@ -483,14 +488,13 @@ namespace Plan2Ext.Plot
                 if (arr.Length > index)
                 {
                     var tp = arr[index];
-                    if (tp.TypeCode != (short)_AcTrx.LispDataType.Nil) val = (double)tp.Value;
+                    if (tp.TypeCode != (short)_AcBrx.LispDataType.Nil) val = (double)tp.Value;
                 }
             }
             catch (Exception)
             {
-                ;
+	            // ignored
             }
-
         }
         private static void TolerantGet(_AcDb.TypedValue[] arr, out short? val, int index)
         {
@@ -501,14 +505,13 @@ namespace Plan2Ext.Plot
                 if (arr.Length > index)
                 {
                     var tp = arr[index];
-                    if (tp.TypeCode != (short)_AcTrx.LispDataType.Nil) val = (short)tp.Value;
+                    if (tp.TypeCode != (short)_AcBrx.LispDataType.Nil) val = (short)tp.Value;
                 }
             }
             catch (Exception)
             {
-                ;
+	            // ignored
             }
-
         }
     }
 }
