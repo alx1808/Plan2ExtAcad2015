@@ -1,11 +1,20 @@
 ﻿using System.Globalization;
 using System.Linq;
+
+
+#if BRX_APP
+using Bricscad.ApplicationServices;
+using Teigha.DatabaseServices;
+using Bricscad.EditorInput;
+using Teigha.Runtime;
+#elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
-using Exception = Autodesk.AutoCAD.Runtime.Exception;
+#endif
+
+
 
 // ReSharper disable CommentTypo
 
@@ -21,7 +30,7 @@ namespace Plan2Ext.LayTrans
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
         #endregion
 
-        [CommandMethod("Plan2LayTransExport")]
+        //[CommandMethod("Plan2LayTransExport")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTransExport()
         {
@@ -53,7 +62,7 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        [CommandMethod("Plan2LayTransExportBulk", CommandFlags.Session)]
+        //[CommandMethod("Plan2LayTransExportBulk", CommandFlags.Session)]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTransExportBulk()
         {
@@ -93,7 +102,7 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        [CommandMethod("Plan2LayTransExportWithNrElements")]
+        //[CommandMethod("Plan2LayTransExportWithNrElements")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTransExportWithNrElements()
         {
@@ -123,7 +132,7 @@ namespace Plan2Ext.LayTrans
             }
         }
 
-        [CommandMethod("Plan2LayTrans")]
+        //[CommandMethod("Plan2LayTrans")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTrans()
         {
@@ -167,7 +176,7 @@ namespace Plan2Ext.LayTrans
         /// <summary>
         /// Laytrans with commandline options instead of fileselection via dialog
         /// </summary>
-        [CommandMethod("Plan2LayTrans2")]
+        //[CommandMethod("Plan2LayTrans2")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2LayTrans2()
         {

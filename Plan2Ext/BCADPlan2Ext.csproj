@@ -118,6 +118,8 @@
     <Compile Include="HoehenPruefung\MyExtensions.cs" />
     <Compile Include="InvokeLisp.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
+    <Compile Include="LayTrans\Commands.cs" />
+    <Compile Include="LayTrans\Engine.cs" />
     <Compile Include="LispFileDialogs.cs" />
     <Compile Include="Massenbefehle\GetPlotterName.cs">
       <SubType>Form</SubType>
