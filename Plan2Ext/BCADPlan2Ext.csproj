@@ -126,6 +126,8 @@
       <DependentUpon>GetPlotterName.cs</DependentUpon>
     </Compile>
     <Compile Include="Massenbefehle\SetCtbInLayouts.cs" />
+    <Compile Include="Massenbefehle\SetPlotterInLayouts.cs" />
+    <Compile Include="Plotter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RaumHoePruefung\Commands.cs" />
     <Compile Include="RaumHoePruefung\Engine.cs" />

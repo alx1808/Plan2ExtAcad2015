@@ -93,7 +93,7 @@ namespace Plan2Ext.Massenbefehle
             }
             catch (System.Exception ex)
             {
-                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (Plan2SetPlotterInLayouts): {0}", ex.Message);
+                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (Plan2PlotToDwf): {0}", ex.Message);
                 _Editor.WriteMessage("\n" + msg);
                 System.Windows.Forms.MessageBox.Show(ex.Message, "Plan2PlotToDwf");
             }
