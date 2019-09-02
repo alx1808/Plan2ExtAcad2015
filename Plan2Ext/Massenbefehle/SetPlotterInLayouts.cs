@@ -53,7 +53,7 @@ namespace Plan2Ext.Massenbefehle
         private static string _noPlotterName = string.Empty;
         #endregion
 
-        [_AcTrx.CommandMethod("Plan2SetPlotterInLayouts")]
+        //[_AcTrx.CommandMethod("Plan2SetPlotterInLayouts")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetPlotterInLayouts()
         {
@@ -88,7 +88,7 @@ namespace Plan2Ext.Massenbefehle
             }
         }
 
-        [_AcTrx.CommandMethod("Plan2SetPlotterInLayoutsBulk", _AcTrx.CommandFlags.Session)]
+        //[_AcTrx.CommandMethod("Plan2SetPlotterInLayoutsBulk", _AcTrx.CommandFlags.Session)]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetPlotterInLayoutsBulk()
         {
