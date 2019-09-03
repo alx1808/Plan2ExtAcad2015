@@ -983,18 +983,13 @@ namespace Plan2Ext
 
             using (process = Process.Start(ProcessInfo))
             {
-                process.WaitForExit();
+                //process.WaitForExit();
 
-                // *** Read the streams ***
-                output = process.StandardOutput.ReadToEnd();
-                error = process.StandardError.ReadToEnd();
+                //// *** Read the streams ***
+                //output = process.StandardOutput.ReadToEnd();
+                //error = process.StandardError.ReadToEnd();
 
-                exitCode = process.ExitCode;
-
-                //MessageBox.Show("output>>" + (String.IsNullOrEmpty(output) ? "(none)" : output));
-                //MessageBox.Show("error>>" + (String.IsNullOrEmpty(error) ? "(none)" : error));
-                //MessageBox.Show("ExitCode: " + xitCode.ToString(), "ExecuteCommand");
-                //process.Close();
+                //exitCode = process.ExitCode;
             }
         }
 
