@@ -53,9 +53,7 @@ namespace Plan2Ext.Massenbefehle
         private static string _noPlotterName = string.Empty;
 		#endregion
 
-#if ARX_APP
         [_AcTrx.CommandMethod("Plan2SetPlotterInLayouts")]
-#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetPlotterInLayouts()
         {
@@ -89,9 +87,7 @@ namespace Plan2Ext.Massenbefehle
                 System.Windows.Forms.MessageBox.Show(ex.Message, "Plan2SetPlotterInLayouts");
             }
         }
-#if ARX_APP
 		[_AcTrx.CommandMethod("Plan2SetPlotterInLayoutsBulk", _AcTrx.CommandFlags.Session)]
-#endif
 		// ReSharper disable once UnusedMember.Global
 		public static void Plan2SetPlotterInLayoutsBulk()
         {

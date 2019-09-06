@@ -54,9 +54,7 @@ namespace Plan2Ext.Massenbefehle
         private static bool _noCtbInModelSpace;
         private static string _noCtbName = string.Empty;
 		#endregion
-#if !BRX_APP
 		[_AcTrx.CommandMethod("Plan2SetCtbInLayouts")]
-#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetCtbInLayouts()
         {
@@ -90,9 +88,7 @@ namespace Plan2Ext.Massenbefehle
                 System.Windows.Forms.MessageBox.Show(ex.Message, "Plan2SetCtbInLayouts");
             }
         }
-#if !BRX_APP
         [_AcTrx.CommandMethod("Plan2SetCtbInLayoutsBulk", _AcTrx.CommandFlags.Session)]
-#endif
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetCtbInLayoutsBulk()
         {
