@@ -5,6 +5,7 @@ using System.Text;
 
 using System.Globalization;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 //using Autodesk.AutoCAD.ApplicationServices.Core;
 using Microsoft.Win32.TaskScheduler;
@@ -50,7 +51,7 @@ namespace Plan2Ext
 
         private static bool inCommand;
 
-		/*
+        /*
         //[_AcTrx.CommandMethod("Alx")]
         public static void Alx()
         {
@@ -105,7 +106,7 @@ namespace Plan2Ext
         {
             inCommand = false;
         }
-		*/
+        */
         public static void ImportDrawing(string drawingPath)
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
@@ -860,6 +861,122 @@ namespace Plan2Ext
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Calls Process with arguments and environment variables
+        /// </summary>
+        /// <param name="rb"></param>
+        /// <remarks>
+        /// (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))
+        /// </remarks>
+
+        [_AcTrx.LispFunction("InoCallProcessWithEnv")]
+        public static bool InoCallProcessWithEnv(_AcDb.ResultBuffer rb)
+        {
+            _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            if (rb == null) return false;
+            _AcDb.TypedValue[] values = rb.AsArray();
+            if (values == null || values.Length < 3)
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                return false;
+            }
+            if (values[0].Value == null) return false;
+            string fileName = values[0].Value.ToString();
+            //if (!File.Exists(fileName))
+            //{
+            //    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Datei {0} existiert nicht!", fileName));
+            //    return false;
+            //}
+
+            // get args
+            var args = new List<string>();
+            int i = 1;
+            if (values[i].TypeCode != (short)_AcBrx.LispDataType.Nil)
+            {
+                if (values[i].TypeCode != (short)_AcBrx.LispDataType.ListBegin)
+                {
+                    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                    return false;
+                }
+                i++;
+                while (i < values.Length && (values[i].TypeCode != (short)_AcBrx.LispDataType.ListEnd))
+                {
+                    if (values[i].TypeCode == (short)_AcBrx.LispDataType.ListBegin)
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        return false;
+                    }
+                    args.Add(values[i].Value.ToString());
+                    i++;
+                }
+                i++;
+            }
+            // get envs
+            var envs = new List<EnvPair>();
+            if (values[i].TypeCode != (short) _AcBrx.LispDataType.Nil)
+            {
+                    if (values[i].TypeCode != (short) _AcBrx.LispDataType.ListBegin)
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
+                            "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        return false;
+                    }
+
+                for (int j = i + 1; j < values.Length - 4; j += 4)
+                {
+                    if (values[j].TypeCode != (short) _AcBrx.LispDataType.ListBegin)
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
+                            "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        return false;
+                    }
+
+                    var key = values[j + 1].Value.ToString();
+                    var val = values[j + 2].Value.ToString();
+                    envs.Add(new EnvPair()
+                    {
+                        Key = key,
+                        Val = val
+                    });
+
+                    if (values[j + 3].TypeCode != (short) _AcBrx.LispDataType.ListEnd)
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
+                            "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        return false;
+                    }
+                }
+            }
+
+            // call process
+            foreach (var envPair in envs)
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,"\n{0}:{1}",envPair.Key,envPair.Val));
+                System.Environment.SetEnvironmentVariable(envPair.Key, envPair.Val);
+            }
+
+            var allArgs = string.Join(" ", args);
+            ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nCalling {0} {1}", fileName, allArgs));
+
+            try
+            {
+                Process.Start(fileName, allArgs);
+            }
+            catch (Exception e)
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\n{0}", e));
+                return false;
+            }
+
+            return true;
+        }
+
+        private class EnvPair
+        {
+            public string Key { get; set; }
+            public string Val { get; set; }
         }
 
         /// <summary>
