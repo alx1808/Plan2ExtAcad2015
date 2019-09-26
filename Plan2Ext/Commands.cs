@@ -863,32 +863,53 @@ namespace Plan2Ext
             }
         }
 
+        [_AcTrx.LispFunction("InoKillAllProcessesWithName")]
+        public static bool InoKillAllProcessesWithName(_AcDb.ResultBuffer rb)
+        {
+            _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            if (rb == null)
+            {
+	            ShowCallingInfoForKillAllProcessesWithName(ed);
+	            return false;
+            }
+            _AcDb.TypedValue[] values = rb.AsArray();
+            if (values == null || values.Length < 1)
+            {
+                ShowCallingInfoForKillAllProcessesWithName(ed);
+                return false;
+            }
+
+            var processName = values[0].Value.ToString();
+            var processes = Process.GetProcessesByName(processName);
+            foreach (var process in processes)
+            {
+                process.Kill();
+            }
+            return true;
+        }
+
+
         /// <summary>
         /// Calls Process with arguments and environment variables
         /// </summary>
         /// <param name="rb"></param>
         /// <remarks>
-        /// (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))
+        /// (InoCallProcessWithEnv exename (arglist) timeoutInMs ((envkey envval)(envkey envval)))
+        /// timeoutInMs: -1 = infinite
         /// </remarks>
-
         [_AcTrx.LispFunction("InoCallProcessWithEnv")]
         public static bool InoCallProcessWithEnv(_AcDb.ResultBuffer rb)
         {
             _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
             if (rb == null) return false;
             _AcDb.TypedValue[] values = rb.AsArray();
-            if (values == null || values.Length < 3)
+            if (values == null || values.Length < 4)
             {
-                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                ShowCallingInfoForProcessWithEnv(ed);
                 return false;
             }
             if (values[0].Value == null) return false;
             string fileName = values[0].Value.ToString();
-            //if (!File.Exists(fileName))
-            //{
-            //    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Datei {0} existiert nicht!", fileName));
-            //    return false;
-            //}
 
             // get args
             var args = new List<string>();
@@ -897,7 +918,7 @@ namespace Plan2Ext
             {
                 if (values[i].TypeCode != (short)_AcBrx.LispDataType.ListBegin)
                 {
-                    ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                    ShowCallingInfoForProcessWithEnv(ed);
                     return false;
                 }
                 i++;
@@ -905,22 +926,36 @@ namespace Plan2Ext
                 {
                     if (values[i].TypeCode == (short)_AcBrx.LispDataType.ListBegin)
                     {
-                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        ShowCallingInfoForProcessWithEnv(ed);
                         return false;
                     }
                     args.Add(values[i].Value.ToString());
                     i++;
                 }
+            }
+
+            i++;
+            // timeout
+            int timeout;
+            try
+            {
+                timeout = int.Parse(values[i].Value.ToString());
                 i++;
             }
+            catch (Exception e)
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Fehler bei timeout parameter='{0}': {1}", values[i].Value,e));
+                ShowCallingInfoForProcessWithEnv(ed);
+                return false;
+            }
+
             // get envs
             var envs = new List<EnvPair>();
             if (values[i].TypeCode != (short) _AcBrx.LispDataType.Nil)
             {
                     if (values[i].TypeCode != (short) _AcBrx.LispDataType.ListBegin)
                     {
-                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
-                            "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        ShowCallingInfoForProcessWithEnv(ed);
                         return false;
                     }
 
@@ -928,8 +963,7 @@ namespace Plan2Ext
                 {
                     if (values[j].TypeCode != (short) _AcBrx.LispDataType.ListBegin)
                     {
-                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
-                            "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        ShowCallingInfoForProcessWithEnv(ed);
                         return false;
                     }
 
@@ -943,8 +977,7 @@ namespace Plan2Ext
 
                     if (values[j + 3].TypeCode != (short) _AcBrx.LispDataType.ListEnd)
                     {
-                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
-                            "Aufruf: (InoCallProcessWithEnv exename (arglist) ((envkey envval)(envkey envval)))"));
+                        ShowCallingInfoForProcessWithEnv(ed);
                         return false;
                     }
                 }
@@ -962,7 +995,15 @@ namespace Plan2Ext
 
             try
             {
-                Process.Start(fileName, allArgs);
+                using (var exeProcess = Process.Start(fileName, allArgs))
+                {
+                    exeProcess.WaitForExit(timeout);
+                    if (!exeProcess.HasExited)
+                    {
+                        ed.WriteMessage("Timeout überschritten. Der Prozess wird beendet.");
+                        exeProcess.Kill();
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -971,6 +1012,18 @@ namespace Plan2Ext
             }
 
             return true;
+        }
+
+        private static void ShowCallingInfoForKillAllProcessesWithName(_AcEd.Editor ed)
+        {
+            ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
+                "Aufruf: (InoKillAllProcessesWithName {{friendly process name}})"));
+        }
+
+        private static void ShowCallingInfoForProcessWithEnv(_AcEd.Editor ed)
+        {
+            ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,
+                "Aufruf: (InoCallProcessWithEnv exename (arglist) timeoutInMs ((envkey envval)(envkey envval)))"));
         }
 
         private class EnvPair
