@@ -23,6 +23,7 @@ using _AcPl = Bricscad.PlottingServices;
 using _AcBrx = Bricscad.Runtime;
 using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
+// ReSharper disable StringLiteralTypo
 #elif ARX_APP
 using _AcAp = Autodesk.AutoCAD.ApplicationServices;
 using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
@@ -897,6 +898,9 @@ namespace Plan2Ext
         /// (InoCallProcessWithEnv exename (arglist) timeoutInMs ((envkey envval)(envkey envval)))
         /// timeoutInMs: -1 = infinite
         /// </remarks>
+        /// <returns>
+        /// True, if Process-Call was successful and no timeout
+        /// </returns>
         [_AcTrx.LispFunction("InoCallProcessWithEnv")]
         public static bool InoCallProcessWithEnv(_AcDb.ResultBuffer rb)
         {
@@ -997,17 +1001,23 @@ namespace Plan2Ext
             {
                 using (var exeProcess = Process.Start(fileName, allArgs))
                 {
+	                if (exeProcess == null)
+	                {
+						ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Konnte Prozess {0} nicht starten!", fileName));
+						return false;
+	                }
                     exeProcess.WaitForExit(timeout);
                     if (!exeProcess.HasExited)
                     {
                         ed.WriteMessage("Timeout überschritten. Der Prozess wird beendet.");
                         exeProcess.Kill();
+                        return false;
                     }
                 }
             }
             catch (Exception e)
             {
-                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\n{0}", e));
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nFehler beim Starten von Prozess {1}: {0}", e, fileName));
                 return false;
             }
 
