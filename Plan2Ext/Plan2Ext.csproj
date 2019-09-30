@@ -232,6 +232,7 @@
       <DependentUpon>GetPlotterName.cs</DependentUpon>
     </Compile>
     <Compile Include="Massenbefehle\Plan2RenameBlocks.cs" />
+    <Compile Include="Massenbefehle\Plan2RenameLayers.cs" />
     <Compile Include="Massenbefehle\Plan2ReplaceTexts.cs" />
     <Compile Include="Massenbefehle\PlotToDwf.cs" />
     <Compile Include="Massenbefehle\ReplaceInLayoutNamesBulk.cs" />
