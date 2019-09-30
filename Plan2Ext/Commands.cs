@@ -889,6 +889,51 @@ namespace Plan2Ext
             return true;
         }
 
+        /// <summary>
+        /// String.Replace from c# for Lisp
+        /// </summary>
+        /// <param name="rb"></param>
+        /// <returns></returns>
+        [_AcTrx.LispFunction("InoStringReplace")]
+        public static string InoStringReplace(_AcDb.ResultBuffer rb)
+        {
+            _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            if (rb == null)
+            {
+                ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
+                return null;
+            }
+
+            _AcDb.TypedValue[] values = rb.AsArray();
+            if (values == null || values.Length < 3)
+            {
+                ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
+                return null;
+            }
+
+            if (values[0].TypeCode != (short) _AcBrx.LispDataType.Text)
+            {
+                ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
+                return null;
+            }
+            var completeString = values[0].Value.ToString();
+            if (values[1].TypeCode != (short) _AcBrx.LispDataType.Text)
+            {
+                ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
+                return null;
+            }
+            var stringToReplace = values[1].Value.ToString();
+            if (values[2].TypeCode != (short) _AcBrx.LispDataType.Text)
+            {
+                ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
+                return null;
+            }
+            var newString = values[2].Value.ToString();
+
+            return completeString.Replace(stringToReplace, newString);
+        }
+
+
 
         /// <summary>
         /// Calls Process with arguments and environment variables
