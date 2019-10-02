@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 //using Autodesk.AutoCAD.ApplicationServices.Core;
 using Microsoft.Win32.TaskScheduler;
 
@@ -864,14 +865,122 @@ namespace Plan2Ext
             }
         }
 
+
+        [_AcTrx.LispFunction("InoWaitForPlotPdfFile")]
+        public static string InoWaitForPlotPdfFile(_AcDb.ResultBuffer rb)
+        {
+            _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            if (rb == null)
+            {
+                ShowCallingInfoForWaitForPlotFile(ed);
+                return null;
+            }
+
+            _AcDb.TypedValue[] values = rb.AsArray();
+            if (values == null || values.Length < 2 || values[0].Value == null || values[1].Value == null)
+            {
+                ShowCallingInfoForWaitForPlotFile(ed);
+                return null;
+            }
+
+            var dir = values[0].Value.ToString();
+            if (!Directory.Exists(dir))
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nVerzeichnis {0} existiert nicht!", dir));
+                return null;
+            }
+
+            int timeout;
+            if (!int.TryParse(values[1].Value.ToString(), out timeout))
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nTimeout is ungültig: {0}!", values[1].Value.ToString()));
+                return null;
+            }
+
+            ed.WriteMessage("\nWarte auf Plotdatei");
+
+            var nrOfAgeSeconds = 60;
+            var start = Environment.TickCount;
+            var endTime = start + timeout;
+            string theFile = null;
+            while (Environment.TickCount < endTime)
+            {
+                if (theFile == null)
+                {
+                    var files = Directory.GetFiles(dir, "*.pdf").Where(x => NotOlderThan(x, nrOfAgeSeconds)).OrderBy(File.GetLastAccessTime).Reverse().ToArray();
+                    if (files.Length > 0)
+                    {
+                        theFile = files[0];
+                    }
+                }
+
+                if (theFile != null)
+                {
+                    if (!IsFileLocked(new FileInfo(theFile)))
+                    {
+                        return theFile;
+                    }
+                }
+
+                Thread.Sleep(1000);
+            }
+            if (theFile == null)
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nKeine neue Plotdatei in {0} gefunden", dir));
+            }
+            else
+            {
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nPlotfile {0} noch gesperrt nach Wartezeit {1}!", theFile, timeout));
+            }
+            return null;
+        }
+
+        private static bool IsFileLocked(FileInfo file)
+        {
+            FileStream stream = null;
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+
+            //file is not locked
+            return false;
+        }
+
+        private static bool NotOlderThan(string fileName, int seconds)
+        {
+            var now = DateTime.Now;
+            var diff = now - File.GetLastAccessTime(fileName);
+            return (diff.TotalSeconds < seconds);
+        }
+
+        private static void ShowCallingInfoForWaitForPlotFile(_AcEd.Editor ed)
+        {
+            ed.WriteMessage("\nAufruf: (InoWaitForPlotPdfFile Directory Timeout)");
+        }
+
+
         [_AcTrx.LispFunction("InoKillAllProcessesWithName")]
         public static bool InoKillAllProcessesWithName(_AcDb.ResultBuffer rb)
         {
             _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
             if (rb == null)
             {
-	            ShowCallingInfoForKillAllProcessesWithName(ed);
-	            return false;
+                ShowCallingInfoForKillAllProcessesWithName(ed);
+                return false;
             }
             _AcDb.TypedValue[] values = rb.AsArray();
             if (values == null || values.Length < 1)
@@ -911,19 +1020,19 @@ namespace Plan2Ext
                 return null;
             }
 
-            if (values[0].TypeCode != (short) _AcBrx.LispDataType.Text)
+            if (values[0].TypeCode != (short)_AcBrx.LispDataType.Text)
             {
                 ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
                 return null;
             }
             var completeString = values[0].Value.ToString();
-            if (values[1].TypeCode != (short) _AcBrx.LispDataType.Text)
+            if (values[1].TypeCode != (short)_AcBrx.LispDataType.Text)
             {
                 ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
                 return null;
             }
             var stringToReplace = values[1].Value.ToString();
-            if (values[2].TypeCode != (short) _AcBrx.LispDataType.Text)
+            if (values[2].TypeCode != (short)_AcBrx.LispDataType.Text)
             {
                 ed.WriteMessage("\nAufruf (InoStringReplace Completestring StringToReplace NewString");
                 return null;
@@ -993,24 +1102,24 @@ namespace Plan2Ext
             }
             catch (Exception e)
             {
-                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Fehler bei timeout parameter='{0}': {1}", values[i].Value,e));
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Fehler bei timeout parameter='{0}': {1}", values[i].Value, e));
                 ShowCallingInfoForProcessWithEnv(ed);
                 return false;
             }
 
             // get envs
             var envs = new List<EnvPair>();
-            if (values[i].TypeCode != (short) _AcBrx.LispDataType.Nil)
+            if (values[i].TypeCode != (short)_AcBrx.LispDataType.Nil)
             {
-                    if (values[i].TypeCode != (short) _AcBrx.LispDataType.ListBegin)
-                    {
-                        ShowCallingInfoForProcessWithEnv(ed);
-                        return false;
-                    }
+                if (values[i].TypeCode != (short)_AcBrx.LispDataType.ListBegin)
+                {
+                    ShowCallingInfoForProcessWithEnv(ed);
+                    return false;
+                }
 
                 for (int j = i + 1; j < values.Length - 4; j += 4)
                 {
-                    if (values[j].TypeCode != (short) _AcBrx.LispDataType.ListBegin)
+                    if (values[j].TypeCode != (short)_AcBrx.LispDataType.ListBegin)
                     {
                         ShowCallingInfoForProcessWithEnv(ed);
                         return false;
@@ -1024,7 +1133,7 @@ namespace Plan2Ext
                         Val = val
                     });
 
-                    if (values[j + 3].TypeCode != (short) _AcBrx.LispDataType.ListEnd)
+                    if (values[j + 3].TypeCode != (short)_AcBrx.LispDataType.ListEnd)
                     {
                         ShowCallingInfoForProcessWithEnv(ed);
                         return false;
@@ -1035,7 +1144,7 @@ namespace Plan2Ext
             // call process
             foreach (var envPair in envs)
             {
-                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture,"\n{0}:{1}",envPair.Key,envPair.Val));
+                ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\n{0}:{1}", envPair.Key, envPair.Val));
                 System.Environment.SetEnvironmentVariable(envPair.Key, envPair.Val);
             }
 
@@ -1046,11 +1155,11 @@ namespace Plan2Ext
             {
                 using (var exeProcess = Process.Start(fileName, allArgs))
                 {
-	                if (exeProcess == null)
-	                {
-						ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Konnte Prozess {0} nicht starten!", fileName));
-						return false;
-	                }
+                    if (exeProcess == null)
+                    {
+                        ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "Konnte Prozess {0} nicht starten!", fileName));
+                        return false;
+                    }
                     exeProcess.WaitForExit(timeout);
                     if (!exeProcess.HasExited)
                     {
