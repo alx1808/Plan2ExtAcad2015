@@ -132,6 +132,7 @@
     <Compile Include="BlockInfo\LegendInserter.cs" />
     <Compile Include="BlockInfo\ProtoDwgInfo.cs" />
     <Compile Include="BlockInfo\SingleBlockNameRowProvider.cs" />
+    <Compile Include="BlockInfo\VertikalLegendInserter.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
     <Compile Include="BlockToExcel\BlockToExcel2.cs" />
     <Compile Include="BlockToExcel\Excelizer.cs" />

@@ -9,6 +9,7 @@ namespace Plan2Ext.BlockInfo
     internal interface IGetsFromUser
     {
         void GetNrOfVerticalBlockElements(Editor ed, ref int nrOfVerticalBlockElements);
+        void GetNrOfColumns(Editor ed, ref int nrOfColums);
         void GetScaleFactor(Editor ed, ref double scaleFactor);
     }
 
@@ -25,6 +26,19 @@ namespace Plan2Ext.BlockInfo
                 AllowNone = true,
             });
             if (resultInteger.Status == PromptStatus.OK) nrOfVerticalBlockElements = resultInteger.Value;
+        }
+
+        public void GetNrOfColumns(Editor ed, ref int nrOfColums)
+        {
+            var resultInteger = ed.GetInteger(new PromptIntegerOptions(string.Format(CultureInfo.CurrentCulture,
+                "\nAnzahl der Spalten in der Legende <{0}>:", nrOfColums))
+            {
+                AllowNegative = false,
+                AllowArbitraryInput = false,
+                AllowZero = false,
+                AllowNone = true,
+            });
+            if (resultInteger.Status == PromptStatus.OK) nrOfColums = resultInteger.Value;
         }
 
         public void GetScaleFactor(Editor ed, ref double scaleFactor)

@@ -41,14 +41,14 @@ namespace Plan2Ext.BlockInfo
             "PLK_BS_BA_RAUCHSCHÜRZE"
         };
         private const string LEGEND_BLOCK_PREFIX = "PLK_";
-        private const double VERTICAL_DISTANCE = 7.8104;
+        private const double VERTICAL_DISTANCE = 15.00; //7.8104;
         private const double HORIZONTAL_DISTANCE = 10.0;
         private const double FRAME_OFFSET = 3.0;
-        private static int _NrOfVerticalBlockElements = 5;
+        private static int _NrOfColumns = 2;
         private static double _ScaleFactor = 1.0;
         private static IGetsFromUser _GetsFromUser;
         private static IProtoDwgInfo _ProtoDwgInfo;
-        private static ILegendInserter _LegendInserter;
+        private static IVerticalLegendInserter _LegendInserter;
         private static WildcardAcad[] _BlocksIgnoredWildcards;
 
 
@@ -62,13 +62,13 @@ namespace Plan2Ext.BlockInfo
                 var ed = doc.Editor;
                 _GetsFromUser = new GetsFromUser();
                 _ProtoDwgInfo = new ProtoDwgInfo();
-                _LegendInserter = new LegendInserter(VERTICAL_DISTANCE, HORIZONTAL_DISTANCE, FRAME_OFFSET);
+                _LegendInserter = new VertikalLegendInserter(VERTICAL_DISTANCE, HORIZONTAL_DISTANCE, FRAME_OFFSET);
                 _BlocksIgnoredWildcards = BlocksIgnored.Select(x => new WildcardAcad(x)).ToArray();
 
                 var prototypedwgName = GetPrototypedwgName();
                 if (prototypedwgName == null) return;
 
-                _GetsFromUser.GetNrOfVerticalBlockElements(ed, ref _NrOfVerticalBlockElements);
+                _GetsFromUser.GetNrOfColumns(ed, ref _NrOfColumns);
                 _GetsFromUser.GetScaleFactor(ed, ref _ScaleFactor);
 
                 Plan2BsLegendeModell(prototypedwgName);
@@ -138,7 +138,7 @@ namespace Plan2Ext.BlockInfo
                         {
                             var positionWcs = Globs.TransUcsWcs(result.Value);
                             var legendBlockNames = GetLegendBlockNames(blockNames);
-                            _LegendInserter.InsertLegend(orderedBlocksInProtodwg, legendBlockNames, prototypedwgName, positionWcs, transaction,_ScaleFactor, _NrOfVerticalBlockElements);
+                            _LegendInserter.InsertLegend(orderedBlocksInProtodwg, legendBlockNames, prototypedwgName, positionWcs, transaction,_ScaleFactor, _NrOfColumns);
                             Globs.PurgeBlocks(legendBlockNames.ToList());
                         }
                         transaction.Commit();
