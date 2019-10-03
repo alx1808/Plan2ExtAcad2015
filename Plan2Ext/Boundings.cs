@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -51,7 +52,7 @@ namespace Plan2Ext
 
         }
 
-        //[CommandMethod("MER", CommandFlags.UsePickSet)]
+        [CommandMethod("MER", CommandFlags.UsePickSet)]
         // ReSharper disable once UnusedMember.Global
         public void MinimumEnclosingRectangle()
         {
@@ -324,9 +325,24 @@ namespace Plan2Ext
             BlockReference br = ent as BlockReference;
             if (br != null)
             {
-                foreach (ObjectId arId in br.AttributeCollection)
+                foreach (var arId in br.AttributeCollection)
                 {
-                    DBObject obj = tr.GetObject(arId, OpenMode.ForRead);
+                    // block in block. attributcollection yields attributereferences
+                    var dbText = arId as DBText;
+                    if (dbText != null)
+                    {
+                        ExtractBounds(dbText, pts);
+                        continue;
+                    }
+
+                    if (!(arId is ObjectId))
+                    {
+                        var tp = arId.GetType();
+                        continue;
+                    }
+
+                    var aroid = (ObjectId) arId;
+                    DBObject obj = tr.GetObject(aroid, OpenMode.ForRead);
                     var ar = obj as AttributeReference;
                     if (ar != null)
                     {
@@ -431,6 +447,7 @@ namespace Plan2Ext
                 DBObjectCollection oc = new DBObjectCollection();
                 try
                 {
+                    if (ent is Hatch) return pts;
                     ent.Explode(oc);
                     if (oc.Count > 0)
                     {

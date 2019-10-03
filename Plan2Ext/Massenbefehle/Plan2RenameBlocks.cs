@@ -59,7 +59,7 @@ namespace Plan2Ext.Massenbefehle
                     string prefix = System.IO.Path.GetFileNameWithoutExtension(fileName) + "_"; // "ALX_".ToUpperInvariant();
                     if (!string.IsNullOrEmpty(prefixUser))
                     {
-                        prefix += (prefixUser + "_");
+                        prefix = prefixUser + "_" + prefix;
                     }
                     bool ok = true;
 
