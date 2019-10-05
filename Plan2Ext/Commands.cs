@@ -39,6 +39,7 @@ using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcLm = Autodesk.AutoCAD.LayerManager;
+// ReSharper disable IdentifierTypo
 #endif
 
 namespace Plan2Ext
@@ -735,12 +736,12 @@ namespace Plan2Ext
                 if (values[0].Value == null) return false;
                 string dirName = values[0].Value.ToString();
                 if (string.IsNullOrEmpty(dirName)) return false;
-                if (!System.IO.Directory.Exists(dirName)) return false;
+                if (!Directory.Exists(dirName)) return false;
 
                 return Plan2FinishPlot(dirName);
 
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (Plan2FinishPlot): {0}", ex.Message);
                 ed.WriteMessage("\n" + msg);
@@ -755,30 +756,33 @@ namespace Plan2Ext
 
             Plan2FinishPlot(dirName, "PDF");
             Plan2FinishPlot(dirName, "PLT");
+            RecRemoveEmptyDir(Path.Combine(dirName, "PLT"));
 
             return true;
         }
 
         private static void Plan2FinishPlot(string dirName, string prefix)
         {
-            string targetDir = System.IO.Path.Combine(dirName, prefix);
-            if (!System.IO.Directory.Exists(targetDir))
+            string targetDir = Path.Combine(dirName, prefix);
+            if (!Directory.Exists(targetDir))
             {
-                System.IO.Directory.CreateDirectory(targetDir);
+                Directory.CreateDirectory(targetDir);
             }
 
-            var subdirs = System.IO.Directory.GetDirectories(targetDir, prefix + "*", System.IO.SearchOption.TopDirectoryOnly);
+            var subdirs = Directory.GetDirectories(targetDir, prefix + "*", System.IO.SearchOption.TopDirectoryOnly);
 
             foreach (var tempDir in subdirs)
             {
-                string fName = System.IO.Path.GetFileName(tempDir);
+                string fName = Path.GetFileName(tempDir);
+                if (fName == null) continue;
                 if (!fName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue; // ignore other dirs
 
-                var pdfFiles = System.IO.Directory.GetFiles(tempDir, "*." + prefix, System.IO.SearchOption.TopDirectoryOnly);
+                var pdfFiles = Directory.GetFiles(tempDir, "*." + prefix, System.IO.SearchOption.TopDirectoryOnly);
                 foreach (var pdf in pdfFiles)
                 {
-                    System.IO.File.Copy(pdf, System.IO.Path.Combine(targetDir, System.IO.Path.GetFileName(pdf)), true);
-                    System.IO.File.Delete(pdf);
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    File.Copy(pdf, Path.Combine(targetDir, Path.GetFileName(pdf)), true);
+                    File.Delete(pdf);
                 }
 
                 RecRemoveEmptyDir(tempDir);
@@ -787,16 +791,16 @@ namespace Plan2Ext
 
         private static void RecRemoveEmptyDir(string tempDir)
         {
-            var subdirs = System.IO.Directory.GetDirectories(tempDir, "*.*", System.IO.SearchOption.TopDirectoryOnly);
+            var subdirs = Directory.GetDirectories(tempDir, "*.*", System.IO.SearchOption.TopDirectoryOnly);
             foreach (var sd in subdirs)
             {
                 RecRemoveEmptyDir(sd);
             }
 
-            if (System.IO.Directory.GetFiles(tempDir, "*.*", System.IO.SearchOption.TopDirectoryOnly).Length == 0 &&
-                System.IO.Directory.GetDirectories(tempDir, "*.*", System.IO.SearchOption.TopDirectoryOnly).Length == 0)
+            if (Directory.GetFiles(tempDir, "*.*", System.IO.SearchOption.TopDirectoryOnly).Length == 0 &&
+                Directory.GetDirectories(tempDir, "*.*", System.IO.SearchOption.TopDirectoryOnly).Length == 0)
             {
-                System.IO.Directory.Delete(tempDir);
+                Directory.Delete(tempDir);
             }
         }
 
