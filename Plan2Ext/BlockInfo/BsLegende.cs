@@ -51,7 +51,6 @@ namespace Plan2Ext.BlockInfo
         private static IVerticalLegendInserter _LegendInserter;
         private static WildcardAcad[] _BlocksIgnoredWildcards;
 
-
         [CommandMethod("Plan2BsLegende")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2BsLegende()
@@ -62,13 +61,25 @@ namespace Plan2Ext.BlockInfo
                 var ed = doc.Editor;
                 _GetsFromUser = new GetsFromUser();
                 _ProtoDwgInfo = new ProtoDwgInfo();
-                _LegendInserter = new VertikalLegendInserter(VERTICAL_DISTANCE, HORIZONTAL_DISTANCE, FRAME_OFFSET);
                 _BlocksIgnoredWildcards = BlocksIgnored.Select(x => new WildcardAcad(x)).ToArray();
+                _LegendInserter = new VertikalLegendInserter(VERTICAL_DISTANCE, HORIZONTAL_DISTANCE, FRAME_OFFSET)
+                {
+                    UseFrame = false,
+                    IgnoreMissingLegendBlocks =
+                    {
+                        "PLK_BS_BA_FWKL-DECKE", 
+                        "PLK_BS_BA_FWKL-GELAENDENIVEAU", 
+                        "PLK_BS_BA_FWKL-SATTELDACH-1"
+                    }
+                };
 
                 var prototypedwgName = GetPrototypedwgName();
                 if (prototypedwgName == null) return;
 
                 _GetsFromUser.GetNrOfColumns(ed, ref _NrOfColumns);
+                var verticalDistance = VERTICAL_DISTANCE;
+                _GetsFromUser.GetVerticalDistance(ed,ref verticalDistance);
+                _LegendInserter.VerticalDistance = verticalDistance;
                 _GetsFromUser.GetScaleFactor(ed, ref _ScaleFactor);
 
                 Plan2BsLegendeModell(prototypedwgName);
@@ -164,6 +175,5 @@ namespace Plan2Ext.BlockInfo
         {
             return _BlocksIgnoredWildcards.Any(x => x.IsMatch(name));
         }
-
     }
 }

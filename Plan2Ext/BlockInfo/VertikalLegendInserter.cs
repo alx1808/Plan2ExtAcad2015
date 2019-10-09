@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
@@ -10,19 +12,29 @@ namespace Plan2Ext.BlockInfo
     internal interface IVerticalLegendInserter
     {
         void InsertLegend(
-            List<string> blocksInProtodwg, 
-            HashSet<string> legendBlockNames, 
-            string prototypedwgName, 
-            Point3d positionWcs, 
-            Transaction transaction, 
-            double scaleFactor, 
+            List<string> blocksInProtodwg,
+            HashSet<string> legendBlockNames,
+            string prototypedwgName,
+            Point3d positionWcs,
+            Transaction transaction,
+            double scaleFactor,
             int nrOfColumns);
+        double VerticalDistance { get; set; }
+        bool UseFrame { get; set; }
+        List<string> IgnoreMissingLegendBlocks { get; }
     }
     internal class VertikalLegendInserter : IVerticalLegendInserter
-{
-        private double VerticalDistance { get; set; }
+    {
+        private readonly List<string> _ignoreMissingLegendBlocks = new List<string>();
+        public bool UseFrame { get; set; }
+        public double VerticalDistance { get; set; }
         private double HorizontalDistance { get; set; }
         private double FrameOffset { get; set; }
+        public List<string> IgnoreMissingLegendBlocks
+        {
+            get { return _ignoreMissingLegendBlocks; }
+        }
+
         public VertikalLegendInserter(double verticalDistance, double horizontalDistance, double frameOffset)
         {
             VerticalDistance = verticalDistance;
@@ -70,20 +82,22 @@ namespace Plan2Ext.BlockInfo
             if (ucsPointList.Count <= 0) return;
 
             // frame
-            var framePointsUcs = Boundings.GetRectanglePointsFromBounding(buffer: FrameOffset * scaleFactor, pts: ucsPointList);
-            var wcsPointList = framePointsUcs.Select(Globs.TransUcsWcs).ToList();
-            var wcs2DPointList = wcsPointList.ToList2D();
-            var bnd = Boundings.CreatePolyline(wcs2DPointList, closed: true);
-            bnd.Layer = "0";
-            var btr = (BlockTableRecord)transaction.GetObject(Application.DocumentManager.MdiActiveDocument.Database.CurrentSpaceId, OpenMode.ForWrite);
-            btr.AppendEntity(bnd);
-            transaction.AddNewlyCreatedDBObject(bnd, true);
-
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
+            if (UseFrame) AddFrame(transaction, scaleFactor, ucsPointList);
 
             // missing blocks in proto as text
-            foreach (var legendBlockName in legendBlockNames)
+            InsertMissingBlocksAsText(blocksInProtodwg, legendBlockNames, positionWcs, transaction);
+        }
+
+        private void InsertMissingBlocksAsText(List<string> blocksInProtodwg, HashSet<string> legendBlockNames, Point3d positionWcs,
+            Transaction transaction)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            positionWcs += new Vector3d(0, VerticalDistance, 0);
+            var missingLegBlocksToShow = legendBlockNames.Where(x =>
+                    !_ignoreMissingLegendBlocks.Any(y => x.Equals(y, StringComparison.InvariantCultureIgnoreCase)))
+                .ToArray();
+            foreach (var legendBlockName in missingLegBlocksToShow)
             {
                 if (blocksInProtodwg.Contains(legendBlockName)) continue;
                 using (var text = new DBText())
@@ -92,7 +106,8 @@ namespace Plan2Ext.BlockInfo
                     text.TextString = legendBlockName;
                     text.Position = positionWcs;
                     text.Layer = "0";
-                    var acCurSpaceBlkTblRec = (BlockTableRecord)transaction.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                    text.Color = Color.FromColorIndex(ColorMethod.ByAci,1);
+                    var acCurSpaceBlkTblRec = (BlockTableRecord) transaction.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
                     acCurSpaceBlkTblRec.AppendEntity(text);
                     transaction.AddNewlyCreatedDBObject(text, true);
                 }
@@ -100,6 +115,20 @@ namespace Plan2Ext.BlockInfo
                 positionWcs += new Vector3d(0, VerticalDistance, 0);
             }
         }
+
+        private void AddFrame(Transaction transaction, double scaleFactor, List<Point3d> ucsPointList)
+        {
+            var framePointsUcs = Boundings.GetRectanglePointsFromBounding(buffer: FrameOffset * scaleFactor, pts: ucsPointList);
+            var wcsPointList = framePointsUcs.Select(Globs.TransUcsWcs).ToList();
+            var wcs2DPointList = wcsPointList.ToList2D();
+            var bnd = Boundings.CreatePolyline(wcs2DPointList, closed: true);
+            bnd.Layer = "0";
+            var btr = (BlockTableRecord)transaction.GetObject(
+                Application.DocumentManager.MdiActiveDocument.Database.CurrentSpaceId, OpenMode.ForWrite);
+            btr.AppendEntity(bnd);
+            transaction.AddNewlyCreatedDBObject(bnd, true);
+        }
+
         /// <summary>
         /// Inserts block local or from proto
         /// </summary>
@@ -153,6 +182,5 @@ namespace Plan2Ext.BlockInfo
 
             return true;
         }
-
     }
 }

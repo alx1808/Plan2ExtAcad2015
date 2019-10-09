@@ -11,6 +11,7 @@ namespace Plan2Ext.BlockInfo
         void GetNrOfVerticalBlockElements(Editor ed, ref int nrOfVerticalBlockElements);
         void GetNrOfColumns(Editor ed, ref int nrOfColums);
         void GetScaleFactor(Editor ed, ref double scaleFactor);
+        void GetVerticalDistance(Editor ed, ref double verticalDistance);
     }
 
     internal class GetsFromUser : IGetsFromUser
@@ -54,5 +55,15 @@ namespace Plan2Ext.BlockInfo
             if (resultDouble.Status == PromptStatus.OK) scaleFactor = resultDouble.Value;
         }
 
+        public void GetVerticalDistance(Editor ed, ref double verticalDistance)
+        {
+            var resultDouble = ed.GetDouble(new PromptDoubleOptions(string.Format(CultureInfo.CurrentCulture,
+                "\nVertikaler Abstand <{0}>:", verticalDistance))
+            {
+                AllowArbitraryInput = false,
+                AllowNone = true,
+            });
+            if (resultDouble.Status == PromptStatus.OK) verticalDistance = resultDouble.Value;
+        }
     }
 }
