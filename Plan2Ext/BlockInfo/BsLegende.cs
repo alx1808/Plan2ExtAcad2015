@@ -31,6 +31,10 @@ namespace Plan2Ext.BlockInfo
             "BS_AL_LEGENDE_BS_MELDERGRUPPE",
             "BS_AL_LEGENDE_BS_MELDER",
             "BS_AL_LOGO_*",
+            "BS_BA_FWKL-DECKE", 
+            "BS_BA_FWKL-GELAENDENIVEAU", 
+            "BS_BA_FWKL-SATTELDACH-1"
+
         };
         private static readonly List<string> BlocksAlwaysInLegend = new List<string>()
         {
@@ -65,12 +69,6 @@ namespace Plan2Ext.BlockInfo
                 _LegendInserter = new VertikalLegendInserter(VERTICAL_DISTANCE, HORIZONTAL_DISTANCE, FRAME_OFFSET)
                 {
                     UseFrame = false,
-                    IgnoreMissingLegendBlocks =
-                    {
-                        "PLK_BS_BA_FWKL-DECKE", 
-                        "PLK_BS_BA_FWKL-GELAENDENIVEAU", 
-                        "PLK_BS_BA_FWKL-SATTELDACH-1"
-                    }
                 };
 
                 var prototypedwgName = GetPrototypedwgName();

@@ -21,19 +21,13 @@ namespace Plan2Ext.BlockInfo
             int nrOfColumns);
         double VerticalDistance { get; set; }
         bool UseFrame { get; set; }
-        List<string> IgnoreMissingLegendBlocks { get; }
     }
     internal class VertikalLegendInserter : IVerticalLegendInserter
     {
-        private readonly List<string> _ignoreMissingLegendBlocks = new List<string>();
         public bool UseFrame { get; set; }
         public double VerticalDistance { get; set; }
         private double HorizontalDistance { get; set; }
         private double FrameOffset { get; set; }
-        public List<string> IgnoreMissingLegendBlocks
-        {
-            get { return _ignoreMissingLegendBlocks; }
-        }
 
         public VertikalLegendInserter(double verticalDistance, double horizontalDistance, double frameOffset)
         {
@@ -94,10 +88,7 @@ namespace Plan2Ext.BlockInfo
             Document doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             positionWcs += new Vector3d(0, VerticalDistance, 0);
-            var missingLegBlocksToShow = legendBlockNames.Where(x =>
-                    !_ignoreMissingLegendBlocks.Any(y => x.Equals(y, StringComparison.InvariantCultureIgnoreCase)))
-                .ToArray();
-            foreach (var legendBlockName in missingLegBlocksToShow)
+            foreach (var legendBlockName in legendBlockNames)
             {
                 if (blocksInProtodwg.Contains(legendBlockName)) continue;
                 using (var text = new DBText())
