@@ -65,6 +65,68 @@ namespace Plan2Ext.Vorauswahl
             }
         }
 
+
+        /// <summary>
+        /// Command-Line variant
+        /// </summary>
+        [_AcTrx.CommandMethod("-Plan2Vorauswahl", _AcBrx.CommandFlags.Modal |
+                                                       _AcBrx.CommandFlags.UsePickSet |
+                                                       _AcBrx.CommandFlags.Redraw)
+
+        ]
+        // ReSharper disable once UnusedMember.Global
+        public static void Plan2VorauswahCl()
+        {
+            try
+            {
+                var blockNamesWildCards = new List<WildcardAcad>();
+                var layerNamesWildCards = new List<WildcardAcad>();
+                var entityTypes = new List<Type>();
+
+                var keywords = new[] { "Block", "Layer", "Elementtyp", "Fertig" };
+                string keyWord;
+                while (!"Fertig".Equals(keyWord = Globs.AskKeywordFromUser("Auswahl", keywords, 3)))
+                {
+                    if (keyWord == null) return;
+
+                    switch (keyWord)
+                    {
+                        case "Block":
+                            blockNamesWildCards.AddRange(Globs.GetWildcards("Blocknamen: ", true));
+                            break;
+                        case "Layer":
+                            layerNamesWildCards.AddRange(Globs.GetWildcards("Layernamen: ", true));
+                            break;
+                        case "Elementtyp":
+                            entityTypes.AddRange(Globs.GetEntityTypesWithGermanName("Elementtypen: "));
+                            break;
+                    }
+                }
+
+                // get also layers from blocks and turn layer on and thaw and unlock
+                var blockNames = Globs.GetAllBlockNames()
+                    .Where(x => blockNamesWildCards.Any(y => y.IsMatch(x))).ToList();
+                var layerNamesForLayerSchalt = Globs.GetAllLayerNames().Where(x => layerNamesWildCards.Any(y => y.IsMatch(x))).ToList();
+                AddLayersFromBlockNames(blockNames, layerNamesForLayerSchalt);
+                foreach (var layerName in layerNamesForLayerSchalt)
+                {
+                    Globs.LayerOnAndThaw(layerName, true);
+                }
+
+                List<_AcDb.ObjectId> oids = Select(blockNamesWildCards, layerNamesWildCards, entityTypes);
+                _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
+                oids.CopyTo(ids, 0);
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                var editor = doc.Editor;
+                editor.SetImpliedSelection(ids);
+                editor.WriteMessage("\nAnzahl selektierter Elemente: " + oids.Count);
+            }
+            catch (Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2VorauswahlSelect aufgetreten! {0}", ex.Message));
+            }
+        }
+
         [_AcTrx.CommandMethod("Plan2VorauswahlSelect", _AcBrx.CommandFlags.Modal |
                                                        _AcBrx.CommandFlags.UsePickSet |
                                                        _AcBrx.CommandFlags.Redraw)
@@ -79,9 +141,8 @@ namespace Plan2Ext.Vorauswahl
 
                 var layerNames = Palette.LayernamesInList();
                 var blockNames = Palette.BlocknamesInList();
-                var entityTypes = Palette.EntityTypesInList().ToArray();
+                var entityTypes = Palette.EntityTypesInList().ToList();
 
-                // todo: check new list
                 var layerNamesForLayerSchalt = layerNames.Select(x => x).ToList();
                 AddLayersFromBlockNames(blockNames, layerNamesForLayerSchalt);
                 foreach (var lay in layerNamesForLayerSchalt)
@@ -92,7 +153,10 @@ namespace Plan2Ext.Vorauswahl
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 var editor = doc.Editor;
 
-                List<_AcDb.ObjectId> oids = Select(blockNames, layerNames, entityTypes);
+                var blockNamesWildCards = blockNames.Select(x => new WildcardAcad(x)).ToList();
+                var layerNamesWildCards = layerNames.Select(x => new WildcardAcad(x)).ToList();
+
+                List<_AcDb.ObjectId> oids = Select(blockNamesWildCards, layerNamesWildCards, entityTypes);
                 _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
                 oids.CopyTo(ids, 0);
                 editor.SetImpliedSelection(ids);
@@ -104,10 +168,10 @@ namespace Plan2Ext.Vorauswahl
             }
         }
 
-        private static List<_AcDb.ObjectId> Select(ICollection<string> blockNames, ICollection<string> layerNames, Type[] entityTypes)
+        private static List<_AcDb.ObjectId> Select(List<WildcardAcad> blockNamesWildCards, List<WildcardAcad> layerNamesWildCards, List<Type> entityTypes)
         {
             var oids = new List<_AcDb.ObjectId>();
-            if (blockNames.Count == 0 && layerNames.Count == 0 && entityTypes.Length == 0) return oids;
+            if (blockNamesWildCards.Count == 0 && layerNamesWildCards.Count == 0 && entityTypes.Count == 0) return oids;
             var doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
@@ -122,19 +186,19 @@ namespace Plan2Ext.Vorauswahl
                 {
                     _AcDb.Entity ent = (_AcDb.Entity)trans.GetObject(oid, _AcDb.OpenMode.ForRead);
 
-                    if (layerNames.Contains(ent.Layer))
+                    if (layerNamesWildCards.Any(x => x.IsMatch(ent.Layer)))
                     {
                         oids.Add(oid);
                         continue;
                     }
 
-                    if (blockNames.Count > 0)
+                    if (blockNamesWildCards.Count> 0)
                     {
                         var br = ent as _AcDb.BlockReference;
                         if (br != null)
                         {
                             var blockName = Globs.GetBlockname(br, trans);
-                            if (blockNames.Contains(blockName))
+                            if (blockNamesWildCards.Any(x => x.IsMatch(blockName)))
                             {
                                 oids.Add(oid);
                                 continue;
@@ -142,7 +206,7 @@ namespace Plan2Ext.Vorauswahl
                         }
                     }
 
-                    if (entityTypes.Length <= 0) continue;
+                    if (entityTypes.Count <= 0) continue;
                     var type = ent.GetType();
                     if (entityTypes.Any(x => x == type))
                     {

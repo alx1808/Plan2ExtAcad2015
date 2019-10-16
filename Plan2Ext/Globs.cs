@@ -91,6 +91,43 @@ namespace Plan2Ext
 		#endregion
 
 
+        internal static IEnumerable<Type> GetEntityTypesWithGermanName(string message)
+        {
+            var tp = typeof(_AcDb.Arc);
+            var ass = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Arc));
+            var types = ass.GetTypes();
+            var names = Globs.GermanNameForTypeName.Keys.Select(x => ".DatabaseServices." + x);
+            var theTypes = types.Where(
+                x => names.Any(
+                    y => x.FullName != null &&
+                         x.FullName.EndsWith(y, StringComparison.InvariantCultureIgnoreCase)
+                )
+            ).ToArray();
+            var entityTypeItems = theTypes.Select(x => new EntityTypeItem(x)).ToArray();
+            var keyWords = entityTypeItems.Select(x => x.ToString()).OrderBy(x => x).ToArray();
+            var keyWord = Globs.AskKeywordFromUser("Elementtypen: ", keyWords);
+            if (keyWord == null) return new Type[0];
+
+            var ret = entityTypeItems.First(x => x.ToString().Equals(keyWord)).Type;
+            return new[] { ret };
+        }
+
+        internal static IEnumerable<WildcardAcad> GetWildcards(string message, bool allowSpaces = false)
+        {
+            var editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            var promptStringOptions = new _AcEd.PromptStringOptions(message) { AllowSpaces = allowSpaces };
+            var promptResult = editor.GetString(promptStringOptions);
+            if (promptResult.Status == _AcEd.PromptStatus.OK)
+            {
+                return promptResult.StringResult.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Select(x => new WildcardAcad(x));
+
+            }
+            return new WildcardAcad[0];
+        }
+
 		public static bool CallCommand(params object[] parameter)
 		{
 			bool userBreak = false;
@@ -1019,6 +1056,45 @@ namespace Plan2Ext
 				trans.Commit();
 			}
 		}
+
+        public static IEnumerable<string> GetAllLayerNames()
+        {
+            var allLayerNames = new HashSet<string>();
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = doc.TransactionManager.StartTransaction())
+            {
+                var layerTable = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+                foreach (var oid in layerTable)
+                {
+                    var table = (_AcDb.LayerTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+                    allLayerNames.Add(table.Name);
+                }
+                trans.Commit();
+            }
+
+            return allLayerNames;
+        }
+
+        public static IEnumerable<string> GetAllBlockNames()
+        {
+            var allBlockNames = new HashSet<string>();
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = doc.TransactionManager.StartTransaction())
+            {
+                var blockTable = (_AcDb.BlockTable)trans.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+                foreach (var oid in blockTable)
+                {
+                    var table = (_AcDb.BlockTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+                    allBlockNames.Add(table.Name);
+                }
+                trans.Commit();
+            }
+
+            return allBlockNames;
+        }
+
 
 		public static void LayersOnRestOffAllThawIC(List<string> layerNames)
 		{

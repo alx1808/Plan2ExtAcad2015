@@ -90,7 +90,9 @@
     <Compile Include="Configuration\SetConfigForm.Designer.cs">
       <DependentUpon>SetConfigForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="EntityTypeItem.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Fenster\Examiner.cs" />
     <Compile Include="Fenster\Fenster.cs" />
     <Compile Include="Fenster\FensterOptions.cs" />
@@ -168,6 +170,7 @@
       <DependentUpon>TuerOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Tuer\TuerOptionsPalette.cs" />
+    <Compile Include="WildcardAcad.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CalcArea\CalcAreaControl.resx">

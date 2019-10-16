@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
-//using _AcBr = Teigha.BoundaryRepresentation;
+using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
 using _AcDb = Teigha.DatabaseServices;
 using _AcEd = Bricscad.EditorInput;
@@ -245,13 +245,14 @@ namespace Plan2Ext
 
 
 #if !OLDER_THAN_2015
+#if !BRX_APP
 
-        ///<summary>
-        /// Get the centroid of a Region.
-        ///</summary>
-        ///<param name="cur">An optional curve used to define the region.</param>
-        ///<returns>A nullable Point3d containing the centroid of the Region.</returns>
-        public static _AcGe.Point3d? GetCentroid(this _AcDb.Region reg, _AcDb.Curve cur = null)
+		///<summary>
+		/// Get the centroid of a Region.
+		///</summary>
+		///<param name="cur">An optional curve used to define the region.</param>
+		///<returns>A nullable Point3d containing the centroid of the Region.</returns>
+		public static _AcGe.Point3d? GetCentroid(this _AcDb.Region reg, _AcDb.Curve cur = null)
         {
             if (cur == null)
             {
@@ -275,19 +276,19 @@ namespace Plan2Ext
 
             return pl.EvaluatePoint(a.Centroid);
         }
-
+#endif
 #endif
 
 
-        // Database extensions
-        ///<summary>
-        /// Create a piece of text of a specified size at a specified location.
-        ///</summary>
-        ///<param name="norm">The normal to the text object.</param>
-        ///<param name="pt">The position for the text.</param>
-        ///<param name="conts">The contents of the text.</param>
-        ///<param name="size">The size of the text.</param>
-        public static void CreateText(
+		// Database extensions
+		///<summary>
+		/// Create a piece of text of a specified size at a specified location.
+		///</summary>
+		///<param name="norm">The normal to the text object.</param>
+		///<param name="pt">The position for the text.</param>
+		///<param name="conts">The contents of the text.</param>
+		///<param name="size">The size of the text.</param>
+		public static void CreateText(
 
           this _AcDb.Database db, _AcGe.Vector3d norm, _AcGe.Point3d pt, string conts, double size
 
