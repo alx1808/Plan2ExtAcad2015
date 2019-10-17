@@ -1,13 +1,12 @@
 ﻿using System.Globalization;
 using System.Linq;
-
-
 #if BRX_APP
 using Bricscad.ApplicationServices;
 using Teigha.DatabaseServices;
 using Bricscad.EditorInput;
 using Teigha.Runtime;
 #elif ARX_APP
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -185,9 +184,8 @@ namespace Plan2Ext.LayTrans
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 using (doc.LockDocument())
                 {
-
-                    var fileNames = new[] { "CARLO_AUF_PLAN2", "NORM_AUF_PLAN2", "PLAN2_AUF_CARLO", "PLAN2_AUF_NORM" };
-                    var keywords = new[] {"Carloplan2", "Normplan2", "Plan2carlo", "pLan2norm"};
+                    var fileNames = new[] { "CARLO_AUF_PLAN2", "NORM_AUF_PLAN2", "KAV_AUF_PLAN2", "PLAN2_AUF_CARLO", "PLAN2_AUF_NORM", "PLAN2_AUF_KAV" };
+                    var keywords = new[] {"Carloplan2", "Normplan2","Kavplan2", "Plan2carlo", "pLan2norm", "plan2kaV"};
 
                     var keyword = Globs.AskKeywordFromUser("Layerkonfiguration", keywords);
                     if (keyword== null) return;
@@ -201,7 +199,7 @@ namespace Plan2Ext.LayTrans
                     }
                     catch (Exception)
                     {
-                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Datei {0} wurde nicht gefunden!", keyword));
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Datei {0} wurde nicht gefunden!", fn));
                         return;
                     }
 
@@ -209,11 +207,11 @@ namespace Plan2Ext.LayTrans
                     var ok = engine.LayTrans(fileName);
                     if (!ok)
                     {
-                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in LayTrans2!"));
+                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2LayTrans2!"));
                     }
                     else
                     {
-                        var msg = string.Format(CultureInfo.CurrentCulture, "LayTrans2 für {0} wurde erfolgreich beendet.", fn);
+                        var msg = string.Format(CultureInfo.CurrentCulture, "Plan2LayTrans2 für {0} wurde erfolgreich beendet.", fn);
                         Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(msg);
                         Log.Info(msg);
                     }

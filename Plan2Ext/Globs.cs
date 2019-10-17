@@ -1404,12 +1404,12 @@ namespace Plan2Ext
 
 					if (acObjIdColl.Count > 0)
 					{
-						_AcDb.LayerTableRecord acLyrTblRec;
+						acObjIdColl = GetDistinctValues(acObjIdColl);
 
 						foreach (_AcDb.ObjectId oidLayer in acObjIdColl)
 						{
-							acLyrTblRec = acTrans.GetObject(oidLayer, _AcDb.OpenMode.ForWrite) as _AcDb.LayerTableRecord;
-							acLyrTblRec.Erase(true);
+							var acLyrTblRec = acTrans.GetObject(oidLayer, _AcDb.OpenMode.ForWrite) as _AcDb.LayerTableRecord;
+							if (acLyrTblRec != null) acLyrTblRec.Erase(true);
 						}
 					}
 				}
@@ -1418,6 +1418,23 @@ namespace Plan2Ext
 				acTrans.Commit();
 
 			}
+		}
+
+		private static _AcDb.ObjectIdCollection GetDistinctValues(_AcDb.ObjectIdCollection acObjIdColl)
+		{
+			var oidHash = new HashSet<_AcDb.ObjectId>();
+			foreach (_AcDb.ObjectId objectId in acObjIdColl)
+			{
+				oidHash.Add(objectId);
+			}
+
+			acObjIdColl = new _AcDb.ObjectIdCollection();
+			foreach (var objectId in oidHash)
+			{
+				acObjIdColl.Add(objectId);
+			}
+
+			return acObjIdColl;
 		}
 
 		public static void PurgeBlocks(List<string> blockNames)
@@ -1448,11 +1465,11 @@ namespace Plan2Ext
 
 					if (acObjIdColl.Count > 0)
 					{
-						_AcDb.BlockTableRecord blockTableRecord;
+						acObjIdColl = GetDistinctValues(acObjIdColl);
 
 						foreach (_AcDb.ObjectId oidLayer in acObjIdColl)
 						{
-							blockTableRecord = (_AcDb.BlockTableRecord)acTrans.GetObject(oidLayer, _AcDb.OpenMode.ForWrite);
+							var blockTableRecord = (_AcDb.BlockTableRecord)acTrans.GetObject(oidLayer, _AcDb.OpenMode.ForWrite);
 							blockTableRecord.Erase(true);
 						}
 					}
@@ -1545,6 +1562,8 @@ namespace Plan2Ext
 
 					if (objIdColl.Count > 0)
 					{
+						objIdColl = GetDistinctValues(objIdColl);
+
 						foreach (_AcDb.ObjectId oid in objIdColl)
 						{
 							var record = transaction.GetObject(oid, _AcDb.OpenMode.ForWrite);
