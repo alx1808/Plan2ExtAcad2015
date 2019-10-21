@@ -90,8 +90,22 @@ namespace Plan2Ext
 
 		#endregion
 
+		internal static bool FindFile(string fileName, _AcDb.Database database, out string fullFileName)
+		{
+			fullFileName = null;
+			try
+			{
+				fullFileName = _AcDb.HostApplicationServices.Current.FindFile(fileName, database, _AcDb.FindFileHint.Default);
+			}
+			catch (Exception)
+			{
+                // in acad exception in bcad null-filename
+				return false;
+			}
+			return !string.IsNullOrEmpty(fullFileName);
+		}
 
-        internal static IEnumerable<Type> GetEntityTypesWithGermanName(string message)
+		internal static IEnumerable<Type> GetEntityTypesWithGermanName(string message)
         {
             var tp = typeof(_AcDb.Arc);
             var ass = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Arc));

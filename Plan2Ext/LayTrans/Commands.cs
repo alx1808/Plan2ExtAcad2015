@@ -2,13 +2,11 @@
 using System.Linq;
 #if BRX_APP
 using Bricscad.ApplicationServices;
-using Teigha.DatabaseServices;
 using Bricscad.EditorInput;
 using Teigha.Runtime;
 #elif ARX_APP
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 #endif
@@ -187,23 +185,19 @@ namespace Plan2Ext.LayTrans
                     var fileNames = new[] { "CARLO_AUF_PLAN2", "NORM_AUF_PLAN2", "KAV_AUF_PLAN2", "PLAN2_AUF_CARLO", "PLAN2_AUF_NORM", "PLAN2_AUF_KAV" };
                     var keywords = new[] {"Carloplan2", "Normplan2","Kavplan2", "Plan2carlo", "pLan2norm", "plan2kaV"};
 
-                    var keyword = Globs.AskKeywordFromUser("Layerkonfiguration", keywords);
-                    if (keyword== null) return;
+                    var keyword = Globs.AskKeywordFromUser("Layerkonfiguration", keywords, -1, true);
+                    if (string.IsNullOrEmpty(keyword)) return;
 
-                    var fn = fileNames[keywords.ToList().IndexOf(keyword)];
+                    var index = keywords.ToList().IndexOf(keyword);
+                    var fn = index >= 0 ? fileNames[index] : keyword;
                     fn += ".xlsx";
                     string fileName;
-                    try
+                    if (!Globs.FindFile(fn, doc.Database, out fileName))
                     {
-                        fileName = HostApplicationServices.Current.FindFile(fn, doc.Database, FindFileHint.Default);
-                    }
-                    catch (Exception)
-                    {
-                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Datei {0} wurde nicht gefunden!", fn));
-                        return;
-                    }
-
-                    var engine = new Engine();
+	                    Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Datei '{0}' wurde nicht gefunden!", fn));
+	                    return;
+					}
+					var engine = new Engine();
                     var ok = engine.LayTrans(fileName);
                     if (!ok)
                     {
