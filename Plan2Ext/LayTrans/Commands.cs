@@ -190,13 +190,18 @@ namespace Plan2Ext.LayTrans
 
                     var index = keywords.ToList().IndexOf(keyword);
                     var fn = index >= 0 ? fileNames[index] : keyword;
-                    fn += ".xlsx";
                     string fileName;
-                    if (!Globs.FindFile(fn, doc.Database, out fileName))
+                    if (!Globs.FindFile(fn + ".xls", doc.Database, out fileName))
                     {
-	                    Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Datei '{0}' wurde nicht gefunden!", fn));
-	                    return;
-					}
+                        if (!Globs.FindFile(fn + ".xlsx", doc.Database, out fileName))
+                        {
+                            Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture,
+                                "Datei '{0}'.xls(x) wurde nicht gefunden!", fn));
+                            return;
+                        }
+                        else fn += ".xlsx";
+                    }
+                    else fn += ".xls";
 					var engine = new Engine();
                     var ok = engine.LayTrans(fileName);
                     if (!ok)
