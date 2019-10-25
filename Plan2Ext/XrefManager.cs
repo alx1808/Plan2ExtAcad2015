@@ -168,5 +168,26 @@ namespace Plan2Ext
             }
 
         }
+
+        public static  IEnumerable<ObjectId> GetAllXrefsFromCurrentSpace(Database db)
+        {
+            var allXrefsIds = new List<ObjectId>();
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForRead);
+                foreach (var oid in btr)
+                {
+                    var br = tr.GetObject(oid, OpenMode.ForRead) as BlockReference;
+                    if (br == null) continue;
+                    var bd = (BlockTableRecord)tr.GetObject(br.BlockTableRecord, OpenMode.ForRead);
+                    if (bd.IsFromExternalReference)
+                    {
+                        allXrefsIds.Add(br.ObjectId);
+                    }
+                }
+                tr.Commit();
+            }
+            return allXrefsIds;
+        }
     }
 }

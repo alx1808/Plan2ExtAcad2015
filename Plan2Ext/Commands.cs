@@ -54,6 +54,34 @@ namespace Plan2Ext
 
         private static bool inCommand;
 
+
+        [_AcTrx.LispFunction("SetWorkingDirx")]
+        public static bool SetWorkingDir(_AcDb.ResultBuffer rb)
+        {
+            _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            try
+            {
+                if (rb == null) return false;
+                _AcDb.TypedValue[] values = rb.AsArray();
+                if (values == null || values.Length < 1) return false;
+                if (values[0].Value == null) return false;
+                string dirName = values[0].Value.ToString();
+                if (string.IsNullOrEmpty(dirName)) return false;
+                if (!Directory.Exists(dirName)) return false;
+
+                Directory.SetCurrentDirectory(dirName);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (SetWorkingDir): {0}", ex.Message);
+                ed.WriteMessage("\n" + msg);
+                return false;
+            }
+        }
+
+
         /*
         //[_AcTrx.CommandMethod("Alx")]
         public static void Alx()

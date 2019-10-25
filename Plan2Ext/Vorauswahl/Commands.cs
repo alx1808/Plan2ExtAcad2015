@@ -36,6 +36,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using Autodesk.AutoCAD.ApplicationServices.Core;
+using Plan2Ext.ObjectFilter;
 
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
@@ -79,29 +80,10 @@ namespace Plan2Ext.Vorauswahl
         {
             try
             {
-                var blockNamesWildCards = new List<WildcardAcad>();
-                var layerNamesWildCards = new List<WildcardAcad>();
-                var entityTypes = new List<Type>();
-
-                var keywords = new[] { "Block", "Layer", "Elementtyp", "Fertig" };
-                string keyWord;
-                while (!"Fertig".Equals(keyWord = Globs.AskKeywordFromUser("Auswahl", keywords, 3)))
-                {
-                    if (keyWord == null) return;
-
-                    switch (keyWord)
-                    {
-                        case "Block":
-                            blockNamesWildCards.AddRange(Globs.GetWildcards("Blocknamen: ", true));
-                            break;
-                        case "Layer":
-                            layerNamesWildCards.AddRange(Globs.GetWildcards("Layernamen: ", true));
-                            break;
-                        case "Elementtyp":
-                            entityTypes.AddRange(Globs.GetEntityTypesWithGermanName("Elementtypen: "));
-                            break;
-                    }
-                }
+                List<WildcardAcad> blockNamesWildCards;
+                List<WildcardAcad> layerNamesWildCards;
+                List<Type> entityTypes;
+                if (!GetSelectionInfoViaCmdLine(out blockNamesWildCards, out layerNamesWildCards, out entityTypes)) return;
 
                 // get also layers from blocks and turn layer on and thaw and unlock
                 var blockNames = Globs.GetAllBlockNames()
@@ -125,6 +107,76 @@ namespace Plan2Ext.Vorauswahl
             {
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2VorauswahlSelect aufgetreten! {0}", ex.Message));
             }
+        }
+
+
+        /// <summary>
+        /// Command-Line variant
+        /// </summary>
+        [_AcTrx.CommandMethod("-Plan2XrefVorauswahl", _AcBrx.CommandFlags.Modal | _AcBrx.CommandFlags.Redraw)]
+        // ReSharper disable once UnusedMember.Global
+        public static void Plan2XrefVorauswahCl()
+        {
+            try
+            {
+                var doc = Application.DocumentManager.MdiActiveDocument;
+                var db = doc.Database;
+
+                List<WildcardAcad> blockNamesWildCards;
+                List<WildcardAcad> layerNamesWildCards;
+                List<Type> entityTypes;
+                if (!GetSelectionInfoViaCmdLine(out blockNamesWildCards, out layerNamesWildCards, out entityTypes)) return;
+
+                var objectFilters = new List<IObjectFilter>();
+                objectFilters.AddRange(blockNamesWildCards.Select(x => new BlockNameObjectFilter(x)));
+                objectFilters.AddRange(layerNamesWildCards.Select(x => new LayerNameObjectFilter(x)));
+                objectFilters.AddRange(entityTypes.Select(x => new TypeObjectFilter(x)));
+                var filter = objectFilters.Count > 0 ? new OrObjectFilter(objectFilters) : null;
+
+                var allXrefIds = XrefManager.GetAllXrefsFromCurrentSpace(db).ToArray();
+                var allBlockTableIds = BlockManager.InsertXrefsAsBlocks(db, allXrefIds);
+                var explodedBlocks = BlockManager.ExplodeBlocks(db, db.CurrentSpaceId, allBlockTableIds, true, false, filter).ToArray();
+
+                var editor = doc.Editor;
+                if (explodedBlocks.Length > 0)
+                editor.SetImpliedSelection(explodedBlocks);
+                editor.WriteMessage("\nAnzahl importierter Elemente: " + explodedBlocks.Length);
+            }
+            catch (Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2XrefVorauswahl aufgetreten! {0}", ex.Message));
+            }
+        }
+
+
+        private static bool GetSelectionInfoViaCmdLine(out List<WildcardAcad> blockNamesWildCards, out List<WildcardAcad> layerNamesWildCards,
+            out List<Type> entityTypes)
+        {
+            blockNamesWildCards = new List<WildcardAcad>();
+            layerNamesWildCards = new List<WildcardAcad>();
+            entityTypes = new List<Type>();
+
+            var keywords = new[] {"Block", "Layer", "Elementtyp", "Fertig"};
+            string keyWord;
+            while (!"Fertig".Equals(keyWord = Globs.AskKeywordFromUser("Auswahl", keywords, 3)))
+            {
+                if (keyWord == null) return false;
+
+                switch (keyWord)
+                {
+                    case "Block":
+                        blockNamesWildCards.AddRange(Globs.GetWildcards("Blocknamen: ", true));
+                        break;
+                    case "Layer":
+                        layerNamesWildCards.AddRange(Globs.GetWildcards("Layernamen: ", true));
+                        break;
+                    case "Elementtyp":
+                        entityTypes.AddRange(Globs.GetEntityTypesWithGermanName("Elementtypen: "));
+                        break;
+                }
+            }
+
+            return true;
         }
 
         [_AcTrx.CommandMethod("Plan2VorauswahlSelect", _AcBrx.CommandFlags.Modal |

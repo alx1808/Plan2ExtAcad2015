@@ -133,6 +133,7 @@
     <Compile Include="BlockInfo\ProtoDwgInfo.cs" />
     <Compile Include="BlockInfo\SingleBlockNameRowProvider.cs" />
     <Compile Include="BlockInfo\VertikalLegendInserter.cs" />
+    <Compile Include="BlockManager.cs" />
     <Compile Include="BlockToExcel\BlockToExcel.cs" />
     <Compile Include="BlockToExcel\BlockToExcel2.cs" />
     <Compile Include="BlockToExcel\Excelizer.cs" />
@@ -251,6 +252,12 @@
     </Compile>
     <Compile Include="Nummerierung\NrOptions.cs" />
     <Compile Include="Nummerierung\NrPalette.cs" />
+    <Compile Include="ObjectFilter\AndObjectFilter.cs" />
+    <Compile Include="ObjectFilter\BlockNameObjectFilter.cs" />
+    <Compile Include="ObjectFilter\IObjectFilter.cs" />
+    <Compile Include="ObjectFilter\LayerNameObjectFilter.cs" />
+    <Compile Include="ObjectFilter\OrObjectFilter.cs" />
+    <Compile Include="ObjectFilter\TypeObjectFilter.cs" />
     <Compile Include="PaperSpaceHelper.cs" />
     <Compile Include="Plotter.cs" />
     <Compile Include="Plot\LayoutCreation.cs" />
