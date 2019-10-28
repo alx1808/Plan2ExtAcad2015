@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 #if BRX_APP
-using  Bricscad.ApplicationServices;
+using Teigha.DatabaseServices;
 #elif ARX_APP
 using Autodesk.AutoCAD.DatabaseServices;
 #endif

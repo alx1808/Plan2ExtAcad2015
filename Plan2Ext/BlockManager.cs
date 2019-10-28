@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Plan2Ext.ObjectFilter;
 #if BRX_APP
 using  Bricscad.ApplicationServices;
@@ -6,13 +8,14 @@ using Teigha.DatabaseServices;
 #elif ARX_APP
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.ApplicationServices.Core;
+// ReSharper disable CommentTypo
 #endif
 
 namespace Plan2Ext
 {
     internal static class BlockManager
     {
-        public  static IEnumerable<ObjectId> InsertXrefsAsBlocks(Database db, IEnumerable<ObjectId> xrefTableRecordIds)
+        public static IEnumerable<ObjectId> InsertXrefsAsBlocks(Database db, IEnumerable<ObjectId> xrefTableRecordIds)
         {
             var blockRefIds = new List<ObjectId>();
             using (var tr = db.TransactionManager.StartTransaction())
@@ -45,10 +48,10 @@ namespace Plan2Ext
         }
 
         public static IEnumerable<ObjectId> ExplodeBlocks(
-            Database db, 
-            ObjectId spaceId,  
-            IEnumerable<ObjectId> blockRefIds, 
-            bool deleteRef, 
+            Database db,
+            ObjectId spaceId,
+            IEnumerable<ObjectId> blockRefIds,
+            bool deleteRef,
             bool deleteBtr,
             IObjectFilter objectFilter
             )
@@ -112,5 +115,107 @@ namespace Plan2Ext
 
             return filteredObjects;
         }
+
+        /// <summary>
+        /// Adds all non constant attributes from blockdefinition
+        /// </summary>
+        /// <param name="blockReference"></param>
+        /// <param name="transaction"></param>
+        /// <returns>Added AttributeReferences</returns>
+        public static IEnumerable<AttributeReference> AddAllAttributesFromDefinition(BlockReference blockReference, Transaction transaction)
+        {
+            var attributeReferences = new List<AttributeReference>();
+            var blockDef = (BlockTableRecord)blockReference.BlockTableRecord.GetObject(OpenMode.ForRead);
+            var nonConstantAttributeDefinitions = GetNonConstantAttributeDefinitions(blockDef).ToArray();
+            foreach (var attDef in nonConstantAttributeDefinitions)
+            {
+                var attRef = new AttributeReference();
+                attRef.SetAttributeFromBlock(attDef, blockReference.BlockTransform);
+                blockReference.AttributeCollection.AppendAttribute(attRef);
+                transaction.AddNewlyCreatedDBObject(attRef, true);
+                attributeReferences.Add(attRef);
+            }
+
+            return attributeReferences;
+        }
+
+        /// <summary>
+        /// Sets Attributvalues. If attribute doesn't exist, but exists in the blockdefinition, the attribute will be added.
+        /// </summary>
+        /// <param name="blockRef"></param>
+        /// <param name="attributes"></param>
+        /// <param name="transaction"></param>
+        /// <returns>
+        /// Returns true, if all values in attributes were found and set.
+        /// </returns>
+        public static bool SetAttributes(BlockReference blockRef, Dictionary<string, string> attributes, Transaction transaction)
+        {
+            var everyValueSet = true;
+            var blockDef = (BlockTableRecord)transaction.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead);
+            var nonConstantAttributeDefinitions = GetNonConstantAttributeDefinitions(blockDef).ToArray();
+            var attributeReferences = GetAttributeReferences(blockRef).ToArray();
+            foreach (var kvpAttribute in attributes)
+            {
+                var attributeTag = kvpAttribute.Key;
+                var attributeValue = kvpAttribute.Value;
+                var existingAtt = attributeReferences.FirstOrDefault(x =>
+                    x.Tag.Equals(attributeTag, StringComparison.InvariantCultureIgnoreCase));
+                if (existingAtt != null)
+                {
+                    existingAtt.UpgradeOpen();
+                    existingAtt.TextString = attributeValue;
+                    existingAtt.DowngradeOpen();
+                    continue;
+                }
+
+                var attDef = nonConstantAttributeDefinitions.FirstOrDefault(x =>
+                    x.Tag.Equals(attributeTag, StringComparison.InvariantCultureIgnoreCase));
+                if (attDef != null)
+                {
+                    using (var attRef = new AttributeReference())
+                    {
+                        attRef.SetAttributeFromBlock(attDef, blockRef.BlockTransform);
+                        attRef.TextString = attributeValue;
+                        blockRef.AttributeCollection.AppendAttribute(attRef);
+                        transaction.AddNewlyCreatedDBObject(attRef, true);
+                    }
+
+                    continue;
+                }
+
+                everyValueSet = false;
+            }
+
+            return everyValueSet;
+        }
+
+        private static IEnumerable<AttributeReference> GetAttributeReferences(BlockReference blockReference, OpenMode openMode = OpenMode.ForRead)
+        {
+            var attributeReferences = new List<AttributeReference>();
+            foreach (ObjectId attId in blockReference.AttributeCollection)
+            {
+                var anyAttRef = attId.GetObject(openMode) as AttributeReference;
+                if (anyAttRef == null) continue;
+                attributeReferences.Add(anyAttRef);
+            }
+
+            return attributeReferences;
+        }
+
+        private static IEnumerable<AttributeDefinition> GetNonConstantAttributeDefinitions(
+            BlockTableRecord blockTableRecord)
+        {
+            var attributeDefinitions = new List<AttributeDefinition>();
+            foreach (var oid in blockTableRecord)
+            {
+                var attDef = oid.GetObject(OpenMode.ForRead) as AttributeDefinition;
+                if (attDef != null && !attDef.Constant)
+                {
+                    attributeDefinitions.Add(attDef);
+                }
+            }
+            return attributeDefinitions;
+        }
+
     }
 }

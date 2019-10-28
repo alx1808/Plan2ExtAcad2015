@@ -138,8 +138,7 @@ namespace Plan2Ext.Vorauswahl
                 var explodedBlocks = BlockManager.ExplodeBlocks(db, db.CurrentSpaceId, allBlockTableIds, true, false, filter).ToArray();
 
                 var editor = doc.Editor;
-                if (explodedBlocks.Length > 0)
-                editor.SetImpliedSelection(explodedBlocks);
+                //if (explodedBlocks.Length > 0) editor.SetImpliedSelection(explodedBlocks);
                 editor.WriteMessage("\nAnzahl importierter Elemente: " + explodedBlocks.Length);
             }
             catch (Exception ex)

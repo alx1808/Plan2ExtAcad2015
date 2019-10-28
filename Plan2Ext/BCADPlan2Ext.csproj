@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaEngine.cs" />
+    <Compile Include="BlockManager.cs" />
     <Compile Include="CalcArea\CalcAreaControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -119,6 +120,7 @@
     <Compile Include="HoehenPruefung\HoePrPalette.cs" />
     <Compile Include="HoehenPruefung\MyExtensions.cs" />
     <Compile Include="InvokeLisp.cs" />
+    <Compile Include="Kleinbefehle\Battman.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
     <Compile Include="LayTrans\Commands.cs" />
     <Compile Include="LayTrans\Engine.cs" />
@@ -131,6 +133,12 @@
     </Compile>
     <Compile Include="Massenbefehle\SetCtbInLayouts.cs" />
     <Compile Include="Massenbefehle\SetPlotterInLayouts.cs" />
+    <Compile Include="ObjectFilter\AndObjectFilter.cs" />
+    <Compile Include="ObjectFilter\BlockNameObjectFilter.cs" />
+    <Compile Include="ObjectFilter\IObjectFilter.cs" />
+    <Compile Include="ObjectFilter\LayerNameObjectFilter.cs" />
+    <Compile Include="ObjectFilter\OrObjectFilter.cs" />
+    <Compile Include="ObjectFilter\TypeObjectFilter.cs" />
     <Compile Include="Plotter.cs" />
     <Compile Include="Plot\PlotSettingsForLayout.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
