@@ -387,6 +387,7 @@ namespace Plan2Ext.Massenbefehle
 
             foreach (_AcDb.ObjectId attId in blockRef.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = tr.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
                 if (anyAttRef != null)
                 {

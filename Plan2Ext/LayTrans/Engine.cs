@@ -135,6 +135,7 @@ namespace Plan2Ext.LayTrans
 						foreach (var att in block.AttributeCollection)
 						{
 							_AcDb.ObjectId attOid = (_AcDb.ObjectId)att;
+                            if (attOid.IsErased) continue;
 							_AcDb.AttributeReference attrib = trans.GetObject(attOid, _AcDb.OpenMode.ForWrite) as _AcDb.AttributeReference;
 							if (attrib != null)
 							{
@@ -185,6 +186,7 @@ namespace Plan2Ext.LayTrans
 						foreach (var att in block.AttributeCollection)
 						{
 							_AcDb.ObjectId attOid = (_AcDb.ObjectId)att;
+                            if (attOid.IsErased) continue;
 							_AcDb.AttributeReference attrib = trans.GetObject(attOid, _AcDb.OpenMode.ForWrite) as _AcDb.AttributeReference;
 							if (attrib != null)
 							{
@@ -666,6 +668,7 @@ namespace Plan2Ext.LayTrans
 							{
 								foreach (_AcDb.ObjectId attId in bref.AttributeCollection)
 								{
+                                    if (attId.IsErased) continue;
 									ent = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
 									CountEntity(dict, ent);
 								}

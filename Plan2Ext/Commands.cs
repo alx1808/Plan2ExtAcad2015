@@ -615,6 +615,7 @@ namespace Plan2Ext
                             foreach (var att in block.AttributeCollection)
                             {
                                 _AcDb.ObjectId attOid = (_AcDb.ObjectId)att;
+                                if (attOid.IsErased) continue;
                                 _AcDb.AttributeReference attrib = trans.GetObject(attOid, _AcDb.OpenMode.ForWrite) as _AcDb.AttributeReference;
                                 if (attrib != null)
                                 {
@@ -657,6 +658,7 @@ namespace Plan2Ext
                             foreach (var att in block.AttributeCollection)
                             {
                                 _AcDb.ObjectId attOid = (_AcDb.ObjectId)att;
+                                if (attOid.IsErased) continue;
                                 _AcDb.AttributeReference attrib = trans.GetObject(attOid, _AcDb.OpenMode.ForWrite) as _AcDb.AttributeReference;
                                 if (attrib != null)
                                 {

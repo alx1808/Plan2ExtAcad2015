@@ -194,6 +194,7 @@ namespace Plan2Ext
             var attributeReferences = new List<AttributeReference>();
             foreach (ObjectId attId in blockReference.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = attId.GetObject(openMode) as AttributeReference;
                 if (anyAttRef == null) continue;
                 attributeReferences.Add(anyAttRef);

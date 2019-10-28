@@ -353,6 +353,7 @@ namespace Plan2Ext.Raumnummern
             var atts = new List<AttributeReference>();
             foreach (ObjectId attId in blockRef.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
                 if (anyAttRef != null)
                 {

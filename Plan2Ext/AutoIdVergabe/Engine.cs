@@ -1171,6 +1171,7 @@ namespace Plan2Ext.AutoIdVergabe
         {
             foreach (_AcDb.ObjectId attId in blockEnt.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = _TransMan.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
                 if (anyAttRef != null)
                 {

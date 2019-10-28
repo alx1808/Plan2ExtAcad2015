@@ -135,6 +135,7 @@ namespace Plan2Ext.Kleinbefehle
             var attRefNames = new List<string>();
             foreach (_AcDb.ObjectId attOid in blockRef.AttributeCollection)
             {
+                if (attOid.IsErased) continue;
                 var attRef = trans.GetObject(attOid, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
                 if (attRef != null)
                 {

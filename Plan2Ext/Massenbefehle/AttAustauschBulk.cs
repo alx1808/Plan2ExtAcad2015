@@ -303,6 +303,7 @@ namespace Plan2Ext.Massenbefehle
                             _AcDb.AttributeReference att2 = null;
                             foreach (_AcDb.ObjectId attId in br.AttributeCollection)
                             {
+                                if (attId.IsErased) continue;
                                 var anyAttRef = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
                                 if (anyAttRef != null)
                                 {

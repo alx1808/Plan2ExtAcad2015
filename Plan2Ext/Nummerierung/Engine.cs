@@ -320,6 +320,7 @@ namespace Plan2Ext.Nummerierung
         {
             foreach (ObjectId attId in blockEnt.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = _TransMan.GetObject(attId, OpenMode.ForRead) as AttributeReference;
                 if (anyAttRef != null)
                 {
@@ -335,8 +336,14 @@ namespace Plan2Ext.Nummerierung
         private AttributeReference GetFirstBlockAttribute(BlockReference blockEnt)
         {
             if (blockEnt.AttributeCollection.Count == 0) return null;
-            var attId = blockEnt.AttributeCollection[0];
-            return _TransMan.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+            for (int i = 0; i < blockEnt.AttributeCollection.Count; i++)
+            {
+                var attId = blockEnt.AttributeCollection[i];
+                if (attId.IsErased) continue;
+                return _TransMan.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+            }
+
+            return null;
         }
 
         private string GetCompleteNumber(string curNumber)

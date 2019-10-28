@@ -748,6 +748,7 @@ namespace Plan2Ext.RaumHoePruefung
             {
                 foreach (ObjectId attId in blockEnt.AttributeCollection)
                 {
+                    if (attId.IsErased) continue;
                     var anyAttRef = _TransMan.GetObject(attId, OpenMode.ForRead) as AttributeReference;
                     if (anyAttRef != null)
                     {

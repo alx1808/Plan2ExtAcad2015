@@ -182,6 +182,7 @@ namespace Plan2Ext.Raumnummern
                     blockRef.Position = newP;
                     foreach (ObjectId attId in blockRef.AttributeCollection)
                     {
+                        if (attId.IsErased) continue;
                         var anyAttRef = _TransMan.GetObject(attId, OpenMode.ForWrite) as AttributeReference;
                         if (anyAttRef != null)
                         {
@@ -206,6 +207,7 @@ namespace Plan2Ext.Raumnummern
                 var blockRef = (BlockReference)trans.GetObject(par.Oid, OpenMode.ForRead);
                 foreach (ObjectId attId in blockRef.AttributeCollection)
                 {
+                    if (attId.IsErased) continue;
                     var anyAttRef = trans.GetObject(attId, OpenMode.ForRead) as AttributeReference;
                     if (anyAttRef != null && string.Compare(anyAttRef.Tag, _RnOptions.Attribname, StringComparison.OrdinalIgnoreCase ) == 0)
                     {
@@ -1837,6 +1839,7 @@ namespace Plan2Ext.Raumnummern
         {
             foreach (ObjectId attId in blockEnt.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = _TransMan.GetObject(attId, OpenMode.ForRead) as AttributeReference;
                 if (anyAttRef != null)
                 {

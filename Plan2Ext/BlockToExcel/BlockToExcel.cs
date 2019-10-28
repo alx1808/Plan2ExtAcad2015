@@ -429,6 +429,7 @@ namespace Plan2Ext.BlockToExcel
         {
             foreach (_AcDb.ObjectId attId in blockEnt.AttributeCollection)
             {
+                if (attId.IsErased) continue;
                 var anyAttRef = trans.GetObject(attId, _AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
                 if (anyAttRef != null)
                 {

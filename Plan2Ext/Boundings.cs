@@ -342,6 +342,7 @@ namespace Plan2Ext
                     }
 
                     var aroid = (ObjectId) arId;
+                    if (aroid.IsErased) continue;
                     DBObject obj = tr.GetObject(aroid, OpenMode.ForRead);
                     var ar = obj as AttributeReference;
                     if (ar != null)
