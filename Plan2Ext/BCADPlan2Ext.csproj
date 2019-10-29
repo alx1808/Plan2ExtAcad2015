@@ -122,6 +122,8 @@
     <Compile Include="InvokeLisp.cs" />
     <Compile Include="Kleinbefehle\Battman.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
+    <Compile Include="Kleinbefehle\NonPlottableLayerFreezeOff.cs" />
+    <Compile Include="LayerManager.cs" />
     <Compile Include="LayTrans\Commands.cs" />
     <Compile Include="LayTrans\Engine.cs" />
     <Compile Include="LispFileDialogs.cs" />

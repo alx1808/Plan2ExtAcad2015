@@ -7,7 +7,6 @@ using System.Linq;
 
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
-//using _AcBr = Teigha.BoundaryRepresentation;
 using Teigha.Colors;
 using Teigha.DatabaseServices;
 using Teigha.Runtime;

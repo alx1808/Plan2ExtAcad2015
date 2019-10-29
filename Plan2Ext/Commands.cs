@@ -881,8 +881,7 @@ namespace Plan2Ext
         [_AcTrx.LispFunction("GetNonPlottableLayers")]
         public static _AcDb.ResultBuffer GetNonPlottableLayers(_AcDb.ResultBuffer rb)
         {
-            List<string> layerNames = new List<string>();
-            Globs.GetNonPlottableLayers(layerNames);
+            var layerNames = LayerManager.GetNamesOfNonPlottableLayers().ToList();
 
             if (layerNames.Count > 0)
             {

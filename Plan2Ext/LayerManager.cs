@@ -1,10 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+// ReSharper disable IdentifierTypo
+
+#if BRX_APP
+using Teigha.Colors;
+using Teigha.DatabaseServices;
+using Bricscad.ApplicationServices;
+#elif ARX_APP
+using Autodesk.AutoCAD.ApplicationServices.Core;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 
-// ReSharper disable IdentifierTypo
+#endif
+
 
 namespace Plan2Ext
 {
@@ -94,6 +104,60 @@ namespace Plan2Ext
             }
 
             return layerStates;
+        }
+
+        public static IEnumerable<string> GetNamesOfNonPlottableLayers(Database db = null)
+        {
+            var layerNames = new List<string>();
+            if (db == null) db = Application.DocumentManager.MdiActiveDocument.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var layTb = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (var ltrOid in layTb)
+                {
+                    var ltr = (LayerTableRecord)trans.GetObject(ltrOid, OpenMode.ForRead);
+                    if (!ltr.IsPlottable)
+                    {
+                        layerNames.Add(ltr.Name);
+                    }
+                }
+                trans.Commit();
+            }
+
+            return layerNames;
+        }
+
+        /// <summary>
+        /// Freezes and Offs layer.
+        /// </summary>
+        /// <param name="layerNames"></param>
+        /// <param name="db"></param>
+        /// <returns>True if regen is needed</returns>
+        public static bool FreezeOff(IEnumerable<string> layerNames, Database db = null)
+        {
+            if (db == null) db = Application.DocumentManager.MdiActiveDocument.Database;
+            var needsRegen = false;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var layerTable = (LayerTable)transaction.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (var layerName in layerNames)
+                {
+                    if (!layerTable.Has(layerName)) continue;
+                    var oid = layerTable[layerName];
+                    var ltr = (LayerTableRecord)transaction.GetObject(oid, OpenMode.ForWrite);
+                    ltr.IsOff = true;
+                    if (db.Clayer == oid) continue;
+                    if (!ltr.IsFrozen)
+                    {
+                        ltr.IsFrozen = true;
+                        needsRegen = true;
+                    }
+                }
+                
+                transaction.Commit();
+            }
+
+            return needsRegen;
         }
     }
 }

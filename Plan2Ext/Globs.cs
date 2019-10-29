@@ -1034,26 +1034,6 @@ namespace Plan2Ext
             }
         }
 
-        public static void GetNonPlottableLayers(List<string> layerNames)
-        {
-            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
-            using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
-            {
-                _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
-                List<_AcDb.LayerTableRecord> ltrs = new List<_AcDb.LayerTableRecord>();
-                foreach (var ltrOid in layTb)
-                {
-                    _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
-                    if (!ltr.IsPlottable)
-                    {
-                        layerNames.Add(ltr.Name);
-                    }
-                }
-                trans.Commit();
-            }
-        }
-
         public static void GetAllLayerNames(List<string> layerNames)
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
