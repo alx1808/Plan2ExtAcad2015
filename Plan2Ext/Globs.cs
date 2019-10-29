@@ -1852,7 +1852,7 @@ namespace Plan2Ext
                 using (_AcDb.Database dbInsert = new _AcDb.Database(false, true))
                 {
                     log.Debug("ReadDwgFile");
-                    dbInsert.ReadDwgFile(fname, System.IO.FileShare.Read, true, "");
+                    dbInsert.ReadDwgFile(fname, _AcDb.FileOpenMode.OpenForReadAndAllShare, false, null);
                     log.Debug("Insert to Db");
                     objId = db.Insert(blockName, dbInsert, true);
                 }
