@@ -120,6 +120,7 @@
     <Compile Include="HoehenPruefung\HoePrPalette.cs" />
     <Compile Include="HoehenPruefung\MyExtensions.cs" />
     <Compile Include="InvokeLisp.cs" />
+    <Compile Include="Kleinbefehle\AllBlocksExplodable.cs" />
     <Compile Include="Kleinbefehle\Battman.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
     <Compile Include="Kleinbefehle\NonPlottableLayerFreezeOff.cs" />

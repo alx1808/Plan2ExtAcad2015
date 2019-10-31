@@ -187,6 +187,7 @@
     <Compile Include="HoehenPruefung\MyExtensions.cs" />
     <Compile Include="Kleinbefehle\AddMissingAttDefs.cs" />
     <Compile Include="Kleinbefehle\AddMissingAttRefs.cs" />
+    <Compile Include="Kleinbefehle\AllBlocksExplodable.cs" />
     <Compile Include="Kleinbefehle\Battman.cs" />
     <Compile Include="Kleinbefehle\BlockFarben.cs" />
     <Compile Include="Kleinbefehle\HatchPolyBreite.cs" />
