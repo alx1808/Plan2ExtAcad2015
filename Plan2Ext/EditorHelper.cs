@@ -1,7 +1,13 @@
-﻿using Autodesk.AutoCAD.ApplicationServices.Core;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿// ReSharper disable IdentifierTypo
+#if BRX_APP
+using Teigha.DatabaseServices;
+using Bricscad.ApplicationServices;
+using Bricscad.EditorInput;
+#elif ARX_APP
 using Autodesk.AutoCAD.EditorInput;
-// ReSharper disable IdentifierTypo
+using Autodesk.AutoCAD.ApplicationServices.Core;
+using Autodesk.AutoCAD.DatabaseServices;
+#endif
 
 namespace Plan2Ext
 {

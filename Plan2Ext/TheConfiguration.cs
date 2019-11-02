@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ReSharper disable CommentTypo
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -61,6 +62,55 @@ namespace Plan2Ext
             return value.ToString();
         }
 
+        public static bool GetValueString(string varName, out string val)
+        {
+            val = null;
+            try
+            {
+                val = TheConfiguration.GetValueString(varName);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static object GetValue(string name)
+        {
+            if (!_Loaded)
+            {
+                LoadConfig();
+            }
+
+            ConfigVar cv;
+            if (_ConfigDict.TryGetValue(name, out cv))
+            {
+                object value;
+                Type type;
+                cv.GetValue(out type, out value);
+                return value;
+            }
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Konfigurationseintrag für Configvar {0} nicht gefunden!", name));
+        }
+
+        public static object GetValue(string name, out Type type)
+        {
+            if (!_Loaded)
+            {
+                LoadConfig();
+            }
+
+            ConfigVar cv;
+            if (_ConfigDict.TryGetValue(name, out cv))
+            {
+                object value;
+                cv.GetValue(out type,out value);
+                return value;
+            }
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Konfigurationseintrag für Configvar {0} nicht gefunden!", name));
+        }
+
         public static bool GetValue(string name, out Type type, out object value)
         {
             if (!_Loaded)
@@ -71,12 +121,11 @@ namespace Plan2Ext
             ConfigVar cv;
             if (_ConfigDict.TryGetValue(name, out cv))
             {
-                cv.GetValue(out type,out  value);
+                cv.GetValue(out type, out  value);
                 return true;
             }
             throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Konfigurationseintrag für Configvar {0} nicht gefunden!", name));
         }
-
         private static void LoadConfig()
         {
             GetEncoding();

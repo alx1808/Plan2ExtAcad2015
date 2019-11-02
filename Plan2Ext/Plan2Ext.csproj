@@ -161,6 +161,8 @@
     <Compile Include="CenterBlock\Globs.cs" />
     <Compile Include="CenterBlock\Options.cs" />
     <Compile Include="CenterBlock\Palette.cs" />
+    <Compile Include="Configuration\FensterConfiguration.cs" />
+    <Compile Include="Configuration\TuerConfiguration.cs" />
     <Compile Include="DocumentHandling.cs" />
     <Compile Include="EditorHelper.cs" />
     <Compile Include="EntityTypeItem.cs" />
@@ -188,6 +190,7 @@
     <Compile Include="Kleinbefehle\AddMissingAttDefs.cs" />
     <Compile Include="Kleinbefehle\AddMissingAttRefs.cs" />
     <Compile Include="Kleinbefehle\AllBlocksExplodable.cs" />
+    <Compile Include="Kleinbefehle\BaseMoveOeffnungen.cs" />
     <Compile Include="Kleinbefehle\Battman.cs" />
     <Compile Include="Kleinbefehle\BlockFarben.cs" />
     <Compile Include="Kleinbefehle\HatchPolyBreite.cs" />

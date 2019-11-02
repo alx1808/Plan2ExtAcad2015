@@ -603,6 +603,32 @@ namespace Plan2Ext
             else return false;
         }
 
+
+        public static void ZoomToPoint(_AcGe.Point3d ucsPoint, double width)
+        {
+            var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+            var view = ed.GetCurrentView();
+            view.CenterPoint = ucsPoint.ToPoint2D();
+            view.Height = width;
+            view.Width = width;
+            ed.SetCurrentView(view);
+        }
+
+        public static _AcGe.Point3dCollection GetSelectCrossingPoints(_AcGe.Point3d wcsPoint, double distance)
+        {
+            var ang = GetUcsDirection();
+
+            var right = PolarPoints(wcsPoint, ang, distance);
+            var left = PolarPoints(wcsPoint, ang + Math.PI, distance);
+            var ll = PolarPoints(left, Math.PI * 1.5 + ang, distance);
+            var ul = PolarPoints(left, Math.PI * 0.5 + ang, distance);
+            var lr = PolarPoints(right, Math.PI * 1.5 + ang, distance);
+            var ur = PolarPoints(right, Math.PI * 0.5 + ang, distance);
+            var wcsPoints = new [] {ll,ul,ur, lr};
+            return new _AcGe.Point3dCollection(wcsPoints.Select(TransWcsUcs).ToArray());
+        }
+
+
         public static double WcsAngToUcsAng(double radAngW)
         {
             var ucsAng = GetUcsDirection();
@@ -2182,11 +2208,30 @@ namespace Plan2Ext
             Globs.CreateLayer(layerName);
             oCopiedPoly.Layer = layerName;
 
+		}
+
+#if ARX_APP
+        internal static IEnumerable<_AcDb.ObjectId> GeneratePolylinesFromHatches(_AcDb.ObjectId[] hatches)
+        {
+            var polylineIds = new List<_AcDb.ObjectId>();
+            foreach (var hatchOid in hatches)
+            {
+                var lastOid = EditorHelper.Entlast();
+				_AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Command("_.hatchedit", hatchOid, "_B", "_P", "_N");
+		var polylineObjectId = EditorHelper.Entlast();
+                var newEntityCreated = (lastOid != polylineObjectId);
+                if (newEntityCreated)
+                {
+                    polylineIds.Add(polylineObjectId);
+                }
+            }
+
+            return polylineIds;
         }
+#endif
 
 
-
-        internal static void AddFehlerBlock()
+		internal static void AddFehlerBlock()
         {
             if (Globs.BlockExists(FEHLERBLOCKNAME)) return;
 

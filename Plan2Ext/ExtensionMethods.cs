@@ -34,6 +34,22 @@ namespace Plan2Ext
 {
     public static class ExtensionMethods
     {
+        public static _AcGe.Point3d Polar(this _AcGe.Point3d point, double angle, double distance)
+        {
+            return new _AcGe.Point3d(point.X + distance * Math.Cos(angle),
+                point.Y + distance * Math.Sin(angle),
+                point.Z);
+
+        }
+
+        public static _AcGe.Point3d ToUcs(this _AcGe.Point3d wcsPoint)
+        {
+            return Globs.TransWcsUcs(wcsPoint);
+        }
+        public static _AcGe.Point2d ToPoint2D(this _AcGe.Point3d point3D)
+        {
+            return new _AcGe.Point2d(point3D.X, point3D.Y);
+        }
         // ReSharper disable once InconsistentNaming
         public static double Distance2dTo(this _AcGe.Point3d point, _AcGe.Point3d otherPoint)
         {

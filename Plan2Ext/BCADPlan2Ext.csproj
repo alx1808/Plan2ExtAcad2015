@@ -91,6 +91,7 @@
     <Compile Include="Configuration\SetConfigForm.Designer.cs">
       <DependentUpon>SetConfigForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorHelper.cs" />
     <Compile Include="EntityTypeItem.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Extensions.cs" />
