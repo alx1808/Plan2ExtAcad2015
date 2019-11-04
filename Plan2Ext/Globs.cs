@@ -167,6 +167,9 @@ namespace Plan2Ext
 						case "Double":
 							rb.Add(new _AcDb.TypedValue((int) _AcBrx.LispDataType.Double, Convert.ToDouble(o)));
 							break;
+						case "ObjectId":
+							rb.Add(new _AcDb.TypedValue((int) _AcBrx.LispDataType.ObjectId, (_AcDb.ObjectId)o) );
+							break;
 						default:
 							throw new InvalidOperationException( string.Format("Datatype {0} not supported!",tpName));
 
@@ -2210,14 +2213,14 @@ namespace Plan2Ext
 
 		}
 
-#if ARX_APP
         internal static IEnumerable<_AcDb.ObjectId> GeneratePolylinesFromHatches(_AcDb.ObjectId[] hatches)
         {
             var polylineIds = new List<_AcDb.ObjectId>();
             foreach (var hatchOid in hatches)
             {
                 var lastOid = EditorHelper.Entlast();
-				_AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Command("_.hatchedit", hatchOid, "_B", "_P", "_N");
+                Globs.CallCommand(new object[] {"_.hatchedit", hatchOid, "_B", "_P", "_N"});
+				//_AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Command("_.hatchedit", hatchOid, "_B", "_P", "_N");
 		var polylineObjectId = EditorHelper.Entlast();
                 var newEntityCreated = (lastOid != polylineObjectId);
                 if (newEntityCreated)
@@ -2228,7 +2231,6 @@ namespace Plan2Ext
 
             return polylineIds;
         }
-#endif
 
 
 		internal static void AddFehlerBlock()

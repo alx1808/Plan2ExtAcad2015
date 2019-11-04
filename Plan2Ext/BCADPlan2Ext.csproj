@@ -85,12 +85,14 @@
     <Compile Include="ConfigForm.Designer.cs">
       <DependentUpon>ConfigForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Configuration\FensterConfiguration.cs" />
     <Compile Include="Configuration\SetConfigForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Configuration\SetConfigForm.Designer.cs">
       <DependentUpon>SetConfigForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Configuration\TuerConfiguration.cs" />
     <Compile Include="EditorHelper.cs" />
     <Compile Include="EntityTypeItem.cs" />
     <Compile Include="ExtensionMethods.cs" />
@@ -122,6 +124,7 @@
     <Compile Include="HoehenPruefung\MyExtensions.cs" />
     <Compile Include="InvokeLisp.cs" />
     <Compile Include="Kleinbefehle\AllBlocksExplodable.cs" />
+    <Compile Include="Kleinbefehle\BaseMoveOeffnungen.cs" />
     <Compile Include="Kleinbefehle\Battman.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
     <Compile Include="Kleinbefehle\NonPlottableLayerFreezeOff.cs" />

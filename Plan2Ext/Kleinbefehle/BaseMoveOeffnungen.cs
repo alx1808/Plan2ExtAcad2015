@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
 using Plan2Ext.Configuration;
-using Exception = Autodesk.AutoCAD.BoundaryRepresentation.Exception;
 #if BRX_APP
+using Bricscad.EditorInput;
 using Teigha.DatabaseServices;
 using Teigha.Runtime;
+using Teigha.Geometry;
 using Bricscad.ApplicationServices;
 #elif ARX_APP
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.ApplicationServices.Core;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 #endif
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
@@ -41,9 +42,9 @@ namespace Plan2Ext.Kleinbefehle
                 var blockIds = SearchOeffBlockIds();
                 if (blockIds == null) return;
                 blockIds.ToList().ForEach(BasePointCorrection);
-                
+
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (Plan2BaseMoveOeffnungen): {0}", ex.Message);
                 editor.WriteMessage("\n" + msg);
@@ -55,11 +56,11 @@ namespace Plan2Ext.Kleinbefehle
             var doc = Application.DocumentManager.MdiActiveDocument;
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
-                var block = (BlockReference) oid.GetObject(OpenMode.ForRead);
+                var block = (BlockReference)oid.GetObject(OpenMode.ForRead);
                 var hatchOrPolyOid = SearchHatchOrPoly(block.Position);
                 if (hatchOrPolyOid.IsNull)
                 {
-                    Globs.InsertFehlerLines(new List<Point3d>(){block.Position}, HatchOrPolyNotFound );
+                    Globs.InsertFehlerLines(new List<Point3d>() { block.Position }, HatchOrPolyNotFound);
                 }
                 else
                 {
@@ -124,23 +125,22 @@ namespace Plan2Ext.Kleinbefehle
         private Point3d? GetCentroid(ObjectId hatchOrPolyOid)
         {
             var ent = hatchOrPolyOid.GetObject(OpenMode.ForRead);
-            ObjectId polylineId;
-            if (ent is Polyline)
-            {
-                polylineId = hatchOrPolyOid;
-            }
-            else
-            {
-                polylineId= Globs.GeneratePolylinesFromHatches(new[] {hatchOrPolyOid}).First();
-            }
+            if (ent is Polyline) return Globs.GetCentroid(hatchOrPolyOid);
 
-            return Globs.GetCentroid(polylineId);
+            var toDelete = Globs.GeneratePolylinesFromHatches(new[] { hatchOrPolyOid }).ToArray();
+            var centroid = Globs.GetCentroid(toDelete.First());
+            foreach (var objectId in toDelete)
+            {
+                var dbo = objectId.GetObject(OpenMode.ForWrite);
+                dbo.Erase(true);
+            }
+            return centroid;
         }
 
         private ObjectId SearchHatchOrPoly(Point3d wcsBlockPosition)
         {
             var cps = Globs.GetSelectCrossingPoints(wcsBlockPosition, _searchDistance);
-            Globs.ZoomToPoint(wcsBlockPosition.ToUcs(),_zoomWith);
+            Globs.ZoomToPoint(wcsBlockPosition.ToUcs(), _zoomWith);
             var oeffHatchLayer = TheConfiguration.GetValueString("alx_V:ino_zrids_OeffnungsLayer");
             oeffHatchLayer = MatchCodeCorrection(oeffHatchLayer);
             var filter = new SelectionFilter(new[]
@@ -149,7 +149,7 @@ namespace Plan2Ext.Kleinbefehle
                 new TypedValue((int) DxfCode.LayerName, oeffHatchLayer),
                 new TypedValue((int)DxfCode.Operator ,"<OR"),
                 new TypedValue((int) DxfCode.Start, "HATCH"),
-                new TypedValue((int) DxfCode.Start, "LWPOLYLINE"),
+                new TypedValue((int) DxfCode.Start, "*POLYLINE"),
                 new TypedValue((int)DxfCode.Operator ,"OR>"),
                 new TypedValue((int)DxfCode.Operator ,"AND>"),
             });
@@ -168,7 +168,7 @@ namespace Plan2Ext.Kleinbefehle
 
         private string MatchCodeCorrection(string code)
         {
-            var arr = code.Split(new []{","}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+            var arr = code.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
             return string.Join(",", arr);
         }
 
