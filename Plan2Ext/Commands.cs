@@ -834,6 +834,20 @@ namespace Plan2Ext
             }
         }
 
+
+        [_AcTrx.LispFunction("Plan2MatchCodeCorrection")]
+        public static string Plan2MatchCodeCorrection(_AcDb.ResultBuffer rb)
+        {
+            if (rb == null) return null;
+            var arr = rb.AsArray();
+            if (arr.Length < 1) return null;
+            if (arr[0].TypeCode != (short) _AcBrx.LispDataType.Text) return null;
+            var val = arr[0].Value;
+            if (val == null) return null;
+            return Globs.MatchCodeCorrection(val.ToString());
+        }
+
+
         /// <summary>
         /// (Layer, Length?, Angle?, Colorindex?, LB, p1, p2, ..., LE)
         /// </summary>
@@ -870,6 +884,8 @@ namespace Plan2Ext
             if (o is double || o is float || o is int || o is Int16) return Convert.ToDouble(o);
             return null;
         }
+
+
 
         [_AcTrx.LispFunction("InoNewGuid")]
         public static _AcDb.ResultBuffer InoGuid(_AcDb.ResultBuffer rb)

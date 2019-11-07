@@ -64,14 +64,14 @@ namespace Plan2Ext.Kleinbefehle
                 }
                 else
                 {
-                    var centroid = GetCentroid(hatchOrPolyOid);
+                    var centroid = GetCentroidUcs(hatchOrPolyOid);
                     if (centroid == null)
                     {
                         Globs.InsertFehlerLines(new List<Point3d>() { block.Position }, CentroidNotFound);
                     }
                     else
                     {
-                        var intersPerpenticular = GetIntersPerpenticular(block, centroid.Value);
+                        var intersPerpenticular = GetIntersPerpenticular(block, centroid.Value.ToWcs());
                         if (intersPerpenticular == null)
                         {
                             Globs.InsertFehlerLines(new List<Point3d>() { block.Position }, NoIntersectionFound);
@@ -82,7 +82,6 @@ namespace Plan2Ext.Kleinbefehle
                         }
                     }
                 }
-
 
                 transaction.Commit();
             }
@@ -122,7 +121,7 @@ namespace Plan2Ext.Kleinbefehle
             }
         }
 
-        private Point3d? GetCentroid(ObjectId hatchOrPolyOid)
+        private Point3d? GetCentroidUcs(ObjectId hatchOrPolyOid)
         {
             var ent = hatchOrPolyOid.GetObject(OpenMode.ForRead);
             if (ent is Polyline) return Globs.GetCentroid(hatchOrPolyOid);
@@ -140,9 +139,9 @@ namespace Plan2Ext.Kleinbefehle
         private ObjectId SearchHatchOrPoly(Point3d wcsBlockPosition)
         {
             var cps = Globs.GetSelectCrossingPoints(wcsBlockPosition, _searchDistance);
-            Globs.ZoomToPoint(wcsBlockPosition.ToUcs(), _zoomWith);
+            Globs.ZoomToPoint(wcsBlockPosition, _zoomWith);
             var oeffHatchLayer = TheConfiguration.GetValueString("alx_V:ino_zrids_OeffnungsLayer");
-            oeffHatchLayer = MatchCodeCorrection(oeffHatchLayer);
+            oeffHatchLayer = Globs.MatchCodeCorrection(oeffHatchLayer);
             var filter = new SelectionFilter(new[]
             {
                 new TypedValue((int)DxfCode.Operator ,"<AND"),
@@ -164,12 +163,6 @@ namespace Plan2Ext.Kleinbefehle
                 // first
                 return ss.GetObjectIds()[0];
             }
-        }
-
-        private string MatchCodeCorrection(string code)
-        {
-            var arr = code.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
-            return string.Join(",", arr);
         }
 
         private IEnumerable<ObjectId> SearchOeffBlockIds()

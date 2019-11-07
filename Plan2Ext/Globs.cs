@@ -606,12 +606,17 @@ namespace Plan2Ext
             else return false;
         }
 
+        public static string MatchCodeCorrection(string code)
+        {
+            var arr = code.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+            return string.Join(",", arr);
+        }
 
-        public static void ZoomToPoint(_AcGe.Point3d ucsPoint, double width)
+        public static void ZoomToPoint(_AcGe.Point3d wcsPoint, double width)
         {
             var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
             var view = ed.GetCurrentView();
-            view.CenterPoint = ucsPoint.ToPoint2D();
+            view.CenterPoint = wcsPoint.ToPoint2D();
             view.Height = width;
             view.Width = width;
             ed.SetCurrentView(view);

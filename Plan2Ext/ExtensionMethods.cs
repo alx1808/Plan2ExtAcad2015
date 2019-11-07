@@ -46,6 +46,10 @@ namespace Plan2Ext
         {
             return Globs.TransWcsUcs(wcsPoint);
         }
+        public static _AcGe.Point3d ToWcs(this _AcGe.Point3d ucs)
+        {
+            return Globs.TransUcsWcs(ucs);
+        }
         public static _AcGe.Point2d ToPoint2D(this _AcGe.Point3d point3D)
         {
             return new _AcGe.Point2d(point3D.X, point3D.Y);
