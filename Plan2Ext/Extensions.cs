@@ -40,6 +40,34 @@ namespace Plan2Ext
 {
     internal static class Extensions
     {
+        public static IEnumerable<_AcDb.AttributeReference> AttributeReferences(this _AcDb.BlockReference blockReference)
+        {
+            var attributeReferences = new List<_AcDb.AttributeReference>();
+            if (blockReference == null) return null;
+            foreach (_AcDb.ObjectId objectId in blockReference.AttributeCollection)
+            {
+                if (objectId.IsErased) continue;
+                var attributeReference = objectId.GetObject(_AcDb.OpenMode.ForRead) as _AcDb.AttributeReference;
+                if (attributeReference != null) attributeReferences.Add(attributeReference);
+            }
+
+            return attributeReferences;
+        }
+        public static IEnumerable<_AcDb.ObjectId> PickfirstSelection(this _AcEd.Editor editor)
+        {
+            var result = editor.SelectImplied();
+            if (result.Status != _AcEd.PromptStatus.OK) return new List<_AcDb.ObjectId>(); ;
+
+#if BRX_APP
+            SelectionSet ss = result.Value;
+#else
+            using (var ss = result.Value)
+#endif
+            {
+                return ss.GetObjectIds();
+            }
+        }
+
 
         public static List<_AcGe.Point2d> ToList2D(this List<_AcGe.Point3d> point3DList)
         {
