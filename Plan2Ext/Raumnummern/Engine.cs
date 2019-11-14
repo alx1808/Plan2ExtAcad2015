@@ -1609,11 +1609,7 @@ namespace Plan2Ext.Raumnummern
             PromptSelectionResult res = ed.GetSelection(filter); // ed.SelectAll(filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 return ss.GetObjectIds().ToList();
             }
@@ -1629,11 +1625,7 @@ namespace Plan2Ext.Raumnummern
             PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 return ss.GetObjectIds().ToList();
             }
@@ -1674,11 +1666,7 @@ namespace Plan2Ext.Raumnummern
             PromptSelectionResult res = ed.GetSelection(SelOpts, filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 return ss.GetObjectIds().ToList();
             }
@@ -1696,11 +1684,7 @@ namespace Plan2Ext.Raumnummern
             PromptSelectionResult res = ed.GetSelection(options, filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 return ss.GetObjectIds().ToList();
             }
@@ -1716,11 +1700,7 @@ namespace Plan2Ext.Raumnummern
             PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 return ss.GetObjectIds().ToList();
             }
@@ -1736,11 +1716,7 @@ namespace Plan2Ext.Raumnummern
             PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
 
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 return ss.GetObjectIds().ToList();
             }

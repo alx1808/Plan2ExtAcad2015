@@ -1185,11 +1185,7 @@ namespace Plan2Ext
                 return new List<_AcDb.ObjectId>();
             }
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
                 List<_AcDb.ObjectId> theBlockOids = new List<_AcDb.ObjectId>();
 
@@ -1231,11 +1227,7 @@ namespace Plan2Ext
                 return new List<_AcDb.ObjectId>();
             }
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
                 // polylinepoly? 
                 _AcDb.ObjectId[] idArray = ss.GetObjectIds();
@@ -1331,11 +1323,7 @@ namespace Plan2Ext
                 return Ret;
             }
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
 
                 _AcDb.ObjectId[] idArray = ss.GetObjectIds();
@@ -1386,11 +1374,7 @@ namespace Plan2Ext
                 return;
             }
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
 
 
@@ -1499,11 +1483,7 @@ namespace Plan2Ext
             res = ed.SelectAll(filter);
             if (res.Status != _AcEd.PromptStatus.OK) return;
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
 
                 _AcDb.ObjectId[] idArray = ss.GetObjectIds();
@@ -1693,11 +1673,7 @@ namespace Plan2Ext
                 return;
             }
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
                 _FlaechenGrenzen = new List<_AcDb.ObjectId>();
                 _Raumbloecke = new List<_AcDb.ObjectId>();

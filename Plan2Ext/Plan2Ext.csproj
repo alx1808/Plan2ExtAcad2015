@@ -171,6 +171,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Fenster\Examiner.cs" />
     <Compile Include="Fenster\Searcher.cs" />
+    <Compile Include="Find\AttributeDefinitionReplacer.cs" />
     <Compile Include="Find\AttributeReferenceReplacer.cs" />
     <Compile Include="Find\BaseReplacer.cs" />
     <Compile Include="Find\BlockReferenceReplacer.cs" />

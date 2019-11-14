@@ -1,9 +1,8 @@
 ﻿#if BRX_APP
-using Bricscad.Runtime;
 using Teigha.DatabaseServices;
 using Teigha.Runtime;
 using Bricscad.ApplicationServices;
-Bricscad.EditorInput;
+using Bricscad.EditorInput;
 #elif ARX_APP
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.ApplicationServices.Core;
@@ -13,7 +12,7 @@ using Autodesk.AutoCAD.EditorInput;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
+// ReSharper disable CommentTypo
 // ReSharper disable StringLiteralTypo
 // ReSharper disable IdentifierTypo
 
@@ -27,8 +26,8 @@ namespace Plan2Ext.Find
         private readonly List<IReplacer> _replacers = new List<IReplacer>
         {
             new BlockReferenceReplacer(new AttributeReferenceReplacer()),
+            new AttributeDefinitionReplacer(), // must come before DbTextReplacer
             new DbTextReplacer(),
-            new AttributeReferenceReplacer(),
             new MTextReplacer(),
         };
 
@@ -39,29 +38,36 @@ namespace Plan2Ext.Find
             var editor = doc.Editor;
             try
             {
-                string searchText;
-                string replaceText;
-                if (!GetTextOptions(editor, out searchText, out replaceText)) return;
+	            string searchText;
+	            string replaceText;
+	            if (!GetTextOptions(editor, out searchText, out replaceText)) return;
 
-                using (_transaction = doc.TransactionManager.StartTransaction())
-                {
-                    foreach (var objectId in NextOid())
-                    {
-                        var dbObject = _transaction.GetObject(objectId, OpenMode.ForRead);
-                        var replacer = _replacers.FirstOrDefault(x => x.SetEntityIfApplicable(dbObject));
-                        if (replacer == null) continue;
-                        dbObject.UpgradeOpen();
-                        replacer.Replace(searchText,replaceText);
-                        dbObject.DowngradeOpen();
-                    }
-                    _transaction.Commit();
-                }
+	            using (_transaction = doc.TransactionManager.StartTransaction())
+	            {
+		            foreach (var objectId in NextOid())
+		            {
+			            var dbObject = _transaction.GetObject(objectId, OpenMode.ForRead);
+			            var replacer = _replacers.FirstOrDefault(x => x.SetEntityIfApplicable(dbObject));
+			            if (replacer == null) continue;
+			            dbObject.UpgradeOpen();
+			            replacer.Replace(searchText, replaceText);
+			            dbObject.DowngradeOpen();
+		            }
+
+		            _transaction.Commit();
+	            }
             }
             catch (System.Exception ex)
             {
-                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (-Find): {0}", ex.Message);
-                editor.WriteMessage("\n" + msg);
+	            string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (-Find): {0}", ex.Message);
+	            editor.WriteMessage("\n" + msg);
             }
+            finally
+            {
+                // needs to be done for bricscad
+				editor.SetImpliedSelection(new ObjectId[]{});
+            }
+
         }
 
         private static bool GetTextOptions(Editor editor, out string searchText, out string replaceText)

@@ -170,11 +170,7 @@ namespace Plan2Ext.HoehenPruefung
             if (res.Status != PromptStatus.OK) return false;
 
             List<ObjectId> allEntities = null;
-#if BRX_APP
-            SelectionSet ss = res.Value;
-#else
             using (SelectionSet ss = res.Value)
-#endif
             {
                 allEntities = ss.GetObjectIds().ToList();
             }

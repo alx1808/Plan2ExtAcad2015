@@ -2623,11 +2623,7 @@ namespace Plan2Ext
             _AcEd.PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status == _AcEd.PromptStatus.OK)
             {
-#if BRX_APP
-				_AcEd.SelectionSet ss = res.Value;
-#else
                 using (_AcEd.SelectionSet ss = res.Value)
-#endif
                 {
                     hatches.AddRange(ss.GetObjectIds().ToList());
                 }
@@ -2674,11 +2670,7 @@ namespace Plan2Ext
             _AcEd.PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status == _AcEd.PromptStatus.OK)
             {
-#if BRX_APP
-				_AcEd.SelectionSet ss = res.Value;
-#else
                 using (_AcEd.SelectionSet ss = res.Value)
-#endif
                 {
                     fehlerLines.AddRange(ss.GetObjectIds().ToList());
                 }
@@ -2725,12 +2717,7 @@ namespace Plan2Ext
             _AcEd.PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status == _AcEd.PromptStatus.OK)
             {
-#if BRX_APP
-				_AcEd.SelectionSet ss = res.Value;
-#else
                 using (_AcEd.SelectionSet ss = res.Value)
-#endif
-
                 {
                     fehlerBlocks.AddRange(ss.GetObjectIds().ToList());
                 }
@@ -2755,12 +2742,7 @@ namespace Plan2Ext
             _AcEd.PromptSelectionResult res = ed.GetSelection(filter);
             if (res.Status == _AcEd.PromptStatus.OK)
             {
-#if BRX_APP
-				_AcEd.SelectionSet ss = res.Value;
-#else
                 using (_AcEd.SelectionSet ss = res.Value)
-#endif
-
                 {
                     fehlerBlocks.AddRange(ss.GetObjectIds().ToList());
                 }

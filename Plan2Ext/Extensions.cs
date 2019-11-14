@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-#if BRX_APP
+﻿#if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
@@ -36,6 +30,12 @@ using _AcIntCom = Autodesk.AutoCAD.Interop.Common;
 using _AcInt = Autodesk.AutoCAD.Interop;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+// ReSharper disable IdentifierTypo
+
 namespace Plan2Ext
 {
     internal static class Extensions
@@ -56,18 +56,12 @@ namespace Plan2Ext
         public static IEnumerable<_AcDb.ObjectId> PickfirstSelection(this _AcEd.Editor editor)
         {
             var result = editor.SelectImplied();
-            if (result.Status != _AcEd.PromptStatus.OK) return new List<_AcDb.ObjectId>(); ;
-
-#if BRX_APP
-            SelectionSet ss = result.Value;
-#else
+            if (result.Status != _AcEd.PromptStatus.OK) return new List<_AcDb.ObjectId>();
             using (var ss = result.Value)
-#endif
             {
                 return ss.GetObjectIds();
             }
         }
-
 
         public static List<_AcGe.Point2d> ToList2D(this List<_AcGe.Point3d> point3DList)
         {

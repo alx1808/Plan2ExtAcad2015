@@ -1,12 +1,9 @@
-﻿
-using System.Linq;
-#if BRX_APP
-using _AcAp = Bricscad.ApplicationServices;
+﻿#if BRX_APP
 using Teigha.DatabaseServices;
 #elif ARX_APP
 using Autodesk.AutoCAD.DatabaseServices;
-
 #endif
+using System.Linq;
 
 namespace Plan2Ext.Find
 {

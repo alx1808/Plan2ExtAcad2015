@@ -108,6 +108,14 @@
     </Compile>
     <Compile Include="Fenster\FensterOptionsPalette.cs" />
     <Compile Include="Fenster\Searcher.cs" />
+    <Compile Include="Find\AttributeDefinitionReplacer.cs" />
+    <Compile Include="Find\AttributeReferenceReplacer.cs" />
+    <Compile Include="Find\BaseReplacer.cs" />
+    <Compile Include="Find\BlockReferenceReplacer.cs" />
+    <Compile Include="Find\DbTextReplacer.cs" />
+    <Compile Include="Find\Find.cs" />
+    <Compile Include="Find\IReplacer.cs" />
+    <Compile Include="Find\MTextReplacer.cs" />
     <Compile Include="Flaeche.cs" />
     <Compile Include="Globs.cs" />
     <Compile Include="HoehenPruefung\Commands.cs" />

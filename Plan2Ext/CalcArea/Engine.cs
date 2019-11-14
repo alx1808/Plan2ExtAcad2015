@@ -240,12 +240,7 @@ namespace Plan2Ext.CalcArea
             _AcEd.PromptSelectionResult res = ed.GetSelection(filter);
             if (res.Status != _AcEd.PromptStatus.OK) return new List<_AcDb.ObjectId>();
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
-
             {
                 List<_AcDb.ObjectId> theBlockOids = new List<_AcDb.ObjectId>();
 

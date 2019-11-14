@@ -7,18 +7,19 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Plan2Ext.Find
 {
-    class MTextReplacer : BaseReplacer, IReplacer
+    class AttributeDefinitionReplacer : BaseReplacer, IReplacer
     {
-        private MText _current;
+        private AttributeDefinition _current;
         public bool SetEntityIfApplicable(DBObject dbo)
         {
-            _current = dbo as MText;
+            _current = dbo as AttributeDefinition;
             return _current != null;
         }
 
         public void Replace(string searchText, string replaceText)
         {
-            _current.Contents = ReplaceEscaped(_current.Contents, searchText, replaceText);
+            _current.Prompt = ReplaceEscaped(_current.Prompt, searchText, replaceText);
+            _current.Tag = ReplaceEscaped(_current.Tag, searchText, replaceText);
         }
     }
 }

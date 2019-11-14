@@ -1,5 +1,4 @@
 ﻿#if BRX_APP
-using _AcAp = Bricscad.ApplicationServices;
 using Teigha.DatabaseServices;
 #elif ARX_APP
 using Autodesk.AutoCAD.DatabaseServices;

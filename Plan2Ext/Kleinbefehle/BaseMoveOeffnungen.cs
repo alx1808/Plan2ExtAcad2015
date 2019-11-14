@@ -154,11 +154,7 @@ namespace Plan2Ext.Kleinbefehle
             });
             var result = Application.DocumentManager.MdiActiveDocument.Editor.SelectCrossingPolygon(cps, filter);
             if (result.Status != PromptStatus.OK) return ObjectId.Null;
-#if BRX_APP
-            SelectionSet ss = result.Value;
-#else
-            using (SelectionSet ss = result.Value)
-#endif
+            using (var ss = result.Value)
             {
                 // first
                 return ss.GetObjectIds()[0];
@@ -185,11 +181,7 @@ namespace Plan2Ext.Kleinbefehle
             });
             var result = Application.DocumentManager.MdiActiveDocument.Editor.SelectAll(filter);
             if (result.Status != PromptStatus.OK) return null;
-#if BRX_APP
-            SelectionSet ss = result.Value;
-#else
             using (SelectionSet ss = result.Value)
-#endif
             {
                 return ss.GetObjectIds();
             }

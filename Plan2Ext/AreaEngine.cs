@@ -104,11 +104,7 @@ namespace Plan2Ext
                 }
             }
 
-#if BRX_APP
-            _AcEd.SelectionSet ss = res.Value;
-#else
             using (_AcEd.SelectionSet ss = res.Value)
-#endif
             {
                 _AcDb.ObjectId[] idArray = ss.GetObjectIds();
 
