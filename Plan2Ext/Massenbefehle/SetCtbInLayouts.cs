@@ -47,37 +47,37 @@ namespace Plan2Ext.Massenbefehle
         #endregion
 
         #region Member variables
-        private static string _CtbName = string.Empty;
-        private static _AcDb.Transaction _Tr;
-        private static _AcDb.Database _Db;
+        private static string _ctbName = string.Empty;
+        private static _AcDb.Transaction _tr;
+        private static _AcDb.Database _db;
         private static readonly List<string> DwgsWrongCtb = new List<string>();
-        private static int _NrCtbs;
-        private static bool _NoCtbInModelSpace;
-        private static string _NoCtbName = string.Empty;
+        private static int _nrCtbs;
+        private static bool _noCtbInModelSpace;
+        private static string _noCtbName = string.Empty;
         #endregion
         [_AcTrx.CommandMethod("Plan2SetCtbInLayouts")]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetCtbInLayouts()
         {
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            _Db = doc.Database;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _db = doc.Database;
             var ed = doc.Editor;
-            _CtbName = string.Empty;
+            _ctbName = string.Empty;
             DwgsWrongCtb.Clear();
-            _NrCtbs = 0;
+            _nrCtbs = 0;
 
             try
             {
                 if (!GetCtbName()) return;
                 if (!SetCtbInLayouts())
                 {
-                    string msg = string.Format(CultureInfo.CurrentCulture, "Ctb '{0}' existiert nicht!", _CtbName);
+                    string msg = string.Format(CultureInfo.CurrentCulture, "Ctb '{0}' existiert nicht!", _ctbName);
                     ed.WriteMessage("\n" + msg);
                     System.Windows.Forms.MessageBox.Show(msg, "Plan2SetCtbInLayouts");
                 }
                 else
                 {
-                    string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter CTBs: {0}", _NrCtbs.ToString());
+                    string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter CTBs: {0}", _nrCtbs.ToString());
                     Log.Info(resultMsg);
                     System.Windows.Forms.MessageBox.Show(resultMsg, "Plan2SetCtb");
                 }
@@ -94,15 +94,15 @@ namespace Plan2Ext.Massenbefehle
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetCtbInLayoutsCl()
         {
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            _Db = doc.Database;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _db = doc.Database;
             var editor = doc.Editor;
-            _CtbName = null;
+            _ctbName = null;
             try
             {
                 var question = Globs.AskKeywordFromUser("Kein Ctb in Modellbereich Nein/<Ja>: ", new[] { "Ja", "Nein" }, 0);
                 if (question == null) return;
-                _NoCtbInModelSpace = question.Equals("Ja");
+                _noCtbInModelSpace = question.Equals("Ja");
                 
                 var promptStringOptions = new _AcEd.PromptStringOptions("\nCtb-Name/?/: ") { AllowSpaces = true, DefaultValue = "Keine", UseDefaultValue = true };
                 do
@@ -123,17 +123,17 @@ namespace Plan2Ext.Massenbefehle
                             Log.Warn(msg);
                         }
                     }
-                } while (_CtbName == null);
+                } while (_ctbName == null);
                 if (!SetCtbInLayouts())
                 {
-                    string msg = string.Format(CultureInfo.CurrentCulture, "Ctb '{0}' existiert nicht!", _CtbName);
+                    string msg = string.Format(CultureInfo.CurrentCulture, "Ctb '{0}' existiert nicht!", _ctbName);
                     editor.WriteMessage("\n" + msg);
                     Log.Warn(msg);
                 }
                 else
                 {
-                    editor.WriteMessage("\n" + String.Format("CTBs auf '{0}' gesetzt.",_CtbName == String.Empty ? "Keine" : _CtbName) + (_NoCtbInModelSpace ? " Modell auf 'Keine'." : ""));
-                    string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter CTBs: {0}", _NrCtbs.ToString());
+                    editor.WriteMessage("\n" + String.Format("CTBs auf '{0}' gesetzt.",_ctbName == String.Empty ? "Keine" : _ctbName) + (_noCtbInModelSpace ? " Modell auf 'Keine'." : ""));
+                    string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter CTBs: {0}", _nrCtbs.ToString());
                     Log.Info(resultMsg);
                 }
             }
@@ -150,7 +150,7 @@ namespace Plan2Ext.Massenbefehle
             var devList = GetCtbList();
             var candidates =  devList.Where(x => x.StartsWith(ctbNameStart, StringComparison.InvariantCultureIgnoreCase)).ToArray();
             if (candidates.Length != 1) return false;
-            _CtbName = candidates[0].Equals("Keine", StringComparison.InvariantCultureIgnoreCase) ? "" : candidates[0];
+            _ctbName = candidates[0].Equals("Keine", StringComparison.InvariantCultureIgnoreCase) ? "" : candidates[0];
             return true;
         }
 
@@ -171,11 +171,11 @@ namespace Plan2Ext.Massenbefehle
         // ReSharper disable once UnusedMember.Global
         public static void Plan2SetCtbInLayoutsBulk()
         {
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            _Db = doc.Database;
-            _CtbName = string.Empty;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            _db = doc.Database;
+            _ctbName = string.Empty;
             DwgsWrongCtb.Clear();
-            _NrCtbs = 0;
+            _nrCtbs = 0;
             List<string> saveNotPossible = new List<string>();
             try
             {
@@ -195,7 +195,7 @@ namespace Plan2Ext.Massenbefehle
                 }
                 if (!string.IsNullOrEmpty(dirName))
                 {
-                    Log.Info(string.Format(CultureInfo.CurrentCulture, "CTB '{0}' wird gesetzt in Zeichnungen unter '{1}'.", _CtbName, dirName));
+                    Log.Info(string.Format(CultureInfo.CurrentCulture, "CTB '{0}' wird gesetzt in Zeichnungen unter '{1}'.", _ctbName, dirName));
                 }
                 foreach (var fileName in dwgFileNames)
                 {
@@ -206,9 +206,9 @@ namespace Plan2Ext.Massenbefehle
                     Log.Info("----------------------------------------------------------------------------------");
                     Log.Info(string.Format(CultureInfo.CurrentCulture, "Öffne Zeichnung {0}", fileName));
 
-                    Application.DocumentManager.Open(fileName, false);
-                    doc = Application.DocumentManager.MdiActiveDocument;
-                    _Db = doc.Database;
+                    _AcAp.Application.DocumentManager.Open(fileName, false);
+                    doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+                    _db = doc.Database;
 
                     //Lock the new document
                     using (doc.LockDocument())
@@ -259,18 +259,18 @@ namespace Plan2Ext.Massenbefehle
         private static bool SetCtbInLayouts()
         {
             var ok = true;
-            using (_Tr = _Db.TransactionManager.StartTransaction())
+            using (_tr = _db.TransactionManager.StartTransaction())
             {
                 // var layManager = _AcDb.LayoutManager.Current;
                 var plotSetVal = _AcDb.PlotSettingsValidator.Current;
 
                 //_AcDb.DBDictionary layoutsEx = acTransEx.GetObject(acExDb.LayoutDictionaryId, _AcDb.OpenMode.ForRead) as _AcDb.DBDictionary;
-                var layouts = (_AcDb.DBDictionary)_Tr.GetObject(_Db.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
+                var layouts = (_AcDb.DBDictionary)_tr.GetObject(_db.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
                 foreach (var layoutDe in layouts)
                 {
                     //_AcDb.ObjectId layoutId = layManager.GetLayoutId(layManager.CurrentLayout);
                     var layoutId = layoutDe.Value;
-                    var layoutObj = (_AcDb.Layout)_Tr.GetObject(layoutId, _AcDb.OpenMode.ForWrite);
+                    var layoutObj = (_AcDb.Layout)_tr.GetObject(layoutId, _AcDb.OpenMode.ForWrite);
                     //ed.WriteMessage("Style sheet of current layout: " + layoutObj.CurrentStyleSheet + "\n");
                     //plotSetVal.RefreshLists(layoutObj); // ändert zb auch paperunits
                     System.Collections.Specialized.StringCollection sheetList = plotSetVal.GetPlotStyleSheetList();
@@ -282,20 +282,20 @@ namespace Plan2Ext.Massenbefehle
                     }
                     else
                     {
-                        if (_NoCtbInModelSpace && layoutObj.LayoutName == "Model")
+                        if (_noCtbInModelSpace && layoutObj.LayoutName == "Model")
                         {
-                            plotSetVal.SetCurrentStyleSheet(layoutObj, _NoCtbName);
+                            plotSetVal.SetCurrentStyleSheet(layoutObj, _noCtbName);
                         }
                         else
                         {
-                            plotSetVal.SetCurrentStyleSheet(layoutObj, _CtbName);
+                            plotSetVal.SetCurrentStyleSheet(layoutObj, _ctbName);
                             //var ps = (_AcDb.PlotSettings)layoutObj;
                             //if (ps.PlotPaperUnits != _AcDb.PlotPaperUnit.Millimeters) -> sollt nicht notwendig sein
                             //{ 
                             //    plotSetVal.SetPlotPaperUnits(ps, _AcDb.PlotPaperUnit.Millimeters);
                             //}
                         }
-                        _NrCtbs++;
+                        _nrCtbs++;
                     }
                     //ed.WriteMessage("The list of available plot style sheets\n");
                     //foreach (String str in sheetList)
@@ -319,17 +319,17 @@ namespace Plan2Ext.Massenbefehle
                     //    }
                     //}
                 }
-                _Tr.Commit();
+                _tr.Commit();
             }
             return ok;
         }
 
         private static bool CtbExists(System.Collections.Specialized.StringCollection sheetList)
         {
-            if (_CtbName == "") return true;
+            if (_ctbName == "") return true;
             foreach (var ctbName in sheetList)
             {
-                if (string.Compare(ctbName, _CtbName, StringComparison.OrdinalIgnoreCase) == 0) return true;
+                if (string.Compare(ctbName, _ctbName, StringComparison.OrdinalIgnoreCase) == 0) return true;
             }
             return false;
         }
@@ -356,7 +356,7 @@ namespace Plan2Ext.Massenbefehle
                 if (!string.IsNullOrEmpty(errorsWithDwgsMsg))
                     errorsWithDwgsMsg = string.Format(CultureInfo.CurrentCulture, "\nFehler in folgenden Dwgs aufgetreten (Info in Logdatei):\n{0}", errorsWithDwgsMsg);
             }
-            string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter CTBs: {0}\n{1}", _NrCtbs.ToString(), errorsWithDwgsMsg);
+            string resultMsg = string.Format(CultureInfo.CurrentCulture, "Anzahl gesetzter CTBs: {0}\n{1}", _nrCtbs.ToString(), errorsWithDwgsMsg);
             Log.Info(resultMsg);
             System.Windows.Forms.MessageBox.Show(resultMsg, "Plan2SetCtb");
         }
@@ -364,7 +364,7 @@ namespace Plan2Ext.Massenbefehle
         private static bool GetCtbName()
         {
             var devList = GetCtbList();
-            _NoCtbName = "";
+            _noCtbName = "";
 
             using (var frm = new GetPlotterName(devList))
             {
@@ -372,13 +372,13 @@ namespace Plan2Ext.Massenbefehle
                 frm.chkModelToNone.Text = "Kein CTB im Modellbereich";
                 var res = _AcAp.Application.ShowModalDialog(frm);
                 if (res == System.Windows.Forms.DialogResult.Cancel) return false;
-                _CtbName = frm.CurrentPlotterName;
-                _NoCtbInModelSpace = frm.NoPlotterInModelspace;
+                _ctbName = frm.CurrentPlotterName;
+                _noCtbInModelSpace = frm.NoPlotterInModelspace;
             }
 
-            if (string.Compare(_CtbName, "Keine", StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Compare(_ctbName, "Keine", StringComparison.OrdinalIgnoreCase) == 0)
             {
-                _CtbName = "";
+                _ctbName = "";
             }
             //var prompt = new _AcEd.PromptStringOptions("\nCTB-Name, der allen Layouts zugewiesen werden soll: ");
             //prompt.AllowSpaces = true;
@@ -398,10 +398,10 @@ namespace Plan2Ext.Massenbefehle
         private static List<string> GetCtbList()
         {
             var ctbs = new List<string>() { "Keine" };
-            using (var trans = _Db.TransactionManager.StartTransaction())
+            using (var trans = _db.TransactionManager.StartTransaction())
             {
                 var plotSetVal = _AcDb.PlotSettingsValidator.Current;
-                var layouts = (_AcDb.DBDictionary)trans.GetObject(_Db.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
+                var layouts = (_AcDb.DBDictionary)trans.GetObject(_db.LayoutDictionaryId, _AcDb.OpenMode.ForRead);
                 foreach (var layoutDe in layouts)
                 {
                     var layoutId = layoutDe.Value;
