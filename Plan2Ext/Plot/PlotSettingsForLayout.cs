@@ -77,7 +77,21 @@ namespace Plan2Ext.Plot
                     }
                     else
                     {
-                        Log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);
+	                    if (device.Equals("Kein", StringComparison.CurrentCultureIgnoreCase))
+	                    {
+							// english variante
+							device = "None";
+							if (devs.ContainsIgnoreUc(ref device))
+							{
+								Log.InfoFormat(CultureInfo.CurrentCulture, "Setze Device '{0}' für Layout '{1}'.", device, lay.LayoutName);
+								psv.SetPlotConfigurationName(ps, device, null);
+								psv.RefreshLists(ps);
+							}
+							else
+							{ Log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device); }
+						}
+						else
+	                    { Log.WarnFormat(CultureInfo.CurrentCulture, "Device '{0}' existiert nicht!", device);}
                     }
                 }
 
