@@ -10,6 +10,11 @@ namespace Plan2Ext.Find
     class MTextReplacer : BaseReplacer, IReplacer
     {
         private MText _current;
+
+        public MTextReplacer(bool useRegex)
+        {
+            UseRegex = useRegex;
+        }
         public bool SetEntityIfApplicable(DBObject dbo)
         {
             _current = dbo as MText;

@@ -10,6 +10,11 @@ namespace Plan2Ext.Find
     class DbTextReplacer : BaseReplacer, IReplacer
     {
         private DBText _current;
+
+        public DbTextReplacer(bool useRegex)
+        {
+            UseRegex = useRegex;
+        }
         public bool SetEntityIfApplicable(DBObject dbo)
         {
             _current = dbo as DBText;

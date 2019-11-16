@@ -12,6 +12,10 @@ namespace Plan2Ext.Find
         private BlockReference _current;
         private readonly AttributeReferenceReplacer _attributeReferenceReplacer;
 
+        public BlockReferenceReplacer(bool useRegex)
+        {
+            UseRegex = useRegex;
+        }
         public BlockReferenceReplacer(AttributeReferenceReplacer attributeReferenceReplacer)
         {
             _attributeReferenceReplacer = attributeReferenceReplacer;

@@ -23,51 +23,68 @@ namespace Plan2Ext.Find
     {
         private Transaction _transaction;
 
-        private readonly List<IReplacer> _replacers = new List<IReplacer>
-        {
-            new BlockReferenceReplacer(new AttributeReferenceReplacer()),
-            new AttributeDefinitionReplacer(), // must come before DbTextReplacer
-            new DbTextReplacer(),
-            new MTextReplacer(),
-        };
+        private List<IReplacer> _replacers;
 
         [CommandMethod("-Find", CommandFlags.UsePickSet)]
         public void FindCommandLine()
+        {
+            _replacers = new List<IReplacer>
+            {
+                new BlockReferenceReplacer(new AttributeReferenceReplacer(false)),
+                new AttributeDefinitionReplacer(false), // must come before DbTextReplacer
+                new DbTextReplacer(false),
+                new MTextReplacer(false),
+            };
+            FindCl();
+        }
+        [CommandMethod("-FindR", CommandFlags.UsePickSet)]
+        public void FindCommandLineRegex()
+        {
+            _replacers = new List<IReplacer>
+            {
+                new BlockReferenceReplacer(new AttributeReferenceReplacer(true)),
+                new AttributeDefinitionReplacer(true), // must come before DbTextReplacer
+                new DbTextReplacer(true),
+                new MTextReplacer(true),
+            };
+            FindCl();
+        }
+
+        private void FindCl()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var editor = doc.Editor;
             try
             {
-	            string searchText;
-	            string replaceText;
-	            if (!GetTextOptions(editor, out searchText, out replaceText)) return;
+                string searchText;
+                string replaceText;
+                if (!GetTextOptions(editor, out searchText, out replaceText)) return;
 
-	            using (_transaction = doc.TransactionManager.StartTransaction())
-	            {
-		            foreach (var objectId in NextOid())
-		            {
-			            var dbObject = _transaction.GetObject(objectId, OpenMode.ForRead);
-			            var replacer = _replacers.FirstOrDefault(x => x.SetEntityIfApplicable(dbObject));
-			            if (replacer == null) continue;
-			            dbObject.UpgradeOpen();
-			            replacer.Replace(searchText, replaceText);
-			            dbObject.DowngradeOpen();
-		            }
+                using (_transaction = doc.TransactionManager.StartTransaction())
+                {
+                    foreach (var objectId in NextOid())
+                    {
+                        var dbObject = _transaction.GetObject(objectId, OpenMode.ForRead);
+                        var replacer = _replacers.FirstOrDefault(x => x.SetEntityIfApplicable(dbObject));
+                        if (replacer == null) continue;
+                        dbObject.UpgradeOpen();
+                        replacer.Replace(searchText, replaceText);
+                        dbObject.DowngradeOpen();
+                    }
 
-		            _transaction.Commit();
-	            }
+                    _transaction.Commit();
+                }
             }
             catch (System.Exception ex)
             {
-	            string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (-Find): {0}", ex.Message);
-	            editor.WriteMessage("\n" + msg);
+                string msg = string.Format(CultureInfo.CurrentCulture, "Fehler in (-Find): {0}", ex.Message);
+                editor.WriteMessage("\n" + msg);
             }
             finally
             {
                 // needs to be done for bricscad
-				editor.SetImpliedSelection(new ObjectId[]{});
+                editor.SetImpliedSelection(new ObjectId[] { });
             }
-
         }
 
         private static bool GetTextOptions(Editor editor, out string searchText, out string replaceText)

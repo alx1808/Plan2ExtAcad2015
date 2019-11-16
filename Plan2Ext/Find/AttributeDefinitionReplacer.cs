@@ -9,6 +9,10 @@ namespace Plan2Ext.Find
 {
     class AttributeDefinitionReplacer : BaseReplacer, IReplacer
     {
+        public AttributeDefinitionReplacer(bool useRegex)
+        {
+            UseRegex = useRegex;
+        }
         private AttributeDefinition _current;
         public bool SetEntityIfApplicable(DBObject dbo)
         {

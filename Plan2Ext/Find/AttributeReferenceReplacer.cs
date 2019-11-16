@@ -10,6 +10,12 @@ namespace Plan2Ext.Find
     class AttributeReferenceReplacer : BaseReplacer, IReplacer
     {
         private AttributeReference _current;
+
+        public AttributeReferenceReplacer(bool useRegex)
+        {
+            UseRegex = useRegex;
+        }
+        
         public bool SetEntityIfApplicable(DBObject dbo)
         {
             _current = dbo as AttributeReference;
