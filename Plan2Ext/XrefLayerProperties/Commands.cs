@@ -38,7 +38,7 @@ namespace Plan2Ext.XrefLayerProperties
 
                 using (var db = new Database())
                 {
-                    db.ReadDwgFile(dwgfilename, FileShare.Read, false, null);
+                    db.ReadDwgFile(dwgfilename, FileOpenMode.OpenForReadAndAllShare, false, null);
 
                     var names = XrefManager.GetAllXrefNames(db).Where(x => string.Compare(xrefName, x, StringComparison.OrdinalIgnoreCase) == 0).ToArray();
                     if (!names.Any())
