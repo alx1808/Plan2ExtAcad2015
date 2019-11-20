@@ -26,5 +26,10 @@ namespace Plan2Ext
 
             return oids[0];
         }
+
+        public static void WriteLine(string message)
+        {
+            Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage("\n" + message);
+        }
     }
 }

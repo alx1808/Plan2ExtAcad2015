@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using log4net;
 using Plan2Ext.Properties;
@@ -36,23 +37,9 @@ namespace Plan2Ext.XrefLayerProperties
                 if (!GetDwgfilename(out dwgfilename)) return;
 
 
-                using (var db = new Database())
-                {
-                    db.ReadDwgFile(dwgfilename, FileOpenMode.OpenForReadAndAllShare, false, null);
-
-                    var names = XrefManager.GetAllXrefNames(db).Where(x => string.Compare(xrefName, x, StringComparison.OrdinalIgnoreCase) == 0).ToArray();
-                    if (!names.Any())
-                    {
-                        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Es gibt kein Xref mit Namen {0} in der Zeichnung {1}.", xrefName, dwgfilename));
-                        return;
-                    }
-                    var layerStates = LayerManager.GetClonedLayerTableRecords(db).ToList();
-                    var nameStates = names.SelectMany(x => layerStates.Where(s => s.Name.StartsWith(x + "|", StringComparison.OrdinalIgnoreCase)));
-                    SetLayersState(nameStates);
-                }
+                if (!ImportXrefLayerProperties(dwgfilename, xrefName)) return;
 
                 Application.DocumentManager.MdiActiveDocument.Editor.Regen();
-
             }
             catch (OperationCanceledException)
             {
@@ -66,6 +53,86 @@ namespace Plan2Ext.XrefLayerProperties
                 Log.Error(msg);
                 Application.ShowAlertDialog(msg);
             }
+        }
+
+        [CommandMethod("-Plan2ImportXrefLayerProperties")]
+        // ReSharper disable once UnusedMember.Global
+        public void Plan2ImportXrefLayerPropertiesCl()
+        {
+            Log.Info("-Plan2ImportXrefLayerProperties");
+            try
+            {
+                string xrefName;
+                if (!GetStringAllowSpaces("Xref-Name: ", out xrefName)) return;
+                if (string.IsNullOrEmpty(xrefName))
+                {
+                    var msg = "Es wurde kein XREF-Name angegeben.";
+                    EditorHelper.WriteLine(msg);
+                    Log.Warn(msg);
+                    return;
+                }
+
+                string dwgfilename;
+                if (!GetStringAllowSpaces("Import Dwg-Name: ", out dwgfilename)) return;
+                dwgfilename = dwgfilename.Trim(new char[] {'"'});
+                if (!dwgfilename.EndsWith(".dwg", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    dwgfilename += ".dwg";
+                }
+
+                if (!File.Exists(dwgfilename))
+                {
+                    var msg = string.Format(CultureInfo.CurrentCulture, "Die Datei '{0}' existiert nicht!",
+                        dwgfilename);
+                    EditorHelper.WriteLine(msg);
+                    Log.Warn(msg);
+                    return;
+                }
+
+                if (!ImportXrefLayerProperties(dwgfilename, xrefName, true)) return;
+
+                Application.DocumentManager.MdiActiveDocument.Editor.Regen();
+
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Info("Abbruch durch Benutzer.");
+                // cancelled by user
+            }
+            catch (Exception ex)
+            {
+                var msg = string.Format(CultureInfo.CurrentCulture,
+                    "Fehler in -Plan2ImportXrefLayerProperties aufgetreten! {0}", ex.Message);
+                Log.Error(msg);
+                EditorHelper.WriteLine(msg);
+            }
+        }
+
+        private static bool ImportXrefLayerProperties(string dwgfilename, string xrefName, bool commandLine = false)
+        {
+            using (var db = new Database())
+            {
+                db.ReadDwgFile(dwgfilename, FileOpenMode.OpenForReadAndAllShare, false, null);
+
+                var names = XrefManager.GetAllXrefNames(db)
+                    .Where(x => string.Compare(xrefName, x, StringComparison.OrdinalIgnoreCase) == 0).ToArray();
+                if (!names.Any())
+                {
+                    var msg = string.Format(CultureInfo.CurrentCulture,
+                        "Es gibt kein Xref mit Namen {0} in der Zeichnung {1}.", xrefName, dwgfilename);
+                    if (commandLine) EditorHelper.WriteLine(msg);
+                    else Application.ShowAlertDialog(msg);
+                    Log.Warn(msg);
+                    return false;
+                }
+
+                var layerStates = LayerManager.GetClonedLayerTableRecords(db).ToList();
+                var nameStates = names.SelectMany(x =>
+                    layerStates.Where(s => s.Name.StartsWith(x + "|", StringComparison.OrdinalIgnoreCase)));
+                SetLayersState(nameStates);
+            }
+
+            return true;
         }
 
         private static bool GetDwgfilename(out string dwgfilename)
@@ -94,6 +161,20 @@ namespace Plan2Ext.XrefLayerProperties
                     Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage("\nImportzeichnung kann nicht die aktuelle Zeichnung sein.");
                 }
             }
+        }
+
+        private static bool GetStringAllowSpaces(string message, out string str)
+        {
+            str = string.Empty;
+            var editor = Application.DocumentManager.MdiActiveDocument.Editor;
+            var result = editor.GetString(new PromptStringOptions(message)
+            {
+                AllowSpaces = true,
+            });
+
+            if (result.Status != PromptStatus.OK) return false;
+            str = result.StringResult;
+            return true;
         }
 
         private static bool GetXrefName(out string xrefName)
