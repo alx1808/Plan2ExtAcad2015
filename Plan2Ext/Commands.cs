@@ -9,7 +9,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 //using Autodesk.AutoCAD.ApplicationServices.Core;
+#if !ACAD2020
 using Microsoft.Win32.TaskScheduler;
+#endif
 
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
@@ -46,9 +48,9 @@ namespace Plan2Ext
 {
     public class Commands
     {
-        #region log4net Initialization
+#region log4net Initialization
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Commands))));
-        #endregion
+#endregion
 
 
 
@@ -1589,6 +1591,8 @@ namespace Plan2Ext
         [_AcTrx.LispFunction("CallCropBat")]
         public static bool CallCropBat(_AcDb.ResultBuffer rb)
         {
+#if !ACAD2020
+
             _AcEd.Editor ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
             string taskName = "CallCropBat";
 
@@ -1613,6 +1617,7 @@ namespace Plan2Ext
             {
                 ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nFehler in CallCropBat! {0}'", ex.Message));
             }
+#endif
             return false;
         }
 

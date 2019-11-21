@@ -1,0 +1,425 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6A16B427-5C62-47B4-B2E1-BE45CC91023D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Plan2Ext</RootNamespace>
+    <AssemblyName>Plan2Ext</AssemblyName>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\bin2020\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NEWSETFOCUS;ACAD2013_OR_NEWER;ARX_APP;ACAD2015_OR_NEWER;ACAD2020</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\bin2020\</OutputPath>
+    <DefineConstants>TRACE;NEWSETFOCUS;ACAD2013_OR_NEWER;ARX_APP;ACAD2015_OR_NEWER;ACAD2020</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="accoremgd">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2020\accoremgd.dll</HintPath>
+    </Reference>
+    <Reference Include="acdbmgd">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2020\acdbmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="acdbmgdbrep">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2020\acdbmgdbrep.dll</HintPath>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2020\acmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="Autodesk.AutoCAD.Interop">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2020\Autodesk.AutoCAD.Interop.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Autodesk.AutoCAD.Interop.Common">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2020\Autodesk.AutoCAD.Interop.Common.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SynerGIS\GeoOffice\Bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\office\15.0.0.0__71e9bce111e9429c\office.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AlgebraicArea.cs" />
+    <Compile Include="AreaEngine.cs" />
+    <Compile Include="AttTrans\Commands.cs" />
+    <Compile Include="AttTrans\Engine.cs" />
+    <Compile Include="Aufteilung.cs" />
+    <Compile Include="AutoIdVergabeOeff\Commands.cs" />
+    <Compile Include="AutoIdVergabeOeff\ComparerRaumNummern.cs" />
+    <Compile Include="AutoIdVergabeOeff\ConfigurationHandler.cs" />
+    <Compile Include="AutoIdVergabeOeff\EntityFilter.cs" />
+    <Compile Include="AutoIdVergabeOeff\EntitySearcher.cs" />
+    <Compile Include="AutoIdVergabeOeff\EntitySelector.cs" />
+    <Compile Include="AutoIdVergabeOeff\FenSorter.cs" />
+    <Compile Include="AutoIdVergabeOeff\FensterAttPositions.cs" />
+    <Compile Include="AutoIdVergabeOeff\FensterInfo.cs" />
+    <Compile Include="BlockInfo\GetsFromUser.cs" />
+    <Compile Include="AutoIdVergabeOeff\MyUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="AutoIdVergabeOeff\MyUserControl.Designer.cs">
+      <DependentUpon>MyUserControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AutoIdVergabeOeff\Palette.cs" />
+    <Compile Include="AutoIdVergabeOeff\RaumInfo.cs" />
+    <Compile Include="AutoIdVergabeOeff\SelectedObjectIds.cs" />
+    <Compile Include="AutoIdVergabeOeff\Shared.cs" />
+    <Compile Include="AutoIdVergabeOeff\Sorter.cs" />
+    <Compile Include="AutoIdVergabeOeff\TuerAttPositions.cs" />
+    <Compile Include="AutoIdVergabeOeff\TuerInfo.cs" />
+    <Compile Include="AutoIdVergabeOeff\TuerSorter.cs" />
+    <Compile Include="AutoIdVergabeOeff\UniqueCheckInfo.cs" />
+    <Compile Include="AutoIdVergabe\AutoIdControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="AutoIdVergabe\AutoIdControl.Designer.cs">
+      <DependentUpon>AutoIdControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AutoIdVergabe\AutoIdOptions.cs" />
+    <Compile Include="AutoIdVergabe\AutoIdPalette.cs" />
+    <Compile Include="AutoIdVergabe\Commands.cs" />
+    <Compile Include="AutoIdVergabe\Engine.cs" />
+    <Compile Include="AutoIdVergabe\ExcelExport.cs" />
+    <Compile Include="AutoIdVergabe\Globs.cs" />
+    <Compile Include="AutoIdVergabe\ZuweisungsInfo.cs" />
+    <Compile Include="BlockInfo\BsLegende.cs" />
+    <Compile Include="BlockInfo\Commands.cs" />
+    <Compile Include="BlockInfo\Excelizer.cs" />
+    <Compile Include="BlockInfo\FwLegende.cs" />
+    <Compile Include="BlockInfo\IRowProvider.cs" />
+    <Compile Include="BlockInfo\LayoutBlockNameFactory.cs" />
+    <Compile Include="BlockInfo\LayoutBlockRowProvider.cs" />
+    <Compile Include="BlockInfo\LegendInserter.cs" />
+    <Compile Include="BlockInfo\ProtoDwgInfo.cs" />
+    <Compile Include="BlockInfo\SingleBlockNameRowProvider.cs" />
+    <Compile Include="BlockInfo\VertikalLegendInserter.cs" />
+    <Compile Include="BlockManager.cs" />
+    <Compile Include="BlockToExcel\BlockToExcel.cs" />
+    <Compile Include="BlockToExcel\BlockToExcel2.cs" />
+    <Compile Include="BlockToExcel\Excelizer.cs" />
+    <Compile Include="BlockTrans\Commands.cs" />
+    <Compile Include="BlockTrans\Engine.cs" />
+    <Compile Include="Boundings.cs" />
+    <Compile Include="CalcArea\CalcAreaControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CalcArea\CalcAreaControl.Designer.cs">
+      <DependentUpon>CalcAreaControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CalcArea\CalculateAreaPalette.cs" />
+    <Compile Include="CalcArea\Commands.cs" />
+    <Compile Include="CalcArea\Engine.cs" />
+    <Compile Include="CalcArea\Excelizer.cs" />
+    <Compile Include="CenterBlock\CenterBlockControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CenterBlock\CenterBlockControl.Designer.cs">
+      <DependentUpon>CenterBlockControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CenterBlock\CenterRaumBlock.cs" />
+    <Compile Include="CenterBlock\Commands.cs" />
+    <Compile Include="CenterBlock\Globs.cs" />
+    <Compile Include="CenterBlock\Options.cs" />
+    <Compile Include="CenterBlock\Palette.cs" />
+    <Compile Include="Configuration\FensterConfiguration.cs" />
+    <Compile Include="Configuration\TuerConfiguration.cs" />
+    <Compile Include="DocumentHandling.cs" />
+    <Compile Include="EditorHelper.cs" />
+    <Compile Include="EntityTypeItem.cs" />
+    <Compile Include="ETransmit\Commands.cs" />
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Fenster\Examiner.cs" />
+    <Compile Include="Fenster\Searcher.cs" />
+    <Compile Include="Find\AttributeDefinitionReplacer.cs" />
+    <Compile Include="Find\AttributeReferenceReplacer.cs" />
+    <Compile Include="Find\BaseReplacer.cs" />
+    <Compile Include="Find\BlockReferenceReplacer.cs" />
+    <Compile Include="Find\DbTextReplacer.cs" />
+    <Compile Include="Find\IReplacer.cs" />
+    <Compile Include="Find\MTextReplacer.cs" />
+    <Compile Include="GenerateOeffBoundaries\BlockInfo.cs" />
+    <Compile Include="GenerateOeffBoundaries\Commands.cs" />
+    <Compile Include="GenerateOeffBoundaries\ConfigurationHandler.cs" />
+    <Compile Include="GenerateOeffBoundaries\EntitySearcher.cs" />
+    <Compile Include="HoehenPruefung\Commands.cs" />
+    <Compile Include="HoehenPruefung\Engine.cs" />
+    <Compile Include="HoehenPruefung\Globs.cs" />
+    <Compile Include="HoehenPruefung\HoePrControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="HoehenPruefung\HoePrControl.Designer.cs">
+      <DependentUpon>HoePrControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="HoehenPruefung\HoePrOptions.cs" />
+    <Compile Include="HoehenPruefung\HoePrPalette.cs" />
+    <Compile Include="HoehenPruefung\MyExtensions.cs" />
+    <Compile Include="Kleinbefehle\AddMissingAttDefs.cs" />
+    <Compile Include="Kleinbefehle\AddMissingAttRefs.cs" />
+    <Compile Include="Kleinbefehle\AllBlocksExplodable.cs" />
+    <Compile Include="Kleinbefehle\BaseMoveOeffnungen.cs" />
+    <Compile Include="Kleinbefehle\Battman.cs" />
+    <Compile Include="Kleinbefehle\BlockFarben.cs" />
+    <Compile Include="Find\Find.cs" />
+    <Compile Include="Kleinbefehle\HatchPolyBreite.cs" />
+    <Compile Include="Kleinbefehle\KurzBereinig.cs" />
+    <Compile Include="Kleinbefehle\LayerAufteil.cs" />
+    <Compile Include="Kleinbefehle\Layers.cs" />
+    <Compile Include="Kleinbefehle\NonPlottableLayerFreezeOff.cs" />
+    <Compile Include="Kleinbefehle\ReplaceInLayoutNames.cs" />
+    <Compile Include="Kleinbefehle\Schraff2Solid.cs" />
+    <Compile Include="Kleinbefehle\SpecialXrefLayer.cs" />
+    <Compile Include="LayerFilters\Commands.cs" />
+    <Compile Include="LayerKontrolle\Commands.cs" />
+    <Compile Include="LayerKontrolle\LayerKontrolleControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="LayerKontrolle\LayerKontrolleControl.Designer.cs">
+      <DependentUpon>LayerKontrolleControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LayerKontrolle\LayerNamesLengthFrm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LayerKontrolle\LayerNamesLengthFrm.Designer.cs">
+      <DependentUpon>LayerNamesLengthFrm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LayerKontrolle\Palette.cs" />
+    <Compile Include="LayerManager.cs" />
+    <Compile Include="LayerNummerierung\Commands.cs" />
+    <Compile Include="LayerNummerierung\Engine.cs" />
+    <Compile Include="LayerNummerierung\Globs.cs" />
+    <Compile Include="LayerNummerierung\NrControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="LayerNummerierung\NrControl.Designer.cs">
+      <DependentUpon>NrControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LayerNummerierung\NrOptions.cs" />
+    <Compile Include="LayerNummerierung\NrPalette.cs" />
+    <Compile Include="LayoutExport\Commands.cs" />
+    <Compile Include="Layouts.cs" />
+    <Compile Include="LayTrans\Commands.cs" />
+    <Compile Include="LayTrans\Engine.cs" />
+    <Compile Include="Massenbefehle\AttAustauschBulk.cs" />
+    <Compile Include="Massenbefehle\GetPlotterName.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Massenbefehle\GetPlotterName.Designer.cs">
+      <DependentUpon>GetPlotterName.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Massenbefehle\Plan2RenameBlocks.cs" />
+    <Compile Include="Massenbefehle\Plan2RenameLayers.cs" />
+    <Compile Include="Massenbefehle\Plan2ReplaceTexts.cs" />
+    <Compile Include="Massenbefehle\PlotToDwf.cs" />
+    <Compile Include="Massenbefehle\ReplaceInLayoutNamesBulk.cs" />
+    <Compile Include="Massenbefehle\SetAttValuesBulk.cs" />
+    <Compile Include="Massenbefehle\SetCtbInLayouts.cs" />
+    <Compile Include="Massenbefehle\SetPlotterInLayouts.cs" />
+    <Compile Include="Nummerierung\Commands.cs" />
+    <Compile Include="Nummerierung\Engine.cs" />
+    <Compile Include="Nummerierung\Globs.cs" />
+    <Compile Include="Nummerierung\NrControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Nummerierung\NrControl.Designer.cs">
+      <DependentUpon>NrControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Nummerierung\NrOptions.cs" />
+    <Compile Include="Nummerierung\NrPalette.cs" />
+    <Compile Include="ObjectFilter\AndObjectFilter.cs" />
+    <Compile Include="ObjectFilter\BlockNameObjectFilter.cs" />
+    <Compile Include="ObjectFilter\IObjectFilter.cs" />
+    <Compile Include="ObjectFilter\LayerNameObjectFilter.cs" />
+    <Compile Include="ObjectFilter\OrObjectFilter.cs" />
+    <Compile Include="ObjectFilter\TypeObjectFilter.cs" />
+    <Compile Include="PaperSpaceHelper.cs" />
+    <Compile Include="Plotter.cs" />
+    <Compile Include="Plot\LayoutCreation.cs" />
+    <Compile Include="Plot\PlotSettingsForLayout.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RaumHoePruefung\Commands.cs" />
+    <Compile Include="RaumHoePruefung\Engine.cs" />
+    <Compile Include="RaumHoePruefung\Globs.cs" />
+    <Compile Include="RaumHoePruefung\HoePrControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RaumHoePruefung\HoePrControl.Designer.cs">
+      <DependentUpon>HoePrControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RaumHoePruefung\HoePrPalette.cs" />
+    <Compile Include="RaumHoePruefung\MyExtensions.cs" />
+    <Compile Include="RaumHoePruefung\HoePrOptions.cs" />
+    <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
+    <Compile Include="Raumnummern\Summarizer.cs" />
+    <Compile Include="Searcher.cs" />
+    <Compile Include="TestCommands.cs" />
+    <Compile Include="TestExplode.cs" />
+    <Compile Include="TheConfiguration.cs" />
+    <Compile Include="Commands.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="ConfigForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfigForm.Designer.cs">
+      <DependentUpon>ConfigForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Configuration\SetConfigForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Configuration\SetConfigForm.Designer.cs">
+      <DependentUpon>SetConfigForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CSharpToLisp.cs" />
+    <Compile Include="Fenster\Fenster.cs" />
+    <Compile Include="Fenster\FensterOptions.cs" />
+    <Compile Include="Fenster\FensterOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Fenster\FensterOptionsControl.Designer.cs">
+      <DependentUpon>FensterOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Fenster\FensterOptionsPalette.cs" />
+    <Compile Include="Raumnummern\Engine.cs" />
+    <Compile Include="Raumnummern\Globs.cs" />
+    <Compile Include="Raumnummern\RnControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Raumnummern\RnControl.Designer.cs">
+      <DependentUpon>RnControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Raumnummern\RnOptions.cs" />
+    <Compile Include="Raumnummern\RnPalette.cs" />
+    <Compile Include="Flaeche.cs" />
+    <Compile Include="Globs.cs" />
+    <Compile Include="GripVectorOverrule.cs" />
+    <Compile Include="InvokeLisp.cs" />
+    <Compile Include="LayoutListSelected.cs" />
+    <Compile Include="LispFileDialogs.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Raumnummern\Commands.cs" />
+    <Compile Include="Test.cs" />
+    <Compile Include="Tuer\Tuer.cs" />
+    <Compile Include="Tuer\TuerOptions.cs" />
+    <Compile Include="Tuer\TuerOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Tuer\TuerOptionsControl.Designer.cs">
+      <DependentUpon>TuerOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tuer\TuerOptionsPalette.cs" />
+    <Compile Include="Vorauswahl\Commands.cs" />
+    <Compile Include="Vorauswahl\VorauswahlControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Vorauswahl\VorauswahlControl.Designer.cs">
+      <DependentUpon>VorauswahlControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Vorauswahl\VorauswahlPalette.cs" />
+    <Compile Include="WildcardAcad.cs" />
+    <Compile Include="XrefLayerProperties\Commands.cs" />
+    <Compile Include="XrefManager.cs" />
+    <Compile Include="XrefToExcel\Commands.cs" />
+    <Compile Include="XrefToExcel\Engine.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="AutoIdVergabeOeff\MyUserControl.resx">
+      <DependentUpon>MyUserControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AutoIdVergabe\AutoIdControl.resx">
+      <DependentUpon>AutoIdControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CalcArea\CalcAreaControl.resx">
+      <DependentUpon>CalcAreaControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CenterBlock\CenterBlockControl.resx">
+      <DependentUpon>CenterBlockControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConfigForm.resx">
+      <DependentUpon>ConfigForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\SetConfigForm.resx">
+      <DependentUpon>SetConfigForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Fenster\FensterOptionsControl.resx">
+      <DependentUpon>FensterOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HoehenPruefung\HoePrControl.resx">
+      <DependentUpon>HoePrControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LayerKontrolle\LayerKontrolleControl.resx">
+      <DependentUpon>LayerKontrolleControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LayerKontrolle\LayerNamesLengthFrm.resx">
+      <DependentUpon>LayerNamesLengthFrm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LayerNummerierung\NrControl.resx">
+      <DependentUpon>NrControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Massenbefehle\GetPlotterName.resx">
+      <DependentUpon>GetPlotterName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nummerierung\NrControl.resx">
+      <DependentUpon>NrControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RaumHoePruefung\HoePrControl.resx">
+      <DependentUpon>HoePrControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Raumnummern\RnControl.resx">
+      <DependentUpon>RnControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tuer\TuerOptionsControl.resx">
+      <DependentUpon>TuerOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Vorauswahl\VorauswahlControl.resx">
+      <DependentUpon>VorauswahlControl.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
