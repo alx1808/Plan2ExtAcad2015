@@ -30,7 +30,7 @@ namespace Plan2Ext.LayoutExport
         private static string CurrentExportDwg { get; set; }
         private static Point3d CurrentOrigin { get; set; }
         private static double CurrentScale { get; set; }
-        private static double _ViewportTwistAngle;
+        private static double _viewportTwistAngle;
         private static readonly List<string> ExportDwgNames = new List<string>();
 
 
@@ -334,8 +334,16 @@ namespace Plan2Ext.LayoutExport
                                 }
                                 else
                                 {
-                                    otherEntities.Add(oid);
-                                }
+	                                var solid = ent as Solid;
+	                                if (solid != null)
+	                                {
+		                                hatches.Add(oid);
+	                                }
+	                                else
+	                                {
+		                                otherEntities.Add(oid);
+									}
+								}
                             }
                         }
                     }
@@ -391,7 +399,7 @@ namespace Plan2Ext.LayoutExport
 
         private static void ImportSavedEntitiesToExportedLayout()
         {
-            Globs.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, _ViewportTwistAngle, CurrentScale, false);
+            Globs.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, _viewportTwistAngle, CurrentScale, false);
         }
 
         /// <summary>
@@ -404,14 +412,20 @@ namespace Plan2Ext.LayoutExport
         {
             Globs.SwitchToPaperSpace();
 #if DEBUG
-            if (File.Exists(CurrentExportDwg)) File.Delete(CurrentExportDwg);
-            File.Copy(CurrentExportDwg + ".sic", CurrentExportDwg);
+
+#if ACAD2020
+	        // Globs.CallCommand("_.ExportLayout", CurrentExportDwg);
+	        await Globs.CallCommandAsync("_.ExportLayout", CurrentExportDwg);
+#else
+			if (File.Exists(CurrentExportDwg)) File.Delete(CurrentExportDwg);
+			File.Copy(CurrentExportDwg + ".sic", CurrentExportDwg);
+#endif
 #else
             await Globs.CallCommandAsync("_.ExportLayout", CurrentExportDwg);
 #endif
-        }
+		}
 
-        private static bool SaveAndDeleteNonExportableEntities()
+		private static bool SaveAndDeleteNonExportableEntities()
         {
             var objectIds = SelectNonExportableEntities();
             if (objectIds == null) return false;
@@ -465,7 +479,7 @@ namespace Plan2Ext.LayoutExport
                     Globs.SwitchToPaperSpace();
                     Viewport viewport;
                     if (!GetFirstViewport(transaction, doc, out viewport)) return null;
-                    _ViewportTwistAngle = viewport.TwistAngle;
+                    _viewportTwistAngle = viewport.TwistAngle;
 
                     Point3dCollection point3DCollectionWcs = GetWcsViewportFrame(viewport);
                     Globs.SwitchToModelSpace();
