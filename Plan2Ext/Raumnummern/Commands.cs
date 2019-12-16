@@ -23,7 +23,7 @@ using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Internal;
 #endif
 
-namespace Plan2Ext.Raumnummern
+namespace Plan2Ext.Raumnummern 
 {
     public class Commands
     {
@@ -269,6 +269,10 @@ namespace Plan2Ext.Raumnummern
 #else
 				userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
 #endif
+
+                // update in properties for add room
+                opts.SetTop(topNr);
+
 				IncrementTopNr();
 
             }
@@ -915,7 +919,5 @@ namespace Plan2Ext.Raumnummern
             if (Globs.TheRnOptions == null) return false;
             else return true;
         }
-
-
     }
 }

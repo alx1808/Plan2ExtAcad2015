@@ -33,14 +33,13 @@ namespace Plan2Ext.Raumnummern
 
         #endregion
 
-        private RnOptions _RnOptions;
-        public RnControl(RnOptions rnOptions)
+        private readonly RnOptions _rnOptions;
+        public RnControl()
         {
             InitializeComponent();
 
-            _RnOptions = rnOptions;
-            _RnOptions.Form = this;
-            Globs.TheRnOptions = _RnOptions;
+            _rnOptions = Globs.TheRnOptions;
+            _rnOptions.Form = this;
 
             FillComponents();
 
@@ -63,18 +62,18 @@ namespace Plan2Ext.Raumnummern
 
         private void FillComponents()
         {
-            txtTop.Text = _RnOptions.Top;
-            txtSeparator.Text = _RnOptions.Separator;
-            txtTopNr.Text = _RnOptions.TopNr;
-            txtNumber.Text = _RnOptions.Number;
-            chkAutoCorr.Checked = _RnOptions.AutoCorr;
-            txtBlockname.Text = _RnOptions.Blockname;
-            txtAttName.Text = _RnOptions.Attribname;
-            txtHBlockname.Text = _RnOptions.HBlockname;
-            txtFlaechenAttributName.Text = _RnOptions.FlaechenAttributName;
-            txtFlaechenGrenzeLayerName.Text = _RnOptions.FlaechenGrenzeLayerName;
-            txtAbzFlaechenGrenzeLayerName.Text = _RnOptions.AbzFlaechenGrenzeLayerName;
-            chkHiddenAttribute.Checked = _RnOptions.UseHiddenAttribute;
+            txtTop.Text = _rnOptions.Top;
+            txtSeparator.Text = _rnOptions.Separator;
+            txtTopNr.Text = _rnOptions.TopNr;
+            txtNumber.Text = _rnOptions.Number;
+            chkAutoCorr.Checked = _rnOptions.AutoCorr;
+            txtBlockname.Text = _rnOptions.Blockname;
+            txtAttName.Text = _rnOptions.Attribname;
+            txtHBlockname.Text = _rnOptions.HBlockname;
+            txtFlaechenAttributName.Text = _rnOptions.FlaechenAttributName;
+            txtFlaechenGrenzeLayerName.Text = _rnOptions.FlaechenGrenzeLayerName;
+            txtAbzFlaechenGrenzeLayerName.Text = _rnOptions.AbzFlaechenGrenzeLayerName;
+            chkHiddenAttribute.Checked = _rnOptions.UseHiddenAttribute;
         }
         #endregion
 
@@ -335,37 +334,37 @@ namespace Plan2Ext.Raumnummern
 
         private void txtTop_TextChanged(object sender, EventArgs e)
         {
-            if (txtTop.Text != _RnOptions.Top)
+            if (txtTop.Text != _rnOptions.Top)
             {
                 ResetNr();
             }
-            _RnOptions.Top = txtTop.Text;
+            _rnOptions.Top = txtTop.Text;
         }
 
         private void ResetNr()
         {
-            _RnOptions.ResetNr();
-            txtNumber.Text = _RnOptions.Number;
+            _rnOptions.ResetNr();
+            txtNumber.Text = _rnOptions.Number;
         }
 
         private void txtSeparator_TextChanged(object sender, EventArgs e)
         {
-            _RnOptions.Separator = txtSeparator.Text;
+            _rnOptions.Separator = txtSeparator.Text;
         }
 
         private void txtTopNr_TextChanged(object sender, EventArgs e)
         {
-            _RnOptions.TopNr = txtTopNr.Text;
+            _rnOptions.TopNr = txtTopNr.Text;
         }
 
         private void txtNumber_TextChanged(object sender, EventArgs e)
         {
-            _RnOptions.Number = txtNumber.Text;
+            _rnOptions.Number = txtNumber.Text;
         }
 
         private void chkAutoCorr_CheckedChanged(object sender, EventArgs e)
         {
-            _RnOptions.AutoCorr = chkAutoCorr.Checked;
+            _rnOptions.AutoCorr = chkAutoCorr.Checked;
         }
 
         private bool _chkHiddenAttributeFirstTime = true;
@@ -378,7 +377,7 @@ namespace Plan2Ext.Raumnummern
                 return;
             }
             if (_chkHiddenAttributeShield) return;
-            _RnOptions.UseHiddenAttribute = chkHiddenAttribute.Checked;
+            _rnOptions.UseHiddenAttribute = chkHiddenAttribute.Checked;
             try
             {
                 _chkHiddenAttributeShield = true;

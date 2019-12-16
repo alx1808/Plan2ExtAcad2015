@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgebraicArea.cs" />
+    <Compile Include="Plan2Application.cs" />
     <Compile Include="AreaEngine.cs" />
     <Compile Include="AttTrans\Commands.cs" />
     <Compile Include="AttTrans\Engine.cs" />

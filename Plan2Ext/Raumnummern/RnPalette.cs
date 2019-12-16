@@ -7,20 +7,16 @@ using System.Threading.Tasks;
 
 #if BRX_APP
 using Bricscad.Windows;
+
 #elif ARX_APP
-  using Autodesk.AutoCAD.Windows;
+using Autodesk.AutoCAD.Windows;
+
 #endif
 
 namespace Plan2Ext.Raumnummern
 {
     public class RnPalette
     {
-
-        private RnOptions _RnOptions = null;
-        internal RnOptions RnOptions
-        {
-            get { return _RnOptions; }
-        }
 
         // We cannot derive from PaletteSet
         // so we contain it
@@ -32,8 +28,8 @@ namespace Plan2Ext.Raumnummern
 
         public RnPalette()
         {
-            _RnOptions = new RnOptions();
-            userControl = new RnControl(_RnOptions) { SelectAllOnFocus = true };
+            Globs.TheRnOptions = new RnOptions();
+            userControl = new RnControl() { SelectAllOnFocus = true };
         }
 
         public bool Show()
@@ -72,6 +68,7 @@ namespace Plan2Ext.Raumnummern
                     ps.Visible = true;
                     return false;
                 }
+
                 return true;
 
             }

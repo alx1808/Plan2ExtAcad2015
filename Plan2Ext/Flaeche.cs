@@ -49,7 +49,7 @@ using _AcInt = Autodesk.AutoCAD.Interop;
 
 namespace Plan2Ext
 {
-    public class Flaeche : _AcTrx.IExtensionApplication
+    public class Flaeche
     {
         #region log4net Initialization
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Convert.ToString((typeof(Flaeche))));
@@ -75,8 +75,7 @@ namespace Plan2Ext
 
         #region Member Variables
 
-        static CalcAreaPalette _CalcAreaPalette;
-        internal static CalcAreaPalette TheCalcAreaPalette { get { return _CalcAreaPalette; } }
+        internal static CalcAreaPalette TheCalcAreaPalette { get; set; }
 
         private static string _RaumblockName = "";
         private static string _FlAttrib = "";
@@ -119,7 +118,7 @@ namespace Plan2Ext
 
                 GetArgs(rb);
 
-                _CalcAreaPalette.Show(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer, new AktFlaecheDelegate(AktFlaeche));
+                TheCalcAreaPalette.Show(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer, new AktFlaecheDelegate(AktFlaeche));
 
                 return null; // returns nil
 
@@ -150,7 +149,7 @@ namespace Plan2Ext
 
                 Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
 
-                _CalcAreaPalette.Show(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer, new AktFlaecheDelegate(AktFlaeche));
+                TheCalcAreaPalette.Show(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer, new AktFlaecheDelegate(AktFlaeche));
 
                 AktFlaeche(doc, null, null, null, null, null);
 
@@ -181,7 +180,7 @@ namespace Plan2Ext
 
                 GetArgs(rb);
 
-                _CalcAreaPalette.UpdateValues(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer);
+                TheCalcAreaPalette.UpdateValues(_RaumblockName, _FlAttrib, _FgLayer, _AfLayer);
 
                 return null; // returns nil
 
@@ -1620,22 +1619,6 @@ namespace Plan2Ext
         //    //if (RegionEntity != null) RegionEntity.Delete();
 
         //}
-
-
-
-        #region IExtensionApplication
-
-        public void Initialize()
-        {
-            _CalcAreaPalette = new CalcAreaPalette();
-        }
-
-        public void Terminate()
-        {
-            ;
-        }
-        #endregion
-
         #region Obsolete
         [Obsolete("Use AreaEngine")]
         private static void SelectFgAndRb()

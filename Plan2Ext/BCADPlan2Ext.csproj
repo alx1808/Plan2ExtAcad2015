@@ -154,6 +154,7 @@
     <Compile Include="ObjectFilter\LayerNameObjectFilter.cs" />
     <Compile Include="ObjectFilter\OrObjectFilter.cs" />
     <Compile Include="ObjectFilter\TypeObjectFilter.cs" />
+    <Compile Include="Plan2Application.cs" />
     <Compile Include="Plotter.cs" />
     <Compile Include="Plot\PlotSettingsForLayout.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

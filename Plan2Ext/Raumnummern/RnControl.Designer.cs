@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.grNumber = new System.Windows.Forms.GroupBox();
+            this.btnRenameTop = new System.Windows.Forms.Button();
             this.btnRemoveAllInfos = new System.Windows.Forms.Button();
             this.chkHiddenAttribute = new System.Windows.Forms.CheckBox();
             this.btnRemoveRaum = new System.Windows.Forms.Button();
@@ -68,7 +69,6 @@
             this.btnSum = new System.Windows.Forms.Button();
             this.chkShowSettings = new System.Windows.Forms.CheckBox();
             this.btnLayerRestore = new System.Windows.Forms.Button();
-            this.btnRenameTop = new System.Windows.Forms.Button();
             this.grNumber.SuspendLayout();
             this.grpFbHoehe.SuspendLayout();
             this.grpManually.SuspendLayout();
@@ -97,6 +97,18 @@
             this.grNumber.TabIndex = 0;
             this.grNumber.TabStop = false;
             this.grNumber.Text = "Zuordnen";
+            // 
+            // btnRenameTop
+            // 
+            this.btnRenameTop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRenameTop.Location = new System.Drawing.Point(6, 202);
+            this.btnRenameTop.Name = "btnRenameTop";
+            this.btnRenameTop.Size = new System.Drawing.Size(216, 23);
+            this.btnRenameTop.TabIndex = 35;
+            this.btnRenameTop.Text = "Top umbenennen";
+            this.btnRenameTop.UseVisualStyleBackColor = true;
+            this.btnRenameTop.Click += new System.EventHandler(this.btnRenameTop_Click);
             // 
             // btnRemoveAllInfos
             // 
@@ -171,7 +183,7 @@
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(216, 23);
             this.btnStart.TabIndex = 7;
-            this.btnStart.Text = "Start";
+            this.btnStart.Text = "Raumfläche hinzufügen";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
@@ -530,18 +542,6 @@
             this.btnLayerRestore.Text = "Layer";
             this.btnLayerRestore.UseVisualStyleBackColor = true;
             this.btnLayerRestore.Click += new System.EventHandler(this.btnLayerRestore_Click);
-            // 
-            // btnRenameTop
-            // 
-            this.btnRenameTop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRenameTop.Location = new System.Drawing.Point(6, 202);
-            this.btnRenameTop.Name = "btnRenameTop";
-            this.btnRenameTop.Size = new System.Drawing.Size(216, 23);
-            this.btnRenameTop.TabIndex = 35;
-            this.btnRenameTop.Text = "Top umbenennen";
-            this.btnRenameTop.UseVisualStyleBackColor = true;
-            this.btnRenameTop.Click += new System.EventHandler(this.btnRenameTop_Click);
             // 
             // RnControl
             // 
