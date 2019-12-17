@@ -1,5 +1,5 @@
 ﻿
-
+using System;
 #if BRX_APP
 using Bricscad.ApplicationServices;
 using Teigha.Runtime;
@@ -14,18 +14,11 @@ namespace Plan2Ext
 {
     public class Plan2Application : IExtensionApplication
     {
-
         public void Initialize()
         {
+            Globs.TheApplication = this;
             Flaeche.TheCalcAreaPalette = new CalcAreaPalette();
-            var docMgr = Application.DocumentManager;
-			docMgr.DocumentCreated += docMgr_DocumentCreated;
         }
-
-		void docMgr_DocumentCreated(object sender, DocumentCollectionEventArgs e)
-		{
-		}
-
 		public void Terminate()
         {
         }

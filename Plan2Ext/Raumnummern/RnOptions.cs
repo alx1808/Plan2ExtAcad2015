@@ -27,14 +27,20 @@ namespace Plan2Ext.Raumnummern
     {
         public RnOptions()
         {
+            ReadConfiguration();
+        }
+
+        internal void ReadConfiguration()
+        {
             try
             {
-                this.Blockname  = TheConfiguration.GetValueString("alx_V:ino_rbName");
+                this.Blockname = TheConfiguration.GetValueString("alx_V:ino_rbName");
             }
             catch (Exception)
             {
                 this.Blockname = "?";
             }
+
             try
             {
                 this.Attribname = TheConfiguration.GetValueString("alx_V:ino_rb_nummer_bez");
@@ -43,6 +49,7 @@ namespace Plan2Ext.Raumnummern
             {
                 this.Attribname = "?";
             }
+
             try
             {
                 this.FlaechenAttributName = TheConfiguration.GetValueString("alx_V:ino_flattrib");
@@ -51,6 +58,7 @@ namespace Plan2Ext.Raumnummern
             {
                 this.FlaechenAttributName = "?";
             }
+
             try
             {
                 this.UmfangAttributName = TheConfiguration.GetValueString("alx_V:ino_PeriAttrib");
@@ -59,6 +67,7 @@ namespace Plan2Ext.Raumnummern
             {
                 this.UmfangAttributName = "?";
             }
+
             try
             {
                 this.FlaechenGrenzeLayerName = TheConfiguration.GetValueString("alx_V:ino_fglayer");
@@ -67,6 +76,7 @@ namespace Plan2Ext.Raumnummern
             {
                 this.FlaechenGrenzeLayerName = "?";
             }
+
             try
             {
                 this.AbzFlaechenGrenzeLayerName = TheConfiguration.GetValueString("alx_V:ino_aflayer");
@@ -75,6 +85,7 @@ namespace Plan2Ext.Raumnummern
             {
                 this.AbzFlaechenGrenzeLayerName = "?";
             }
+
             try
             {
                 this.HBlockname = TheConfiguration.GetValueString("alx_V:ino_rb_HkBlockName");

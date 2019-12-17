@@ -40,6 +40,7 @@ namespace Plan2Ext.Raumnummern
 
             _rnOptions = Globs.TheRnOptions;
             _rnOptions.Form = this;
+            TheConfiguration.ConfigurationChanged += TheConfiguration_ConfigurationChanged;
 
             FillComponents();
 
@@ -56,6 +57,12 @@ namespace Plan2Ext.Raumnummern
             //this.txtNumber.MouseUp += new System.Windows.Forms.MouseEventHandler(txtNumber_MouseUp);
 
             //_Engine = new Engine(this); 
+        }
+
+        void TheConfiguration_ConfigurationChanged(object sender, EventArgs e)
+        {
+            _rnOptions.ReadConfiguration();
+            FillComponents();
         }
 
         #region Private

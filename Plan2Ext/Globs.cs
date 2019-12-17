@@ -90,6 +90,8 @@ namespace Plan2Ext
 
         #endregion
 
+        internal static Plan2Application TheApplication;
+
         internal static bool FindFile(string fileName, _AcDb.Database database, out string fullFileName)
         {
             fullFileName = null;

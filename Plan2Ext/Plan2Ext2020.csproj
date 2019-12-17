@@ -161,6 +161,7 @@
     <Compile Include="CenterBlock\Palette.cs" />
     <Compile Include="Configuration\FensterConfiguration.cs" />
     <Compile Include="Configuration\TuerConfiguration.cs" />
+    <Compile Include="DocumentData.cs" />
     <Compile Include="DocumentHandling.cs" />
     <Compile Include="EditorHelper.cs" />
     <Compile Include="EntityTypeItem.cs" />
@@ -238,6 +239,7 @@
     <Compile Include="Layouts.cs" />
     <Compile Include="LayTrans\Commands.cs" />
     <Compile Include="LayTrans\Engine.cs" />
+    <Compile Include="LispHelper.cs" />
     <Compile Include="Massenbefehle\AttAustauschBulk.cs" />
     <Compile Include="Massenbefehle\GetPlotterName.cs">
       <SubType>Form</SubType>
