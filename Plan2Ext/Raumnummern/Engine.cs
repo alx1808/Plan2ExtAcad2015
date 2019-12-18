@@ -9,7 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Windows.Forms;
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
 using _AcCm = Teigha.Colors;
@@ -41,7 +41,7 @@ namespace Plan2Ext.Raumnummern
         private const string XREC_HATCH_OF_RAUM = "Plan2RoomHatch";
         private const string XREC_TOP_IN_FG = "Plan2TopInFg";
 
-        internal const string HIDDEN_NUMMER_ATT = "INFO";
+        //internal const string HIDDEN_NUMMER_ATT = "INFO";
         internal const string TOP_PREFIX = "TOP";
         internal const string TOP_LAYER_PREFIX = "A_RA_TOP_";
 
@@ -133,8 +133,7 @@ namespace Plan2Ext.Raumnummern
         private void MarkRbIfNumber(BlockReference ent)
         {
             if (ent == null) return;
-            //var attRef = GetBlockAttribute(NrAttribname, ent);
-            var attRef = GetBlockAttribute(HIDDEN_NUMMER_ATT, ent);
+            var attRef = GetBlockAttribute(NrAttribname, ent);
             if (attRef == null) return;
             if (string.IsNullOrEmpty(attRef.TextString))
             {
@@ -343,8 +342,8 @@ namespace Plan2Ext.Raumnummern
                 if (!CheckIsSecondClickInSameRoom())
                 {
                     var completeNum = GetCompleteNumber(_RnOptions.Number);
-                    SetBlockAttrib(_CurrentBlock, NrAttribname, completeNum);
-                    SetBlockAttrib(_CurrentBlock, HIDDEN_NUMMER_ATT, completeNum);
+                    //SetBlockAttrib(_CurrentBlock, HIDDEN_NUMMER_ATT, completeNum);
+                    SetBlockAttrib(_CurrentBlock, _RnOptions.Attribname, completeNum);
 
                     BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
                     MarkRbIfNumber(br);
@@ -426,13 +425,26 @@ namespace Plan2Ext.Raumnummern
                 if (string.IsNullOrEmpty(topNr))
                 {
                     _Editor.WriteMessage("\nDer Raum hat keine Topnummer!");
+                    myT.Commit();
                     return true;
                 }
 
                 if (topNr == topNrNeu)
                 {
-                    _Editor.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nTop hat bereits die Topnummer '{0}'.", topNr));
+                    MessageBox.Show(string.Format(CultureInfo.CurrentCulture, "\nTop hat bereits die Topnummer '{0}'.", topNr),
+                        "Top umbenennen", MessageBoxButtons.OK);
+                    myT.Commit();
                     return true;
+                }
+
+                var res = MessageBox.Show(
+                    string.Format(CultureInfo.CurrentCulture, "Soll Top {0} umbenannt werden in Top {1}?", topNr,
+                        topNrNeu),
+                    "Top umbenennen", MessageBoxButtons.YesNoCancel);
+                if (res != DialogResult.Yes)
+                {
+                    myT.Commit();
+                    return false;
                 }
 
                 var fgRbs = GetFgRbInSameTopWithExistingHatch(theFgRb);
@@ -468,15 +480,16 @@ namespace Plan2Ext.Raumnummern
                         {
 
                             var completeNr = TOP_PREFIX + topNrNeu + _RnOptions.Separator + rbRaumNr;
-                            SetBlockAttrib(rbOid, HIDDEN_NUMMER_ATT, completeNr);
-                            if (_RnOptions.UseHiddenAttribute)
-                            {
-                                SetBlockAttrib(rbOid, NrAttribname, "");
-                            }
-                            else
-                            {
-                                SetBlockAttrib(rbOid, NrAttribname, completeNr);
-                            }
+                            //SetBlockAttrib(rbOid, HIDDEN_NUMMER_ATT, completeNr);
+                            SetBlockAttrib(rbOid, _RnOptions.Attribname, completeNr);
+                            //if (_RnOptions.UseHiddenAttribute)
+                            //{
+                            //    SetBlockAttrib(rbOid, NrAttribname, "");
+                            //}
+                            //else
+                            //{
+                            //    SetBlockAttrib(rbOid, NrAttribname, completeNr);
+                            //}
                         }
                     }
 
@@ -705,8 +718,8 @@ namespace Plan2Ext.Raumnummern
                         if (blockReference.Name == Blockname)
                         {
                             // raumblock
-                            SetBlockAttrib(blockReference, NrAttribname, "");
-                            SetBlockAttrib(blockReference, HIDDEN_NUMMER_ATT, "");
+                            SetBlockAttrib(blockReference, _RnOptions.Attribname, "");
+                            //SetBlockAttrib(blockReference, HIDDEN_NUMMER_ATT, "");
                         }
                         else if (blockReference.Name == TopBlockName)
                         {
@@ -785,7 +798,8 @@ namespace Plan2Ext.Raumnummern
         {
             foreach (var oid in rbOids)
             {
-                string attVal = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+                string attVal = GetBlockAttribute(_RnOptions.Attribname, oid);
+                //string attVal = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
                 if (!attVal.StartsWith(topNr))
                 {
                     InsertFehlerLineAt(oid, _ROOM_HAS_WRONG_INFONR);
@@ -902,10 +916,16 @@ namespace Plan2Ext.Raumnummern
                 if (_CurrentBlock != ObjectId.Null)
                 {
                     SetBlockAttrib(_CurrentBlock, NrAttribname, "");
-                    SetBlockAttrib(_CurrentBlock, HIDDEN_NUMMER_ATT, "");
+                    //SetBlockAttrib(_CurrentBlock, HIDDEN_NUMMER_ATT, "");
 
                     BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
                     MarkRbIfNumber(br);
+                }
+
+                if (_RnOptions.AutoCorr)
+                {
+                    CalcBlocksPerTop();
+                    AutoCorrection(_RnOptions.Number.Length);
                 }
 
                 foreach (var f in otherFgRbs)
@@ -997,7 +1017,8 @@ namespace Plan2Ext.Raumnummern
 
         private string GetNumber(ObjectId oid)
         {
-            string attVal = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+            //string attVal = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+            string attVal = GetBlockAttribute(_RnOptions.Attribname, oid);
             return GetNumber(attVal);
         }
 
@@ -1036,7 +1057,8 @@ namespace Plan2Ext.Raumnummern
         {
             topNr = "";
             raumNr = "";
-            var nummer = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+            //var nummer = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+            var nummer = GetBlockAttribute(_RnOptions.Attribname, oid);
             if (string.IsNullOrEmpty(nummer)) return false;
 
             int index = nummer.IndexOf(_RnOptions.Separator);
@@ -1050,7 +1072,8 @@ namespace Plan2Ext.Raumnummern
         private string GetTopNameFromRb(ObjectId oid)
         {
             var nummer = "";
-            nummer = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+            //nummer = GetBlockAttribute(HIDDEN_NUMMER_ATT, oid);
+            nummer = GetBlockAttribute(_RnOptions.Attribname, oid);
 
             return GetTopName(nummer);
         }
@@ -1852,7 +1875,7 @@ namespace Plan2Ext.Raumnummern
                     string num = (i + 1).ToString().PadLeft(numlen, '0');
                     var completeNum = GetCompleteNumber(topName, num);
                     SetBlockAttrib(oids[i], NrAttribname, completeNum);
-                    SetBlockAttrib(oids[i], HIDDEN_NUMMER_ATT, completeNum);
+                    //SetBlockAttrib(oids[i], HIDDEN_NUMMER_ATT, completeNum);
                 }
             }
         }
@@ -1911,7 +1934,7 @@ namespace Plan2Ext.Raumnummern
                 number = Increment(number);
                 var completeNum = GetCompleteNumber(number);
                 SetBlockAttrib(oid, NrAttribname, completeNum);
-                SetBlockAttrib(oid, HIDDEN_NUMMER_ATT, completeNum);
+                //SetBlockAttrib(oid, HIDDEN_NUMMER_ATT, completeNum);
             }
         }
 

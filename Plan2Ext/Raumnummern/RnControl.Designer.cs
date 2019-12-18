@@ -129,12 +129,14 @@
             this.chkHiddenAttribute.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkHiddenAttribute.Checked = true;
             this.chkHiddenAttribute.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkHiddenAttribute.Enabled = false;
             this.chkHiddenAttribute.Location = new System.Drawing.Point(56, 121);
             this.chkHiddenAttribute.Name = "chkHiddenAttribute";
             this.chkHiddenAttribute.Size = new System.Drawing.Size(166, 17);
             this.chkHiddenAttribute.TabIndex = 33;
             this.chkHiddenAttribute.Text = "Verstecktes Nummern-Attribut";
             this.chkHiddenAttribute.UseVisualStyleBackColor = true;
+            this.chkHiddenAttribute.Visible = false;
             this.chkHiddenAttribute.CheckedChanged += new System.EventHandler(this.chkHiddenAttribute_CheckedChanged);
             // 
             // btnRemoveRaum

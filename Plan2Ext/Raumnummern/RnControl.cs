@@ -80,7 +80,7 @@ namespace Plan2Ext.Raumnummern
             txtFlaechenAttributName.Text = _rnOptions.FlaechenAttributName;
             txtFlaechenGrenzeLayerName.Text = _rnOptions.FlaechenGrenzeLayerName;
             txtAbzFlaechenGrenzeLayerName.Text = _rnOptions.AbzFlaechenGrenzeLayerName;
-            chkHiddenAttribute.Checked = _rnOptions.UseHiddenAttribute;
+            //chkHiddenAttribute.Checked = _rnOptions.UseHiddenAttribute;
         }
         #endregion
 
@@ -378,30 +378,29 @@ namespace Plan2Ext.Raumnummern
         private bool _chkHiddenAttributeShield = false;
         private void chkHiddenAttribute_CheckedChanged(object sender, EventArgs e)
         {
-            if (_chkHiddenAttributeFirstTime)
-            {
-                _chkHiddenAttributeFirstTime = false;
-                return;
-            }
-            if (_chkHiddenAttributeShield) return;
-            _rnOptions.UseHiddenAttribute = chkHiddenAttribute.Checked;
-            try
-            {
-                _chkHiddenAttributeShield = true;
+            //if (_chkHiddenAttributeFirstTime)
+            //{
+            //    _chkHiddenAttributeFirstTime = false;
+            //    return;
+            //}
+            //if (_chkHiddenAttributeShield) return;
+            //_rnOptions.UseHiddenAttribute = chkHiddenAttribute.Checked;
+            //try
+            //{
+            //    _chkHiddenAttributeShield = true;
 
-                Globs.CancelCommand();
+            //    Globs.CancelCommand();
 
-                _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummerRnOnOff ", true, false, false);
-            }
-            catch (Exception ex)
-            {
-                _AcAp.Application.ShowAlertDialog(ex.Message);
-            }
-            finally
-            {
-                _chkHiddenAttributeShield = false;
-            }
-
+            //    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummerRnOnOff ", true, false, false);
+            //}
+            //catch (Exception ex)
+            //{
+            //    _AcAp.Application.ShowAlertDialog(ex.Message);
+            //}
+            //finally
+            //{
+            //    _chkHiddenAttributeShield = false;
+            //}
         }
 
         private bool _SelectBlockShield = false;
