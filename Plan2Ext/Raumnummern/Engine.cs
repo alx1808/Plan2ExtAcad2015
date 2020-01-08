@@ -71,11 +71,11 @@ namespace Plan2Ext.Raumnummern
         #endregion
 
         #region Members
-        private TransactionManager _TransMan = null;
+        private TransactionManager _TransMan;
         private ObjectId _CurrentBlock = ObjectId.Null;
         private ObjectId _LastBlock = ObjectId.Null;
-        private Editor _Editor = null;
-        private RnOptions _RnOptions = null;
+        private Editor _Editor;
+        private RnOptions _RnOptions;
         private Dictionary<string, List<ObjectId>> _OidsPerTop = new Dictionary<string, List<ObjectId>>();
         private List<ObjectId> _AllRaumBlocks = new List<ObjectId>();
         public List<ObjectId> AllRaumBlocks
@@ -96,8 +96,9 @@ namespace Plan2Ext.Raumnummern
 
         #region Lifecycle
 
-        public Engine(RnOptions rnOptions)
+        public Engine(RnOptions rnOptions, Dictionary<ObjectId, AreaEngine.FgRbStructure> fgRbStructs = null, List<ObjectId> allRaumBlocks = null)
         {
+            _RnOptions = null;
 
             this._RnOptions = rnOptions;
             Blockname = rnOptions.Blockname;
@@ -113,8 +114,15 @@ namespace Plan2Ext.Raumnummern
             _TransMan = db.TransactionManager;
             _Editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
 
-            _FgRbStructs = AreaEngine.GetFgRbStructs(this._RnOptions.Blockname, this._RnOptions.FlaechenGrenzeLayerName, this._RnOptions.AbzFlaechenGrenzeLayerName, db);
-            _AllRaumBlocks = SelectAllRaumblocks();
+            if (fgRbStructs == null)
+                _FgRbStructs = AreaEngine.GetFgRbStructs(this._RnOptions.Blockname, this._RnOptions.FlaechenGrenzeLayerName, this._RnOptions.AbzFlaechenGrenzeLayerName, db);
+            else
+                _FgRbStructs = fgRbStructs;
+
+            if (allRaumBlocks == null)
+                _AllRaumBlocks = SelectAllRaumblocks(Blockname);
+            else
+                _AllRaumBlocks = allRaumBlocks;
         }
 
         private void MarkRbs()
@@ -208,7 +216,7 @@ namespace Plan2Ext.Raumnummern
                 {
                     if (attId.IsErased) continue;
                     var anyAttRef = trans.GetObject(attId, OpenMode.ForRead) as AttributeReference;
-                    if (anyAttRef != null && string.Compare(anyAttRef.Tag, _RnOptions.Attribname, StringComparison.OrdinalIgnoreCase ) == 0)
+                    if (anyAttRef != null && string.Compare(anyAttRef.Tag, _RnOptions.Attribname, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         if (!string.IsNullOrEmpty(anyAttRef.TextString.Trim())) exists = true;
                         break;
@@ -316,8 +324,8 @@ namespace Plan2Ext.Raumnummern
 
         internal bool AddNumber(List<ObjectId> blockOids)
         {
-            DeleteAllFehlerLines();
-            MarkRbs();
+            // DeleteAllFehlerLines();
+            // MarkRbs();
 
             using (Transaction myT = _TransMan.StartTransaction())
             {
@@ -328,7 +336,7 @@ namespace Plan2Ext.Raumnummern
                 if (fgrb == null) return true;
                 if (_CurrentBlock == ObjectId.Null) return true;
 
-                var otherFgRbs = GetFgRbInSameTopWithExistingHatch(fgrb);
+                var otherFgRbs = GetFgRbInSameTopWithExistingHatch(fgrb, myT);
 
                 HatchItAndSetTopToFg(fgrb);
 
@@ -378,7 +386,7 @@ namespace Plan2Ext.Raumnummern
 
                 foreach (var f in otherFgRbs)
                 {
-                    HatchIt(f);
+                    HatchIt(f, myT);
                 }
 
                 myT.Commit();
@@ -447,7 +455,7 @@ namespace Plan2Ext.Raumnummern
                     return false;
                 }
 
-                var fgRbs = GetFgRbInSameTopWithExistingHatch(theFgRb);
+                var fgRbs = GetFgRbInSameTopWithExistingHatch(theFgRb, myT);
                 fgRbs.Add(theFgRb);
 
                 var topBlockOid = FindTopBlockWithTopNr(myT, topNr);
@@ -901,7 +909,7 @@ namespace Plan2Ext.Raumnummern
 
         internal bool RemoveRaum()
         {
-            MarkRbs();
+            // MarkRbs();
             using (Transaction myT = _TransMan.StartTransaction())
             {
                 AreaEngine.FgRbStructure fgrb = null;
@@ -909,7 +917,7 @@ namespace Plan2Ext.Raumnummern
                 if (fgrb == null) return true;
                 //if (_CurrentBlock == ObjectId.Null) return true;
 
-                var otherFgRbs = GetFgRbInSameTopWithExistingHatch(fgrb);
+                var otherFgRbs = GetFgRbInSameTopWithExistingHatch(fgrb, myT);
                 DeleteOldHatch(fgrb.FlaechenGrenze);
                 Plan2Ext.Globs.DelXrecord(fgrb.FlaechenGrenze, XREC_TOP_IN_FG);
                 Plan2Ext.Globs.DelXrecord(fgrb.FlaechenGrenze, XREC_HATCH_OF_RAUM);
@@ -930,7 +938,7 @@ namespace Plan2Ext.Raumnummern
 
                 foreach (var f in otherFgRbs)
                 {
-                    HatchIt(f);
+                    HatchIt(f, myT);
                 }
 
                 myT.Commit();
@@ -1138,20 +1146,35 @@ namespace Plan2Ext.Raumnummern
             return topNr;
         }
 
-        private List<AreaEngine.FgRbStructure> GetFgRbInSameTopWithExistingHatch(AreaEngine.FgRbStructure fgrb)
+        private string GetTopNr(AreaEngine.FgRbStructure fgrb, Transaction transaction)
         {
-            var fgrbs = GetFgRbInSameTop(fgrb);
-            return fgrbs.Where(x => HasExistingHatch(x.FlaechenGrenze)).ToList();
+            string topNr = null;
+
+            if (fgrb == null || fgrb.FlaechenGrenze == ObjectId.Null) return topNr;
+            var rb = Plan2Ext.Globs.GetXrecord(fgrb.FlaechenGrenze, XREC_TOP_IN_FG, transaction);
+            if (rb != null)
+            {
+                TypedValue[] values = rb.AsArray();
+                topNr = values[0].Value.ToString();
+            }
+            return topNr;
         }
 
-        private List<AreaEngine.FgRbStructure> GetFgRbInSameTop(AreaEngine.FgRbStructure fgrb)
+
+        private List<AreaEngine.FgRbStructure> GetFgRbInSameTopWithExistingHatch(AreaEngine.FgRbStructure fgrb, Transaction transaction)
+        {
+            var fgrbs = GetFgRbInSameTop(fgrb, transaction);
+            return fgrbs.Where(x => HasExistingHatch(x.FlaechenGrenze, transaction)).ToList();
+        }
+
+        private List<AreaEngine.FgRbStructure> GetFgRbInSameTop(AreaEngine.FgRbStructure fgrb, Transaction transaction)
         {
             var fgrbs = new List<AreaEngine.FgRbStructure>();
             // get topnr
-            var topNr = GetTopNr(fgrb);
+            var topNr = GetTopNr(fgrb, transaction);
             if (topNr != null)
             {
-                fgrbs = _FgRbStructs.Values.Where(x => x != fgrb && string.Compare(topNr, GetTopNr(x)) == 0).ToList();
+                fgrbs = _FgRbStructs.Values.Where(x => x != fgrb && string.Compare(topNr, GetTopNr(x, transaction)) == 0).ToList();
             }
             return fgrbs;
         }
@@ -1215,6 +1238,19 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        private void DeleteOldHatch(ObjectId fg, Transaction transaction)
+        {
+
+            var oid = GetHatch(fg, transaction);
+            if (oid == ObjectId.Null) return;
+
+            var o = transaction.GetObject(oid, OpenMode.ForWrite, openErased: true);
+            if (!o.IsErased)
+            {
+                o.Erase();
+            }
+        }
+
         private bool IsErased(ObjectId oid)
         {
             if (oid == ObjectId.Null) return true;
@@ -1231,6 +1267,12 @@ namespace Plan2Ext.Raumnummern
         }
 
         private bool HasExistingHatch(ObjectId fg)
+        {
+            var h = GetHatch(fg);
+            return !IsErased(h);
+        }
+
+        private bool HasExistingHatch(ObjectId fg, Transaction transaction)
         {
             var h = GetHatch(fg);
             return !IsErased(h);
@@ -1254,6 +1296,24 @@ namespace Plan2Ext.Raumnummern
             }
             return oid;
         }
+        private ObjectId GetHatch(ObjectId fg, Transaction transaction)
+        {
+            ObjectId oid = ObjectId.Null;
+            var rb = Plan2Ext.Globs.GetXrecord(fg, XREC_HATCH_OF_RAUM, transaction);
+            if (rb != null)
+            {
+                TypedValue[] values = rb.AsArray();
+                try
+                {
+                    var handleString = values[0].Value.ToString();
+                    oid = Plan2Ext.Globs.HandleStringToObjectId(oid, handleString);
+                }
+                catch (Exception)
+                {
+                }
+            }
+            return oid;
+        }
 
         private string GetHatchLayer()
         {
@@ -1263,7 +1323,7 @@ namespace Plan2Ext.Raumnummern
 
         private static string GetHatchLayer(string nrStr)
         {
-            return string.Format(CultureInfo.InvariantCulture, TOP_LAYER_PREFIX +  "{0}_F", nrStr);
+            return string.Format(CultureInfo.InvariantCulture, TOP_LAYER_PREFIX + "{0}_F", nrStr);
         }
 
         private static string GetDigitsFromTopPart(string nrStr)
@@ -1453,6 +1513,26 @@ namespace Plan2Ext.Raumnummern
             Plan2Ext.Globs.SetXrecord(fgrb.FlaechenGrenze, XREC_HATCH_OF_RAUM, rb);
         }
 
+        private void HatchIt(AreaEngine.FgRbStructure fgrb, Transaction transaction)
+        {
+            var topNr = GetTopNr(fgrb, transaction);
+            if (string.IsNullOrEmpty(topNr)) return;
+            var inner = fgrb.Inseln;
+            inner.AddRange(fgrb.Abzugsflaechen);
+            int color = GetHatchColor(topNr);
+            string layer = GetHatchLayer(topNr);
+            bool needsRegen;
+            Plan2Ext.Globs.LayerOnAndThaw(layer, true, transaction, _AcAp.Application.DocumentManager.MdiActiveDocument.Database, out needsRegen);
+            DeleteOldHatch(fgrb.FlaechenGrenze, transaction);
+            var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, color, _TransMan);
+            var ids = new ObjectIdCollection();
+            ids.Add(oid);
+            Plan2Ext.Globs.DrawOrderBottom(ids, transaction);
+            var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle, oid.Handle));
+            Plan2Ext.Globs.SetXrecord(fgrb.FlaechenGrenze, XREC_HATCH_OF_RAUM, rb, transaction);
+        }
+
+
         private void HatchIt(TopStructure top)
         {
             if (top == null || top.FgRbs == null) return;
@@ -1638,12 +1718,12 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        private List<ObjectId> SelectAllRaumblocks()
+        public static List<ObjectId> SelectAllRaumblocks(string blockName)
         {
             var ed = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
             SelectionFilter filter = new SelectionFilter(new TypedValue[] { 
                 new TypedValue((int)DxfCode.Start,"INSERT" ),
-                new TypedValue((int)DxfCode.BlockName,Blockname)
+                new TypedValue((int)DxfCode.BlockName,blockName)
             });
             PromptSelectionResult res = ed.SelectAll(filter);
             if (res.Status != PromptStatus.OK) return new List<ObjectId>();
@@ -2018,7 +2098,7 @@ namespace Plan2Ext.Raumnummern
             Plan2Ext.Globs.InsertFehlerLines(points, fi.Layername, fi.Length, fi.Ang, fi.Col);
         }
 
-        private void DeleteAllFehlerLines()
+        public void DeleteAllFehlerLines()
         {
             foreach (var kvp in _FehlerInfos)
             {

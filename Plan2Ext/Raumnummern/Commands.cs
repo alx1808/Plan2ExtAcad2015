@@ -60,8 +60,11 @@ namespace Plan2Ext.Raumnummern
             IncrementTopNr();
         }
 
+        private Dictionary<ObjectId, AreaEngine.FgRbStructure> _fgRbStructs = new Dictionary<ObjectId, AreaEngine.FgRbStructure>();
+        private List<ObjectId> _allRaumBlocks = new List<ObjectId>();
+
         [CommandMethod("Plan2Raumnummern")]
-        static public void Plan2Raumnummern()
+        public void Plan2Raumnummern()
         {
             try
             {
@@ -72,8 +75,15 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
+
+                    if  (_fgRbStructs.Count == 0)
+                    { 
+                        _fgRbStructs = AreaEngine.GetFgRbStructs(opts.Blockname, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, doc.Database);
+                        _allRaumBlocks = Engine.SelectAllRaumblocks(opts.Blockname);
+                    }  
+
                     var blockOids = new List<ObjectId>();
-                    Engine _Engine = new Engine(opts);
+                    Engine _Engine = new Engine(opts,_fgRbStructs, _allRaumBlocks);
 
                     Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$", "^A_BE_HK" });
                     Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
@@ -162,6 +172,44 @@ namespace Plan2Ext.Raumnummern
             }
 
             return m2;
+        }
+
+
+        [CommandMethod("Plan2RaumnummernReinit")]
+        public void Plan2RaumnummernReinit()
+        {
+            try
+            {
+                _fgRbStructs = new Dictionary<ObjectId, AreaEngine.FgRbStructure>();
+                _allRaumBlocks = new List<ObjectId>();
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernReinit aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        [CommandMethod("Plan2RaumnummernDeleteFehlerlines")]
+        public void Plan2RaumnummernDeleteFehlerlines()
+        {
+            try
+            {
+                if (!OpenRnPalette()) return;
+
+                var opts = Globs.TheRnOptions;
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (DocumentLock m_doclock = doc.LockDocument())
+                {
+                    Engine _Engine = new Engine(opts, _fgRbStructs, _allRaumBlocks);
+                    _Engine.DeleteAllFehlerLines();
+
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernSum aufgetreten! {0}", ex.Message));
+            }
         }
 
 

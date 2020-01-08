@@ -69,6 +69,8 @@
             this.btnSum = new System.Windows.Forms.Button();
             this.chkShowSettings = new System.Windows.Forms.CheckBox();
             this.btnLayerRestore = new System.Windows.Forms.Button();
+            this.btnDeleteFehlerlines = new System.Windows.Forms.Button();
+            this.btnReinit = new System.Windows.Forms.Button();
             this.grNumber.SuspendLayout();
             this.grpFbHoehe.SuspendLayout();
             this.grpManually.SuspendLayout();
@@ -301,7 +303,7 @@
             this.grpManually.Controls.Add(this.btnSelectBlock);
             this.grpManually.Controls.Add(this.txtBlockname);
             this.grpManually.Controls.Add(this.label1);
-            this.grpManually.Location = new System.Drawing.Point(0, 486);
+            this.grpManually.Location = new System.Drawing.Point(0, 544);
             this.grpManually.Name = "grpManually";
             this.grpManually.Size = new System.Drawing.Size(225, 178);
             this.grpManually.TabIndex = 8;
@@ -515,7 +517,7 @@
             // 
             this.btnSum.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSum.Location = new System.Drawing.Point(6, 431);
+            this.btnSum.Location = new System.Drawing.Point(6, 424);
             this.btnSum.Name = "btnSum";
             this.btnSum.Size = new System.Drawing.Size(216, 23);
             this.btnSum.TabIndex = 33;
@@ -526,7 +528,7 @@
             // chkShowSettings
             // 
             this.chkShowSettings.AutoSize = true;
-            this.chkShowSettings.Location = new System.Drawing.Point(6, 463);
+            this.chkShowSettings.Location = new System.Drawing.Point(6, 521);
             this.chkShowSettings.Name = "chkShowSettings";
             this.chkShowSettings.Size = new System.Drawing.Size(89, 17);
             this.chkShowSettings.TabIndex = 44;
@@ -545,10 +547,36 @@
             this.btnLayerRestore.UseVisualStyleBackColor = true;
             this.btnLayerRestore.Click += new System.EventHandler(this.btnLayerRestore_Click);
             // 
+            // btnDeleteFehlerlines
+            // 
+            this.btnDeleteFehlerlines.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDeleteFehlerlines.Location = new System.Drawing.Point(6, 453);
+            this.btnDeleteFehlerlines.Name = "btnDeleteFehlerlines";
+            this.btnDeleteFehlerlines.Size = new System.Drawing.Size(216, 23);
+            this.btnDeleteFehlerlines.TabIndex = 53;
+            this.btnDeleteFehlerlines.Text = "Fehlerlinien löschen";
+            this.btnDeleteFehlerlines.UseVisualStyleBackColor = true;
+            this.btnDeleteFehlerlines.Click += new System.EventHandler(this.btnDeleteFehlerlines_Click);
+            // 
+            // btnReinit
+            // 
+            this.btnReinit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReinit.Location = new System.Drawing.Point(6, 482);
+            this.btnReinit.Name = "btnReinit";
+            this.btnReinit.Size = new System.Drawing.Size(216, 23);
+            this.btnReinit.TabIndex = 54;
+            this.btnReinit.Text = "Neu Initialisieren";
+            this.btnReinit.UseVisualStyleBackColor = true;
+            this.btnReinit.Click += new System.EventHandler(this.btnReinit_Click);
+            // 
             // RnControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnReinit);
+            this.Controls.Add(this.btnDeleteFehlerlines);
             this.Controls.Add(this.btnLayerRestore);
             this.Controls.Add(this.chkShowSettings);
             this.Controls.Add(this.btnSum);
@@ -560,7 +588,7 @@
             this.Controls.Add(this.grpFbHoehe);
             this.Controls.Add(this.grNumber);
             this.Name = "RnControl";
-            this.Size = new System.Drawing.Size(231, 698);
+            this.Size = new System.Drawing.Size(231, 744);
             this.grNumber.ResumeLayout(false);
             this.grNumber.PerformLayout();
             this.grpFbHoehe.ResumeLayout(false);
@@ -614,5 +642,7 @@
         private System.Windows.Forms.Button btnLayerRestore;
         private System.Windows.Forms.Button btnRemoveAllInfos;
         private System.Windows.Forms.Button btnRenameTop;
+        private System.Windows.Forms.Button btnDeleteFehlerlines;
+        private System.Windows.Forms.Button btnReinit;
     }
 }

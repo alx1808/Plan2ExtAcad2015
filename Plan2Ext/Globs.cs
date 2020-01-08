@@ -543,18 +543,23 @@ namespace Plan2Ext
             _AcDb.Database db = doc.Database;
             using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
             {
-                _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
-                if (ent != null)
-                {
-                    ent.UpgradeOpen();
-                    if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) ent.CreateExtensionDictionary();
-                    _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
-                    _AcDb.Xrecord xRec = new _AcDb.Xrecord();
-                    xRec.Data = resbuf;
-                    xDict.SetAt(key, xRec);
-                    tr.AddNewlyCreatedDBObject(xRec, true);
-                }
+                SetXrecord(id, key, resbuf, tr);
                 tr.Commit();
+            }
+        }
+
+        public static void SetXrecord(_AcDb.ObjectId id, string key, _AcDb.ResultBuffer resbuf, _AcDb.Transaction tr)
+        {
+            _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+            if (ent != null)
+            {
+                ent.UpgradeOpen();
+                if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) ent.CreateExtensionDictionary();
+                _AcDb.DBDictionary xDict = (_AcDb.DBDictionary) tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
+                _AcDb.Xrecord xRec = new _AcDb.Xrecord();
+                xRec.Data = resbuf;
+                xDict.SetAt(key, xRec);
+                tr.AddNewlyCreatedDBObject(xRec, true);
             }
         }
 
@@ -563,28 +568,35 @@ namespace Plan2Ext
             if (id == _AcDb.ObjectId.Null) return null;
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database db = doc.Database;
-            _AcDb.ResultBuffer result = new _AcDb.ResultBuffer();
             using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
             {
-                _AcDb.Xrecord xRec = new _AcDb.Xrecord();
-                _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead, false) as _AcDb.Entity;
-                if (ent != null)
-                {
-                    try
-                    {
-                        if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) return null;
-                        _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForRead, false);
-                        xRec = (_AcDb.Xrecord)tr.GetObject(xDict.GetAt(key), _AcDb.OpenMode.ForRead, false);
-                        return xRec.Data;
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                }
-                else
-                    return null;
+                var rec = GetXrecord(id, key, tr);
+                tr.Commit();
+                return rec;
             }
+        }
+
+        public static _AcDb.ResultBuffer GetXrecord(_AcDb.ObjectId id, string key, _AcDb.Transaction tr)
+        {
+            _AcDb.Xrecord xRec = new _AcDb.Xrecord();
+            _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead, false) as _AcDb.Entity;
+            if (ent != null)
+            {
+                try
+                {
+                    if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) return null;
+                    _AcDb.DBDictionary xDict =
+                        (_AcDb.DBDictionary) tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForRead, false);
+                    xRec = (_AcDb.Xrecord) tr.GetObject(xDict.GetAt(key), _AcDb.OpenMode.ForRead, false);
+                    return xRec.Data;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            else
+                return null;
         }
 
         public static double GetRadRotationTolerance()
@@ -1190,9 +1202,9 @@ namespace Plan2Ext
         {
             var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
-            bool needsRegen = false;
             using (_AcDb.Transaction trans = doc.TransactionManager.StartTransaction())
             {
+                bool needsRegen = false;
                 try
                 {
                     _AcDb.LayerTable layTb = trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTable;
@@ -1223,6 +1235,29 @@ namespace Plan2Ext
                 }
             }
         }
+
+        public static bool LayerOnAndThaw(string layerName, bool unlock, _AcDb.Transaction trans, _AcDb.Database db, out bool needsRegen)
+        {
+            needsRegen = false;
+            _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+            if (!layTb.Has(layerName)) return false;
+            var layId = layTb[layerName];
+            _AcDb.LayerTableRecord ltr = trans.GetObject(layId, _AcDb.OpenMode.ForRead) as _AcDb.LayerTableRecord;
+            log.InfoFormat("Taue und schalte Layer {0} ein.", ltr.Name);
+            ltr.UpgradeOpen();
+            ltr.IsOff = false;
+            if (unlock)
+            {
+                ltr.IsLocked = false;
+            }
+            if (string.Compare(_AcAp.Application.GetSystemVariable("CLAYER").ToString(), ltr.Name, StringComparison.OrdinalIgnoreCase) != 0)
+            {
+                if (ltr.IsFrozen) needsRegen = true;
+                ltr.IsFrozen = false;
+            }
+            return true;
+        }
+
 
         public static void LayerOn(string layerRegexPattern)
         {
@@ -1284,19 +1319,31 @@ namespace Plan2Ext
             var db = doc.Database;
             DrawOrderBottom(ids, db);
         }
+        public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.Transaction transaction)
+        {
+            if (ids.Count == 0) return;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            DrawOrderBottom(ids, db, transaction);
+        }
 
         public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.Database db)
         {
             using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
             {
-                _AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
-                _AcDb.BlockTableRecord btr =
-                    (_AcDb.BlockTableRecord)tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
-
-                var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
-                dot.MoveToBottom(ids);
+                DrawOrderBottom(ids, db, tr);
                 tr.Commit();
             }
+        }
+
+        private static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.Database db, _AcDb.Transaction tr)
+        {
+            _AcDb.BlockTable bt = (_AcDb.BlockTable) tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+            _AcDb.BlockTableRecord btr =
+                (_AcDb.BlockTableRecord) tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+
+            var dot = (_AcDb.DrawOrderTable) tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+            dot.MoveToBottom(ids);
         }
 
         public static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.ObjectId blockTableRecordOid)

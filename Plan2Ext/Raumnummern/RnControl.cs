@@ -188,6 +188,67 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
+        private bool _DeleteFehlerlinesShield = false;
+        private void btnDeleteFehlerlines_Click(object sender, EventArgs e)
+        {
+            if (_DeleteFehlerlinesShield) return;
+            try
+            {
+                _DeleteFehlerlinesShield = true;
+
+                Globs.CancelCommand();
+
+                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
+                {
+#if NEWSETFOCUS
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummernDeleteFehlerlines ", true, false, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernDeleteFehlerlines aufgetreten! {0}", ex.Message));
+            }
+            finally
+            {
+                _DeleteFehlerlinesShield = false;
+            }
+        }
+
+
+        private bool _ReinitShield = false;
+        private void btnReinit_Click(object sender, EventArgs e)
+        {
+            if (_ReinitShield) return;
+            try
+            {
+                _ReinitShield = true;
+
+                Globs.CancelCommand();
+
+                using (_AcAp.DocumentLock m_doclock = _AcAp.Application.DocumentManager.MdiActiveDocument.LockDocument())
+                {
+#if NEWSETFOCUS
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.Window.Focus();
+#else
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView(); // previous 2014 AutoCAD - Versions
+#endif
+                    _AcAp.Application.DocumentManager.MdiActiveDocument.SendStringToExecute("Plan2RaumnummernReinit ", true, false, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernReinit aufgetreten! {0}", ex.Message));
+            }
+            finally
+            {
+                _ReinitShield = false;
+            }
+        }
+
         private bool _SumShield = false;
         private void btnSum_Click(object sender, EventArgs e)
         {
