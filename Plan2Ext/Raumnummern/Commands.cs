@@ -23,7 +23,7 @@ using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Internal;
 #endif
 
-namespace Plan2Ext.Raumnummern 
+namespace Plan2Ext.Raumnummern
 {
     public class Commands
     {
@@ -75,20 +75,13 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
-
-                    if  (_fgRbStructs.Count == 0)
-                    { 
-                        _fgRbStructs = AreaEngine.GetFgRbStructs(opts.Blockname, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, doc.Database);
-                        _allRaumBlocks = Engine.SelectAllRaumblocks(opts.Blockname);
-                    }  
-
                     var blockOids = new List<ObjectId>();
-                    Engine _Engine = new Engine(opts,_fgRbStructs, _allRaumBlocks);
+                    var engine = GetEngine();
 
                     Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$", "^A_BE_HK" });
                     Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
 
-                    while (_Engine.AddNumber(blockOids)) { };
+                    while (engine.AddNumber(blockOids)) { };
 
                     //if (opts.UseHiddenAttribute)
                     //{
@@ -154,12 +147,12 @@ namespace Plan2Ext.Raumnummern
                         opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true, layerSchalt: true);
 
                     Plan2Ext.Globs.LayerOnAndThawRegex(new List<string>() { "^" + Engine.TOP_LAYER_PREFIX });
-                    Engine _Engine = new Engine(opts);
+                    var engine = GetEngine();
 
                     // danach regions etc. bereinig
                     Plan2Ext.Flaeche.BereinigRegions(automated: false);
 
-                    if (!_Engine.SumFgs(ref m2))
+                    if (!engine.SumFgs(ref m2))
                     {
                         m2 = -1.0;
                     }
@@ -201,8 +194,8 @@ namespace Plan2Ext.Raumnummern
 
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
-                    Engine _Engine = new Engine(opts, _fgRbStructs, _allRaumBlocks);
-                    _Engine.DeleteAllFehlerLines();
+                    var engine = GetEngine();
+                    engine.DeleteAllFehlerLines();
 
                 }
             }
@@ -214,7 +207,7 @@ namespace Plan2Ext.Raumnummern
 
 
         [CommandMethod("Plan2RaumnummernSum")]
-        static public void Plan2RaumnummernSum()
+        public void Plan2RaumnummernSum()
         {
             try
             {
@@ -234,13 +227,13 @@ namespace Plan2Ext.Raumnummern
                         opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
                         );
 
-                    Engine _Engine = new Engine(opts);
+                    var engine = GetEngine();
 
                     // danach regions etc. bereinig
                     Plan2Ext.Flaeche.BereinigRegions(automated: false);
                     //_Engine.BereinigFehlerlinien();
 
-                    _Engine.SumTops();
+                    engine.SumTops();
                 }
             }
             catch (System.Exception ex)
@@ -291,7 +284,7 @@ namespace Plan2Ext.Raumnummern
 #if BRX_APP
 	            bool userBreak = Plan2Ext.Globs.CallCommand("_.INSERT", PFEILBLOCKNAME, "\\", 1, 1, "\\");
 #else
-				bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
+                bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
 #endif
                 if (userBreak) return;
                 var oid = Utils.EntLast();
@@ -302,7 +295,7 @@ namespace Plan2Ext.Raumnummern
 #if BRX_APP
 	            Plan2Ext.Globs.CallCommand("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
 #else
-				ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
+                ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
 #endif
                 if (userBreak) return;
                 oid = Utils.EntLast();
@@ -310,13 +303,13 @@ namespace Plan2Ext.Raumnummern
 #if BRX_APP
 	            userBreak = Plan2Ext.Globs.CallCommand("_.MOVE", "_L", "", vctrU, "\\");
 #else
-				userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
+                userBreak = await Plan2Ext.Globs.CallCommandAsync("_.MOVE", "_L", "", vctrU, Editor.PauseToken);
 #endif
 
                 // update in properties for add room
                 opts.SetTop(topNr);
 
-				IncrementTopNr();
+                IncrementTopNr();
 
             }
             catch (System.Exception ex)
@@ -412,7 +405,7 @@ namespace Plan2Ext.Raumnummern
 
 #endif
 
-				private static void IncrementTopNr()
+        private static void IncrementTopNr()
         {
             var topNr = Globs.TheRnOptions.TopNr;
             var newTopNr = IncrementNumberInString(topNr);
@@ -437,7 +430,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummerSelTop")]
-        static public void Plan2RaumnummerSelTop()
+        public void Plan2RaumnummerSelTop()
         {
             try
             {
@@ -499,7 +492,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummerSelHBlock")]
-        static public void Plan2RaumnummerSelHBlock()
+        public void Plan2RaumnummerSelHBlock()
         {
             try
             {
@@ -544,7 +537,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummerSelBlockAndAtt")]
-        static public void Plan2RaumnummerSelBlockAndAtt()
+        public void Plan2RaumnummerSelBlockAndAtt()
         {
             try
             {
@@ -622,7 +615,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummerSelFgLayer")]
-        static public void Plan2RaumnummerSelFgLayer()
+        public void Plan2RaumnummerSelFgLayer()
         {
             try
             {
@@ -673,7 +666,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummerSelAbzFgLayer")]
-        static public void Plan2RaumnummerSelAbzFgLayer()
+        public void Plan2RaumnummerSelAbzFgLayer()
         {
             try
             {
@@ -739,7 +732,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2MoveFbhWithNumber")]
-        static public void Plan2MoveFbhWithNumber()
+        public void Plan2MoveFbhWithNumber()
         {
             string distVar = "alx_V:ino_rb_fbhYDistWithNr";
 
@@ -747,14 +740,14 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2MoveFbhWithOutNumber")]
-        static public void Plan2MoveFbhWithOutNumber()
+        public void Plan2MoveFbhWithOutNumber()
         {
             string distVar = "alx_V:ino_rb_fbhYDistNoNr";
 
-            Plan2MoveFb(distVar,true);
+            Plan2MoveFb(distVar, true);
         }
 
-        private static void Plan2MoveFb(string distVar, bool ignoreIfNrExists = false)
+        private void Plan2MoveFb(string distVar, bool ignoreIfNrExists = false)
         {
             try
             {
@@ -766,12 +759,12 @@ namespace Plan2Ext.Raumnummern
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
 
-                    Engine _Engine = new Engine(opts);
+                    var engine = GetEngine();
 
                     string sDist = TheConfiguration.GetValueString(distVar);
                     double dist = double.Parse(sDist, CultureInfo.InvariantCulture);
 
-                    _Engine.MoveFbh(0.0, dist, ignoreIfNrExists);
+                    engine.MoveFbh(0.0, dist, ignoreIfNrExists);
                 }
 
             }
@@ -782,7 +775,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummernRemoveAllInfos")]
-        static public void Plan2RaumnummernRemoveAllInfos()
+        public void Plan2RaumnummernRemoveAllInfos()
         {
             try
             {
@@ -794,9 +787,9 @@ namespace Plan2Ext.Raumnummern
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
 
-                    Engine _Engine = new Engine(opts);
+                    var engine = GetEngine();
 
-                    _Engine.RemoveAllInfos();
+                    engine.RemoveAllInfos();
                 }
 
             }
@@ -807,7 +800,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummernRenameTop")]
-        static public void Plan2RaumnummernRenameTop()
+        public void Plan2RaumnummernRenameTop()
         {
             try
             {
@@ -819,8 +812,8 @@ namespace Plan2Ext.Raumnummern
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
 
-                    Engine _Engine = new Engine(opts);
-                    _Engine.RenameTop(opts.Top);
+                    var engine = GetEngine();
+                    engine.RenameTop(opts.Top);
                 }
 
             }
@@ -831,7 +824,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummernRemoveRaum")]
-        static public void Plan2RaumnummernRemoveRaum()
+        public void Plan2RaumnummernRemoveRaum()
         {
             try
             {
@@ -843,9 +836,9 @@ namespace Plan2Ext.Raumnummern
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
 
-                    Engine _Engine = new Engine(opts);
+                    var engine = GetEngine();
 
-                    while (_Engine.RemoveRaum()) { };
+                    while (engine.RemoveRaum()) { };
                 }
 
             }
@@ -856,7 +849,7 @@ namespace Plan2Ext.Raumnummern
         }
 
         [CommandMethod("Plan2RaumnummernCalcArea")]
-        static public void Plan2RaumnummernCalcArea()
+        public void Plan2RaumnummernCalcArea()
         {
             try
             {
@@ -886,7 +879,7 @@ namespace Plan2Ext.Raumnummern
         static RnPalette _RnPalette;
 
         [CommandMethod("Plan2RaumnummernBereinig")]
-        static public void Plan2RaumnummernBereinig()
+        public void Plan2RaumnummernBereinig()
         {
             try
             {
@@ -899,8 +892,8 @@ namespace Plan2Ext.Raumnummern
                 using (DocumentLock m_doclock = doc.LockDocument())
                 {
                     Plan2Ext.Flaeche.BereinigFehlerlinienAndRegions(automated: false);
-                    Engine _Engine = new Engine(opts);
-                    _Engine.BereinigFehlerlinien();
+                    var engine = GetEngine();
+                    engine.BereinigFehlerlinien();
                 }
             }
             catch (System.Exception ex)
@@ -961,6 +954,34 @@ namespace Plan2Ext.Raumnummern
 
             if (Globs.TheRnOptions == null) return false;
             else return true;
+        }
+
+        private Engine GetEngine()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            InitFgRbStructs(doc);
+            var fgRbsPerTopNr = new FgRbsPerTopNr(_fgRbStructs.Values);
+
+            var engineParameter = new EngineParameter()
+            {
+                Options = Globs.TheRnOptions,
+                FgRbs = _fgRbStructs,
+                AllRaumBlocks = _allRaumBlocks,
+                FgRbPerTopNr = fgRbsPerTopNr
+            };
+
+            return new Engine(engineParameter);
+        }
+
+        private void InitFgRbStructs(Document doc)
+        {
+            var opts = Globs.TheRnOptions;
+            if (_fgRbStructs.Count == 0)
+            {
+                _fgRbStructs = AreaEngine.GetFgRbStructs(opts.Blockname, opts.FlaechenGrenzeLayerName,
+                    opts.AbzFlaechenGrenzeLayerName, doc.Database);
+                _allRaumBlocks = Engine.SelectAllRaumblocks(opts.Blockname);
+            }
         }
     }
 }

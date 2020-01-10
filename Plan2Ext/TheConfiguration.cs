@@ -219,6 +219,11 @@ namespace Plan2Ext
 			try
 			{
 				var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+                if (doc == null)
+                {
+                    _currentConfig = null;
+                    return;
+                }
 				using (_AcAp.DocumentLock m_doclock = doc.LockDocument())
 				{
 					var rb = DocumentData.Load("ALX_F_PLAN2_CURRENTCONFIG",doc.Database);

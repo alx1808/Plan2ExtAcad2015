@@ -80,6 +80,7 @@ namespace Plan2Ext
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var arr = new TypedValue[0];
+            if (doc == null) return arr;
             using (var trans = doc.TransactionManager.StartTransaction())
             {
                 var dbDictionary = (DBDictionary)trans.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);

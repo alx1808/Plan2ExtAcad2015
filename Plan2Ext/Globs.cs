@@ -511,6 +511,12 @@ namespace Plan2Ext
             }
         }
 
+        public static void DelXrecord(_AcDb.Transaction transaction, _AcDb.ObjectId id, string key)
+        {
+            var ent = transaction.GetObject(id, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+            if (ent != null) DelXrecord(transaction, ent, key);
+        }
+
         public static void DelXrecord(_AcDb.Transaction tr, _AcDb.DBObject dboForRead, string key)
         {
             if (dboForRead != null)
