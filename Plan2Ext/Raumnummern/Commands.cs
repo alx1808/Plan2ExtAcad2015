@@ -201,7 +201,7 @@ namespace Plan2Ext.Raumnummern
             }
             catch (System.Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernSum aufgetreten! {0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernDeleteFehlerlines aufgetreten! {0}", ex.Message));
             }
         }
 
@@ -209,37 +209,49 @@ namespace Plan2Ext.Raumnummern
         [CommandMethod("Plan2RaumnummernSum")]
         public void Plan2RaumnummernSum()
         {
-            try
-            {
-                if (!OpenRnPalette()) return;
+	        try
+	        {
+		        UndoHandler.StartUndoMark();
+		        if (!OpenRnPalette()) return;
 
-                Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
+		        Plan2Ext.Kleinbefehle.Layers.Plan2SaveLayerStatus();
 
-                var opts = Globs.TheRnOptions;
-                Document doc = Application.DocumentManager.MdiActiveDocument;
+		        var opts = Globs.TheRnOptions;
+		        Document doc = Application.DocumentManager.MdiActiveDocument;
 
-                using (DocumentLock m_doclock = doc.LockDocument())
-                {
-                    // zuerst fläche rechnen
-                    Plan2Ext.Flaeche.Modify = true;
-                    Plan2Ext.Flaeche.AktFlaeche(
-                        Application.DocumentManager.MdiActiveDocument,
-                        opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
-                        );
+		        using (DocumentLock m_doclock = doc.LockDocument())
+		        {
+			        // zuerst fläche rechnen
+			        //Plan2Ext.Flaeche.Modify = true;
+			        //Plan2Ext.Flaeche.AktFlaeche(
+			        //    Application.DocumentManager.MdiActiveDocument,
+			        //    opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
+			        //    );
 
-                    var engine = GetEngine();
+			        Plan2Ext.Globs.LayerOnAndThawRegex(new List<string>
+			        {
+				        "^" + opts.FlaechenGrenzeLayerName + "$",
+				        "^" + opts.AbzFlaechenGrenzeLayerName + "$",
+			        });
 
-                    // danach regions etc. bereinig
-                    Plan2Ext.Flaeche.BereinigRegions(automated: false);
-                    //_Engine.BereinigFehlerlinien();
+			        var engine = GetEngine();
 
-                    engine.SumTops();
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummernSum aufgetreten! {0}", ex.Message));
-            }
+			        // danach regions etc. bereinig
+			        //Plan2Ext.Flaeche.BereinigRegions(automated: false);
+			        //_Engine.BereinigFehlerlinien();
+
+			        engine.SumTops();
+		        }
+	        }
+	        catch (System.Exception ex)
+	        {
+		        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture,
+			        "Fehler in Plan2RaumnummernSum aufgetreten! {0}", ex.Message));
+	        }
+	        finally
+	        {
+				UndoHandler.EndUndoMark();
+	        }
         }
 
 

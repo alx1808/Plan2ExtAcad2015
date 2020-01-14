@@ -356,6 +356,7 @@
       <DependentUpon>TuerOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Tuer\TuerOptionsPalette.cs" />
+    <Compile Include="UndoHandler.cs" />
     <Compile Include="Vorauswahl\Commands.cs" />
     <Compile Include="Vorauswahl\VorauswahlControl.cs">
       <SubType>UserControl</SubType>

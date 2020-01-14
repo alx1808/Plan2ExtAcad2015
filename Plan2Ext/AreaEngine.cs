@@ -246,6 +246,7 @@ namespace Plan2Ext
 
             public bool IsPointInFg(_AcGe.Point3d p, _AcDb.Transaction trans)
             {
+                if (FlaechenGrenze.IsErased) return false;
                 var fg = (_AcDb.Entity)trans.GetObject(FlaechenGrenze, _AcDb.OpenMode.ForRead);
                 if (!IsPosInFg(p, fg)) return false;
 
@@ -261,6 +262,11 @@ namespace Plan2Ext
             private const int AcHatchObject = 0;
             private const int AcPatternType = 0;
             #endregion
+
+            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcDb.TransactionManager tm)
+            {
+                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, null, tm);
+            }
 
             public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int colorIndex, _AcDb.TransactionManager tm)
             {

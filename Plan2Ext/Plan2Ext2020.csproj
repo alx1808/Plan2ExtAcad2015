@@ -294,6 +294,8 @@
     <Compile Include="RaumHoePruefung\HoePrPalette.cs" />
     <Compile Include="RaumHoePruefung\MyExtensions.cs" />
     <Compile Include="RaumHoePruefung\HoePrOptions.cs" />
+    <Compile Include="Raumnummern\EngineParameter.cs" />
+    <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
     <Compile Include="Raumnummern\Summarizer.cs" />
     <Compile Include="Searcher.cs" />
@@ -352,6 +354,7 @@
       <DependentUpon>TuerOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Tuer\TuerOptionsPalette.cs" />
+    <Compile Include="UndoHandler.cs" />
     <Compile Include="Vorauswahl\Commands.cs" />
     <Compile Include="Vorauswahl\VorauswahlControl.cs">
       <SubType>UserControl</SubType>

@@ -12,7 +12,6 @@ using Bricscad.ApplicationServices;
 using Autodesk.AutoCAD.ApplicationServices.Core;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
-
 #endif
 
 
@@ -153,11 +152,34 @@ namespace Plan2Ext
                         needsRegen = true;
                     }
                 }
-                
+
                 transaction.Commit();
             }
 
             return needsRegen;
+        }
+
+        /// <summary>
+        /// Sets color of layer
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <param name="col"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public static void SetLayerColor(string layerName, Color col, Database db = null)
+        {
+            if (db == null) db = Application.DocumentManager.MdiActiveDocument.Database;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                var layerTable = (LayerTable)transaction.GetObject(db.LayerTableId, OpenMode.ForRead);
+                if (layerTable.Has(layerName))
+                {
+                    var oid = layerTable[layerName];
+                    var ltr = (LayerTableRecord)transaction.GetObject(oid, OpenMode.ForWrite);
+                    ltr.Color = col;
+                }
+                transaction.Commit();
+            }
         }
     }
 }

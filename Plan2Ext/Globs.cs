@@ -584,6 +584,7 @@ namespace Plan2Ext
 
         public static _AcDb.ResultBuffer GetXrecord(_AcDb.ObjectId id, string key, _AcDb.Transaction tr)
         {
+            if (id.IsErased) return null;
             _AcDb.Xrecord xRec = new _AcDb.Xrecord();
             _AcDb.Entity ent = tr.GetObject(id, _AcDb.OpenMode.ForRead, false) as _AcDb.Entity;
             if (ent != null)
@@ -2154,7 +2155,7 @@ namespace Plan2Ext
 
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
             _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(0, patternName, bAssociativity, 0);
-            hatchObj.TrueColor = col;
+            if (col != null) hatchObj.TrueColor = col;
 
             //var outerInnerEnts = new Dictionary<_AcIntCom.AcadEntity, List<_AcIntCom.AcadEntity>>();
             var polysToDelete = new List<_AcIntCom.AcadEntity>();
@@ -2210,7 +2211,8 @@ namespace Plan2Ext
             //' Create the non associative Hatch object in model space
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
             _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(0, patternName, bAssociativity, 0);
-            hatchObj.TrueColor = col;
+            if (col != null)
+                hatchObj.TrueColor = col;
             _AcIntCom.AcadEntity[] outerLoop = new _AcIntCom.AcadEntity[] { oCopiedPoly };
             hatchObj.AppendOuterLoop(outerLoop);
             try
