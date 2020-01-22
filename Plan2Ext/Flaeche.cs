@@ -66,7 +66,7 @@ namespace Plan2Ext
         #region Constants
         private const int AcHatchObject = 0;
         private const int AcGradientObject = 1;
-        private const int AcPatternType = 0;
+        private const int AcPatternType = (int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined;
         private const int AcGradientPatternType = 1;
         private const string COLOROBJECTPROGID = "AutoCAD.AcCmColor.18";
         private const double ABSTANDTEXT = 4.0;
@@ -935,7 +935,7 @@ namespace Plan2Ext
             //Autodesk.AutoCAD.Interop.AcadApplication abc = (Autodesk.AutoCAD.Interop.AcadApplication)Autodesk.AutoCAD.ApplicationServices.Application.AcadApplication;
             //log.Info("2..");
 
-            _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(AcPatternType, patternName, bAssociativity, AcHatchObject);
+            var hatchObj = app.ActiveDocument.ModelSpace.AddHatch(AcPatternType, patternName, bAssociativity, AcHatchObject);
             _AcIntCom.AcadAcCmColor col1 = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
             //AcadAcCmColor col2 = app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
             col1.SetRGB(red, green, blue);
@@ -1573,52 +1573,6 @@ namespace Plan2Ext
         }
         #endregion
 
-        // funkt so nicht
-        //private static void Hatch(AcadRegion region, string layer, int red, int green, int blue)
-        //{
-        //    string patternName = "_SOLID";
-        //    bool bAssociativity = false;
-
-        //    AcadEntity RegionEntity = region as AcadEntity;
-
-        //    AcadRegion regionCopy = (AcadRegion)region.Copy();
-
-        //    Object[] items = (Object[])regionCopy.Explode();
-
-
-        //    List<AcadEntity> polylines = new List<AcadEntity>();
-        //    foreach (object o in items)
-        //    {
-        //        if (o is AcadPolyline)
-        //        {
-        //            polylines.Add((AcadEntity)o);
-        //        }
-        //        else if (o is AcadLWPolyline)
-        //        {
-        //            polylines.Add((AcadEntity)o);
-        //        }
-        //        else if (o is Acad3DPolyline)
-        //        {
-        //            polylines.Add((AcadEntity)o);
-        //        }
-
-
-        //    }
-
-        //    //SetLayer(RegionEntity, layer);
-
-        //    ////' Create the non associative Hatch object in model space
-        //    //AcadApplication app = (AcadApplication)Application.AcadApplication;
-        //    //AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(AcPatternType, patternName, bAssociativity, AcHatchObject);
-        //    //AcadAcCmColor col1 = app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
-        //    //AcadAcCmColor col2 = app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
-        //    //col1.SetRGB(red, green, blue);
-        //    //hatchObj.TrueColor = col1;
-        //    //AcadEntity[] outerLoop = new AcadEntity[] { RegionEntity };
-        //    //hatchObj.AppendOuterLoop(outerLoop);
-        //    //if (RegionEntity != null) RegionEntity.Delete();
-
-        //}
         #region Obsolete
         [Obsolete("Use AreaEngine")]
         private static void SelectFgAndRb()

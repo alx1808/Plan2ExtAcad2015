@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BrxMgd">
-      <HintPath>..\..\..\..\..\..\Program Files\Bricsys\BricsCAD V19 en_US\BrxMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Bricsys\BricsCAD V20 en_US\BrxMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral">
@@ -56,11 +56,11 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="TD_Mgd">
-      <HintPath>..\..\..\..\..\..\Program Files\Bricsys\BricsCAD V19 en_US\TD_Mgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Bricsys\BricsCAD V20 en_US\TD_Mgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="TD_MgdBrep">
-      <HintPath>..\..\..\..\..\..\Program Files\Bricsys\BricsCAD V19 en_US\TD_MgdBrep.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Bricsys\BricsCAD V20 en_US\TD_MgdBrep.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -174,6 +174,8 @@
     <Compile Include="RaumHoePruefung\MyExtensions.cs" />
     <Compile Include="Raumnummern\Commands.cs" />
     <Compile Include="Raumnummern\Engine.cs" />
+    <Compile Include="Raumnummern\EngineParameter.cs" />
+    <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\Globs.cs" />
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
     <Compile Include="Raumnummern\RnControl.cs">
@@ -196,6 +198,7 @@
       <DependentUpon>TuerOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Tuer\TuerOptionsPalette.cs" />
+    <Compile Include="UndoHandler.cs" />
     <Compile Include="WildcardAcad.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -229,24 +232,22 @@
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="BricscadApp">
-      <Guid>{C4A7E981-5623-484B-A11E-20987543185B}</Guid>
-      <VersionMajor>19</VersionMajor>
+      <Guid>{E09ACD56-05B5-48C5-85A8-C4ED4E69A246}</Guid>
+      <VersionMajor>20</VersionMajor>
       <VersionMinor>0</VersionMinor>
       <Lcid>0</Lcid>
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>True</Private>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
     <COMReference Include="BricscadDb">
-      <Guid>{E5F83403-221E-4D53-93CC-EBFF68F268D5}</Guid>
-      <VersionMajor>19</VersionMajor>
+      <Guid>{136A8EC3-D26F-464A-A62E-7569B4F5C452}</Guid>
+      <VersionMajor>20</VersionMajor>
       <VersionMinor>0</VersionMinor>
       <Lcid>0</Lcid>
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>True</Private>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
     <COMReference Include="Microsoft.Office.Core">
       <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>

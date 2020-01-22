@@ -594,7 +594,9 @@ namespace Plan2Ext
                     if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) return null;
                     _AcDb.DBDictionary xDict =
                         (_AcDb.DBDictionary) tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForRead, false);
-                    xRec = (_AcDb.Xrecord) tr.GetObject(xDict.GetAt(key), _AcDb.OpenMode.ForRead, false);
+                    var keyOid = xDict.GetAt(key);
+                    if (keyOid.IsErased) return null;
+					xRec = (_AcDb.Xrecord) tr.GetObject(keyOid, _AcDb.OpenMode.ForRead, false);
                     return xRec.Data;
                 }
                 catch
@@ -2154,7 +2156,7 @@ namespace Plan2Ext
             bool bAssociativity = false;
 
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
-            _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(0, patternName, bAssociativity, 0);
+            var hatchObj = app.ActiveDocument.ModelSpace.AddHatch((int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined, patternName, bAssociativity, 0);
             if (col != null) hatchObj.TrueColor = col;
 
             //var outerInnerEnts = new Dictionary<_AcIntCom.AcadEntity, List<_AcIntCom.AcadEntity>>();
@@ -2210,7 +2212,7 @@ namespace Plan2Ext
 
             //' Create the non associative Hatch object in model space
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
-            _AcIntCom.AcadHatch hatchObj = app.ActiveDocument.ModelSpace.AddHatch(0, patternName, bAssociativity, 0);
+			var hatchObj = app.ActiveDocument.ModelSpace.AddHatch((int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined , patternName, bAssociativity, 0);
             if (col != null)
                 hatchObj.TrueColor = col;
             _AcIntCom.AcadEntity[] outerLoop = new _AcIntCom.AcadEntity[] { oCopiedPoly };
