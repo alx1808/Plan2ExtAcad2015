@@ -48,7 +48,7 @@ namespace Plan2Ext.CenterBlock
         #region Constants
         private const double ABSTANDTEXT = 2.0;
         private const int AcHatchObject = 0;
-        private const int AcPatternType = 0;
+        private const int AcPatternType = (int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined;
 
         #endregion
 
