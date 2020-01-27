@@ -229,10 +229,11 @@
             // 
             // txtTop
             // 
-            this.txtTop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtTop.Location = new System.Drawing.Point(127, 19);
+            this.txtTop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtTop.Location = new System.Drawing.Point(38, 19);
             this.txtTop.Name = "txtTop";
-            this.txtTop.Size = new System.Drawing.Size(65, 20);
+            this.txtTop.Size = new System.Drawing.Size(154, 20);
             this.txtTop.TabIndex = 2;
             this.txtTop.TextChanged += new System.EventHandler(this.txtTop_TextChanged);
             // 

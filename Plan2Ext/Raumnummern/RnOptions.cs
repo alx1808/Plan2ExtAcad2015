@@ -113,12 +113,12 @@ namespace Plan2Ext.Raumnummern
             Form.txtNumber.Text = num;
         }
 
-        private string _TopNr = "1";
-        public string TopNr { get { return _TopNr; } set { _TopNr = value; } }
-        public void SetTopNr(string topNr)
-        {
-            _TopNr = topNr;
-        }
+        //private string _TopNr = "1";
+        //public string TopNr { get { return _TopNr; } set { _TopNr = value; } }
+        //public void SetTopNr(string topNr)
+        //{
+        //    _TopNr = topNr;
+        //}
 
         private bool _AutoCorr = true;
         public bool AutoCorr { get { return _AutoCorr; } set { _AutoCorr = value; } }

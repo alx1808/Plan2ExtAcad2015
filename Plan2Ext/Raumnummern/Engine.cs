@@ -44,7 +44,6 @@ namespace Plan2Ext.Raumnummern
 		private const string XREC_TOP_IN_FG = "Plan2TopInFg";
 
 		//internal const string HIDDEN_NUMMER_ATT = "INFO";
-		internal const string TOP_PREFIX = "TOP";
 		internal const string TOP_LAYER_PREFIX = "A_RA_TOP_";
 
 		private readonly Dictionary<string, int> _ColorIndexDict = new Dictionary<string, int>() {
@@ -377,7 +376,7 @@ namespace Plan2Ext.Raumnummern
 							{
 								i++;
 								List<ObjectId> oids;
-								if (_OidsPerTop.TryGetValue(TOP_PREFIX + _RnOptions.Top, out oids))
+								if (_OidsPerTop.TryGetValue(_RnOptions.Top, out oids))
 								{
 									if (i > (oids.Count + 1)) i = oids.Count + 1;
 									newNr = i.ToString().PadLeft(newNr.Length, '0');
@@ -479,7 +478,7 @@ namespace Plan2Ext.Raumnummern
 				{
 
 					var pfeilBlockOid = FindPfeilBlockWithTopNr(transaction, topNr);
-					var topStruct = new TopStructure() { TopOid = topBlockOid, TopNummer = TOP_PREFIX + topNrNeu, FgRbs = fgRbs };
+					var topStruct = new TopStructure() { TopOid = topBlockOid, TopNummer = topNrNeu, FgRbs = fgRbs };
 
 					foreach (var fgrb in fgRbs)
 					{
@@ -499,7 +498,7 @@ namespace Plan2Ext.Raumnummern
 						else
 						{
 
-							var completeNr = TOP_PREFIX + topNrNeu + _RnOptions.Separator + rbRaumNr;
+							var completeNr = topNrNeu + _RnOptions.Separator + rbRaumNr;
 							//SetBlockAttrib(rbOid, HIDDEN_NUMMER_ATT, completeNr);
 							SetBlockAttrib(rbOid, _RnOptions.Attribname, completeNr, transaction);
 							//if (_RnOptions.UseHiddenAttribute)
@@ -514,7 +513,7 @@ namespace Plan2Ext.Raumnummern
 					}
 
 					// topblock
-					SetBlockAttrib(topBlockOid, TopBlockTopNrAttName, TOP_PREFIX + " " + topNrNeu, transaction);
+					SetBlockAttrib(topBlockOid, TopBlockTopNrAttName, topNrNeu, transaction);
 					// pfeilblock
 					if (pfeilBlockOid != default(ObjectId))
 					{
@@ -589,7 +588,7 @@ namespace Plan2Ext.Raumnummern
 					TypedValue[] values = rb.AsArray();
 					try
 					{
-						var topNr = TOP_PREFIX + values[0].Value.ToString();
+						var topNr = values[0].Value.ToString();
 
 						//if (!HasExistingHatch(fgrb.FlaechenGrenze))
 						//{
@@ -728,7 +727,7 @@ namespace Plan2Ext.Raumnummern
 				{
 					if (_CurrentTopNr == 'z') _CurrentTopNr = 'a';
 					else _CurrentTopNr++;
-					return TOP_PREFIX + _CurrentTopNr;
+					return _CurrentTopNr.ToString();
 				}
 			}
 		}
@@ -817,7 +816,7 @@ namespace Plan2Ext.Raumnummern
 
 		private void CheckRblockConsistency(AreaEngine.FgRbStructure fgrb, Transaction transaction)
 		{
-			var topNr = GetTopNrWithPrefix(fgrb, transaction);
+			var topNr = GetTopNr(fgrb, transaction);
 			if (topNr == null) return;
 			var rbOids = fgrb.Raumbloecke;
 			CheckRblockConsistency(topNr, rbOids, transaction);
@@ -1160,27 +1159,6 @@ namespace Plan2Ext.Raumnummern
 
 		#region Private
 
-		private string GetTopNrWithPrefix(AreaEngine.FgRbStructure fgrb, Transaction transaction)
-		{
-			string topNr = GetTopNr(fgrb, transaction);
-			if (topNr == null) return topNr;
-			return TOP_PREFIX + topNr;
-		}
-
-		//private string GetTopNr(AreaEngine.FgRbStructure fgrb)
-		//{
-		//    string topNr = null;
-
-		//    if (fgrb == null || fgrb.FlaechenGrenze == ObjectId.Null) return topNr;
-		//    var rb = Plan2Ext.Globs.GetXrecord(fgrb.FlaechenGrenze, XREC_TOP_IN_FG);
-		//    if (rb != null)
-		//    {
-		//        TypedValue[] values = rb.AsArray();
-		//        topNr = values[0].Value.ToString();
-		//    }
-		//    return topNr;
-		//}
-
 		internal static string GetTopNr(AreaEngine.FgRbStructure fgrb, Transaction transaction)
 		{
 			string topNr = null;
@@ -1483,13 +1461,7 @@ namespace Plan2Ext.Raumnummern
 				return false;
 			}
 
-			var completeTopNr = topNrAtt.TextString;
-			if (!completeTopNr.StartsWith(TOP_PREFIX, StringComparison.OrdinalIgnoreCase))
-			{
-				InsertFehlerLineAt(oid, _INVALID_TOP_NR);
-				return false;
-			}
-			topNr = completeTopNr.Remove(0, TOP_PREFIX.Length).Trim();
+			topNr = topNrAtt.TextString;
 			return true;
 		}
 
@@ -1611,13 +1583,7 @@ namespace Plan2Ext.Raumnummern
 
 		private string GetTopNr(TopStructure top)
 		{
-			string topNrIncPrefix = top.TopNummer;
-			if (!topNrIncPrefix.StartsWith(TOP_PREFIX, StringComparison.OrdinalIgnoreCase))
-			{
-				InsertFehlerLineAt(top.TopOid, _INVALID_TOP_NR);
-				return topNrIncPrefix;
-			}
-			return topNrIncPrefix.Remove(0, TOP_PREFIX.Length).Trim();
+			return top.TopNummer.Trim();
 		}
 
 		private void AddToSet(List<ObjectId> set, List<ObjectId> list)
@@ -2038,7 +2004,7 @@ namespace Plan2Ext.Raumnummern
 
 		private string GetCompleteNumber(string curNumber)
 		{
-			return TOP_PREFIX + _RnOptions.Top + _RnOptions.Separator + curNumber;
+			return _RnOptions.Top + _RnOptions.Separator + curNumber;
 		}
 
 		private void AutoCorrection(int numlen, Transaction transaction)
@@ -2130,7 +2096,7 @@ namespace Plan2Ext.Raumnummern
 
 			List<ObjectId> oids;
 			string topName = _RnOptions.Top;
-			if (!_OidsPerTop.TryGetValue(TOP_PREFIX + topName, out oids)) return;
+			if (!_OidsPerTop.TryGetValue(topName, out oids)) return;
 
 			foreach (var oid in oids)
 			{
