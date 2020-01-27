@@ -83,7 +83,7 @@ namespace Plan2Ext.ETransmit
                             CopyCtbs(Path.GetDirectoryName(targetFileName), ctbDir);
                             SetNoPlotterToAllLayouts(db);
                         }
-                        Globs.CreateBakFile(targetFileName);
+                        BlockManager.CreateBakFile(targetFileName);
                         db.SaveAs(targetFileName, true, DwgVersion.Current, doc.Database.SecurityParameters);
                         doc.CloseAndSave(targetFileName);
                     }

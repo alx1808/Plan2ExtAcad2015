@@ -707,13 +707,13 @@ namespace Plan2Ext.CenterBlock
                             if (System.IO.Path.IsPathRooted(bd.PathName))
                             {
                                 log.DebugFormat(string.Format(CultureInfo.CurrentCulture, "Füge Block '{0}' ein. XREF-Pfad: '{1}'.", br.Name + "_AS_BLOCK", bd.PathName));
-                                var blockOid = Plan2Ext.Globs.InsertDwg(bd.PathName, br.Position, br.Rotation, 1.0,br.Name + "_AS_BLOCK");
+                                var blockOid = BlockManager.InsertDwg(bd.PathName, br.Position, br.Rotation, 1.0, br.Name + "_AS_BLOCK");
                                 _BlockRefs.Add(blockOid);
                             }
                             else
                             {
                                 log.DebugFormat(string.Format(CultureInfo.CurrentCulture, "Füge Block '{0}' ein. XREF-Pfad: '{1}'.", br.Name + "_AS_BLOCK", System.IO.Path.GetFullPath(dwgPath + bd.PathName)));
-                                var blockOid = Plan2Ext.Globs.InsertDwg(System.IO.Path.GetFullPath(dwgPath + bd.PathName), br.Position, br.Rotation, 1.0,br.Name + "_AS_BLOCK");
+                                var blockOid = BlockManager.InsertDwg(System.IO.Path.GetFullPath(dwgPath + bd.PathName), br.Position, br.Rotation, 1.0, br.Name + "_AS_BLOCK");
                                 _BlockRefs.Add(blockOid);
                             }
                         }

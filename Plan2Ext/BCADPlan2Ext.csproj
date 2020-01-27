@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="AreaEngine.cs" />
     <Compile Include="BlockManager.cs" />
+    <Compile Include="Boundings.cs" />
     <Compile Include="CalcArea\CalcAreaControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -202,7 +202,7 @@ namespace Plan2Ext.RaumHoePruefung
                             BlockReference br = obj as BlockReference;
                             if (br == null)
                             {
-                                br = Plan2Ext.Globs.GetBlockFromItsSubentity(tr, per);
+                                br = BlockManager.GetBlockFromItsSubentity(tr, per);
                                 if (br == null) return;
                             }
 

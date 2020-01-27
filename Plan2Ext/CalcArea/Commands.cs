@@ -195,7 +195,7 @@ namespace Plan2Ext.CalcArea
                     AttributeReference ar = obj as AttributeReference;
                     if (ar != null && !ar.IsConstant)
                     {
-                        BlockReference br = Plan2Ext.Globs.GetBlockFromItsSubentity(tr, per);
+                        BlockReference br = BlockManager.GetBlockFromItsSubentity(tr, per);
                         if (br != null)
                         {
                             ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlockname: {0}, Attributname: {1}.", Plan2Ext.Globs.GetBlockname(br, tr), ar.Tag));

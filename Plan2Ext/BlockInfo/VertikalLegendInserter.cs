@@ -139,7 +139,7 @@ namespace Plan2Ext.BlockInfo
             Document doc = Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
 
-            if (!Globs.BlockExists(blockName) && !Globs.InsertFromPrototype(blockName, dwgName)) return false;
+            if (!BlockManager.BlockExists(blockName) && !BlockManager.InsertFromPrototype(blockName, dwgName)) return false;
             var blockTable = (BlockTable)transaction.GetObject(db.BlockTableId, OpenMode.ForRead);
             var oid = blockTable[blockName];
             using (var bref = new BlockReference(Globs.TransUcsWcs(positionUcs), oid))

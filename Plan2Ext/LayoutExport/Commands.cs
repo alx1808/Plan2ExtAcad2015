@@ -57,7 +57,7 @@ namespace Plan2Ext.LayoutExport
 
                     SetCurrentExportDwgName();
 
-                    Globs.CreateBakFile(CurrentExportDwg);
+                    BlockManager.CreateBakFile(CurrentExportDwg);
 
                     // Export Wipeout and Blockreference entities inside first view to external dwg and delete entities.
                     if (!SaveAndDeleteNonExportableEntities()) return;
@@ -206,7 +206,7 @@ namespace Plan2Ext.LayoutExport
                 dbTarget.SaveAs(newFileName, DwgVersion.Newest);
             }
 
-            Globs.Move(newFileName, CurrentExportDwg);
+            BlockManager.Move(newFileName, CurrentExportDwg);
         }
         
         // ReSharper disable once UnusedMember.Local
@@ -399,7 +399,7 @@ namespace Plan2Ext.LayoutExport
 
         private static void ImportSavedEntitiesToExportedLayout()
         {
-            Globs.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, _viewportTwistAngle, CurrentScale, false);
+            BlockManager.InsertDwgToDwg(CurrentExportDwg, CurrentOutDwg, Point3d.Origin, _viewportTwistAngle, CurrentScale, false);
         }
 
         /// <summary>
@@ -432,7 +432,7 @@ namespace Plan2Ext.LayoutExport
 
             GetCurrentOutDwg();
 
-            Globs.Wblock(CurrentOutDwg, objectIds, CurrentOrigin);
+            BlockManager.Wblock(CurrentOutDwg, objectIds, CurrentOrigin);
 
             Delete(objectIds);
 

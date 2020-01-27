@@ -654,12 +654,12 @@ namespace Plan2Ext.AutoIdVergabe
                             var dwgPath = _AcAp.Application.GetSystemVariable("DWGPREFIX").ToString();
                             if (System.IO.Path.IsPathRooted(bd.PathName))
                             {
-                                var blockOid = Plan2Ext.Globs.InsertDwg(bd.PathName, br.Position, br.Rotation, 1.0, br.Name + "_AS_BLOCK");
+                                var blockOid = BlockManager.InsertDwg(bd.PathName, br.Position, br.Rotation, 1.0, br.Name + "_AS_BLOCK");
                                 _BlockRefs.Add(blockOid);
                             }
                             else
                             {
-                                var blockOid = Plan2Ext.Globs.InsertDwg(System.IO.Path.GetFullPath(dwgPath + bd.PathName), br.Position, br.Rotation, 1.0, br.Name + "_AS_BLOCK");
+                                var blockOid = BlockManager.InsertDwg(System.IO.Path.GetFullPath(dwgPath + bd.PathName), br.Position, br.Rotation, 1.0, br.Name + "_AS_BLOCK");
                                 _BlockRefs.Add(blockOid);
                             }
                         }

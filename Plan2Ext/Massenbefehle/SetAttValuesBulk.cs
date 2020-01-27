@@ -413,7 +413,7 @@ namespace Plan2Ext.Massenbefehle
                     _AcDb.AttributeReference ar = obj as _AcDb.AttributeReference;
                     if (ar != null && !ar.IsConstant)
                     {
-                        _AcDb.BlockReference br = Plan2Ext.Globs.GetBlockFromItsSubentity(tr, per);
+                        _AcDb.BlockReference br = BlockManager.GetBlockFromItsSubentity(tr, per);
                         if (br != null)
                         {
                             ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlockname: {0}, Attributname: {1}.", Plan2Ext.Globs.GetBlockname(br, tr), ar.Tag));

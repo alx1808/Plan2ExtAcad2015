@@ -466,7 +466,7 @@ namespace Plan2Ext.Massenbefehle
                     _AcDb.AttributeReference ar = obj as _AcDb.AttributeReference;
                     if (ar != null && !ar.IsConstant)
                     {
-                        _AcDb.BlockReference br = Plan2Ext.Globs.GetBlockFromItsSubentity(tr, per);
+                        _AcDb.BlockReference br = BlockManager.GetBlockFromItsSubentity(tr, per);
                         if (br != null)
                         {
                             bname = Plan2Ext.Globs.GetBlockname(br, tr);

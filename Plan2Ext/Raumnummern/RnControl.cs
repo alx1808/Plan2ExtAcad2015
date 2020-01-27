@@ -71,7 +71,6 @@ namespace Plan2Ext.Raumnummern
         {
             txtTop.Text = _rnOptions.Top;
             txtSeparator.Text = _rnOptions.Separator;
-            txtTopNr.Text = _rnOptions.TopNr;
             txtNumber.Text = _rnOptions.Number;
             chkAutoCorr.Checked = _rnOptions.AutoCorr;
             txtBlockname.Text = _rnOptions.Blockname;
@@ -418,11 +417,6 @@ namespace Plan2Ext.Raumnummern
         private void txtSeparator_TextChanged(object sender, EventArgs e)
         {
             _rnOptions.Separator = txtSeparator.Text;
-        }
-
-        private void txtTopNr_TextChanged(object sender, EventArgs e)
-        {
-            _rnOptions.TopNr = txtTopNr.Text;
         }
 
         private void txtNumber_TextChanged(object sender, EventArgs e)

@@ -181,7 +181,7 @@ namespace Plan2Ext.HoehenPruefung
                             BlockReference br = obj as BlockReference;
                             if (br == null)
                             {
-                                br = Plan2Ext.Globs.GetBlockFromItsSubentity(tr, per);
+                                br = BlockManager.GetBlockFromItsSubentity(tr, per);
                                 if (br == null) return;
                             }
 

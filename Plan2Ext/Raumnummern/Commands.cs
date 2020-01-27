@@ -46,19 +46,19 @@ namespace Plan2Ext.Raumnummern
         internal const string PFEILBLOCK_TOPNR_ATTNAME = "TOP";
         internal const string TOPBLOCK_M2_ATTNAME = "M2";
 
-        [LispFunction("alx_F:ino_RaumnummernGetTopNr")]
-        public static string LispRaumnummernGetTopNr(ResultBuffer rb)
-        {
-            if (!OpenRnPalette()) return "";
-            else return Globs.TheRnOptions.TopNr;
-        }
+        //[LispFunction("alx_F:ino_RaumnummernGetTopNr")]
+        //public static string LispRaumnummernGetTopNr(ResultBuffer rb)
+        //{
+        //    if (!OpenRnPalette()) return "";
+        //    else return Globs.TheRnOptions.TopNr;
+        //}
 
-        [LispFunction("alx_F:ino_RaumnummernIncrementTopNr")]
-        public static void LispRaumnummernIncrementTopNr(ResultBuffer rb)
-        {
-            if (!OpenRnPalette()) return;
-            IncrementTopNr();
-        }
+        //[LispFunction("alx_F:ino_RaumnummernIncrementTopNr")]
+        //public static void LispRaumnummernIncrementTopNr(ResultBuffer rb)
+        //{
+        //    if (!OpenRnPalette()) return;
+        //    IncrementTopNr();
+        //}
 
         private Dictionary<ObjectId, AreaEngine.FgRbStructure> _fgRbStructs = new Dictionary<ObjectId, AreaEngine.FgRbStructure>();
         private List<ObjectId> _allRaumBlocks = new List<ObjectId>();
@@ -274,24 +274,24 @@ namespace Plan2Ext.Raumnummern
                 Plan2Ext.Globs.VerifyLayerExists(blockLayer, null);
                 Plan2Ext.Globs.SetLayerCurrent(blockLayer);
 
-                if (!Plan2Ext.Globs.BlockExists(PFEILBLOCKNAME))
+                if (!BlockManager.BlockExists(PFEILBLOCKNAME))
                 {
-                    if (!Plan2Ext.Globs.InsertFromPrototype(PFEILBLOCKNAME, PROPOTYP_DWG_NAME))
+                    if (!BlockManager.InsertFromPrototype(PFEILBLOCKNAME, PROPOTYP_DWG_NAME))
                     {
                         ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlock '{0}' existiert nicht!", PFEILBLOCKNAME));
                         return;
                     }
                 }
-                if (!Plan2Ext.Globs.BlockExists(TOPBLOCKNAME))
+                if (!BlockManager.BlockExists(TOPBLOCKNAME))
                 {
-                    if (!Plan2Ext.Globs.InsertFromPrototype(TOPBLOCKNAME, PROPOTYP_DWG_NAME))
+                    if (!BlockManager.InsertFromPrototype(TOPBLOCKNAME, PROPOTYP_DWG_NAME))
                     {
                         ed.WriteMessage(string.Format(CultureInfo.CurrentCulture, "\nBlock '{0}' existiert nicht!", TOPBLOCKNAME));
                         return;
                     }
                 }
 
-                var oidL = Utils.EntLast();
+                //var oidL = Utils.EntLast();
                 Application.SetSystemVariable("ATTREQ", 0);
 #if BRX_APP
 	            bool userBreak = Plan2Ext.Globs.CallCommand("_.INSERT", PFEILBLOCKNAME, "\\", 1, 1, "\\");
@@ -299,9 +299,9 @@ namespace Plan2Ext.Raumnummern
                 bool userBreak = await Plan2Ext.Globs.CallCommandAsync("_.INSERT", PFEILBLOCKNAME, Editor.PauseToken, 1, 1, Editor.PauseToken);
 #endif
                 if (userBreak) return;
-                var oid = Utils.EntLast();
-                var topNr = opts.TopNr;
-                SetTopNr(doc.Database, oid, topNr, "TOP");
+                //var oid = Utils.EntLast();
+                //var topNr = opts.TopNr;
+                //SetTopNr(doc.Database, oid, topNr, "TOP");
 
                 var vctrU = Plan2Ext.Globs.GetViewCtrW();
 #if BRX_APP
@@ -310,8 +310,8 @@ namespace Plan2Ext.Raumnummern
                 ed.Command("_.INSERT", TOPBLOCKNAME, vctrU, 1, 1, 0.0);
 #endif
                 if (userBreak) return;
-                oid = Utils.EntLast();
-                SetTopBlockNr(doc.Database, oid, topNr, TOPBLOCK_TOPNR_ATTNAME);
+                //oid = Utils.EntLast();
+                //SetTopBlockNr(doc.Database, oid, topNr, TOPBLOCK_TOPNR_ATTNAME);
 #if BRX_APP
 	            userBreak = Plan2Ext.Globs.CallCommand("_.MOVE", "_L", "", vctrU, "\\");
 #else
@@ -319,9 +319,9 @@ namespace Plan2Ext.Raumnummern
 #endif
 
                 // update in properties for add room
-                opts.SetTop(topNr);
+                //opts.SetTop(topNr);
 
-                IncrementTopNr();
+                //IncrementTopNr();
 
             }
             catch (System.Exception ex)

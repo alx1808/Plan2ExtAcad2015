@@ -65,7 +65,6 @@
             this.btnCalcArea = new System.Windows.Forms.Button();
             this.btnFlaBereinig = new System.Windows.Forms.Button();
             this.btnInsertTop = new System.Windows.Forms.Button();
-            this.txtTopNr = new System.Windows.Forms.TextBox();
             this.btnSum = new System.Windows.Forms.Button();
             this.chkShowSettings = new System.Windows.Forms.CheckBox();
             this.btnLayerRestore = new System.Windows.Forms.Button();
@@ -498,20 +497,11 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnInsertTop.Location = new System.Drawing.Point(12, 32);
             this.btnInsertTop.Name = "btnInsertTop";
-            this.btnInsertTop.Size = new System.Drawing.Size(142, 23);
+            this.btnInsertTop.Size = new System.Drawing.Size(216, 23);
             this.btnInsertTop.TabIndex = 32;
             this.btnInsertTop.Text = "Top einfügen";
             this.btnInsertTop.UseVisualStyleBackColor = true;
             this.btnInsertTop.Click += new System.EventHandler(this.btnInsertTop_Click);
-            // 
-            // txtTopNr
-            // 
-            this.txtTopNr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtTopNr.Location = new System.Drawing.Point(160, 34);
-            this.txtTopNr.Name = "txtTopNr";
-            this.txtTopNr.Size = new System.Drawing.Size(62, 20);
-            this.txtTopNr.TabIndex = 51;
-            this.txtTopNr.TextChanged += new System.EventHandler(this.txtTopNr_TextChanged);
             // 
             // btnSum
             // 
@@ -580,7 +570,6 @@
             this.Controls.Add(this.btnLayerRestore);
             this.Controls.Add(this.chkShowSettings);
             this.Controls.Add(this.btnSum);
-            this.Controls.Add(this.txtTopNr);
             this.Controls.Add(this.btnInsertTop);
             this.Controls.Add(this.btnFlaBereinig);
             this.Controls.Add(this.btnCalcArea);
@@ -634,7 +623,6 @@
         private System.Windows.Forms.Button btnCalcArea;
         private System.Windows.Forms.Button btnFlaBereinig;
         private System.Windows.Forms.Button btnInsertTop;
-        internal System.Windows.Forms.TextBox txtTopNr;
         private System.Windows.Forms.Button btnRemoveRaum;
         private System.Windows.Forms.Button btnSum;
         internal System.Windows.Forms.CheckBox chkHiddenAttribute;

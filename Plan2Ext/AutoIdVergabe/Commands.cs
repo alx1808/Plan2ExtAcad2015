@@ -221,7 +221,7 @@ namespace Plan2Ext.AutoIdVergabe
                             _AcDb.BlockReference br = obj as _AcDb.BlockReference;
                             if (br == null)
                             {
-                                br = Plan2Ext.Globs.GetBlockFromItsSubentity(tr, per);
+                                br = BlockManager.GetBlockFromItsSubentity(tr, per);
                                 if (br == null) return;
                             }
 

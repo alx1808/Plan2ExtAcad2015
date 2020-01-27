@@ -1,11 +1,22 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿#if BRX_APP
+using Bricscad.ApplicationServices;
+using Teigha.DatabaseServices;
+using Bricscad.EditorInput;
+using Teigha.Runtime;
+	
+using Teigha.Geometry;
+#elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+
+#endif
+
+using System.Collections.Generic;
+using System.Linq;
 
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable CommentTypo
@@ -337,8 +348,7 @@ namespace Plan2Ext
 
                     if (!(arId is ObjectId))
                     {
-                        var tp = arId.GetType();
-                        continue;
+	                    continue;
                     }
 
                     var aroid = (ObjectId) arId;
