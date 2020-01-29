@@ -21,6 +21,8 @@ using Bricscad.EditorInput;
 using _AcAp = Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+// ReSharper disable CommentTypo
+// ReSharper disable IdentifierTypo
 #endif
 
 namespace Plan2Ext.Raumnummern
@@ -43,20 +45,6 @@ namespace Plan2Ext.Raumnummern
             TheConfiguration.ConfigurationChanged += TheConfiguration_ConfigurationChanged;
 
             FillComponents();
-
-            //this.txtTop.Leave += new System.EventHandler(txtTop_Leave);
-            //this.txtTop.GotFocus += new System.EventHandler(txtTop_GotFocus);
-            //this.txtTop.MouseUp += new System.Windows.Forms.MouseEventHandler(txtTop_MouseUp);
-
-            //this.txtSeparator.Leave += new System.EventHandler(txtSeparator_Leave);
-            //this.txtSeparator.GotFocus += new System.EventHandler(txtSeparator_GotFocus);
-            //this.txtSeparator.MouseUp += new System.Windows.Forms.MouseEventHandler(txtSeparator_MouseUp);
-
-            //this.txtNumber.Leave += new System.EventHandler(txtNumber_Leave);
-            //this.txtNumber.GotFocus += new System.EventHandler(txtNumber_GotFocus);
-            //this.txtNumber.MouseUp += new System.Windows.Forms.MouseEventHandler(txtNumber_MouseUp);
-
-            //_Engine = new Engine(this); 
         }
 
         void TheConfiguration_ConfigurationChanged(object sender, EventArgs e)
@@ -383,18 +371,28 @@ namespace Plan2Ext.Raumnummern
 
 
 
+        /// <summary>
+        /// Validierung Raumnummern
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <remarks>
+        /// Raumnummer setzt sich zusammen aus: [geschoss][nr]
+        /// [geschoss] := "" | "K" | [1-9]
+        /// [nr] := [1-9][1-9]
+        /// </remarks>
         private void txtNumber_Validating(object sender, CancelEventArgs e)
         {
-            string num = txtNumber.Text;
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in num.ToArray())
+            try
             {
-                if (c >= '0' && c <= '9') sb.Append(c);
+                string geschoss, nr;
+                Globs.GetGeschossAndNr(txtNumber.Text.Trim(), out geschoss, out nr);
+                txtNumber.Text = geschoss + nr;
             }
-            num = sb.ToString();
-            if (string.IsNullOrEmpty(num)) num = "01";
-            if (string.Compare(txtNumber.Text, num, StringComparison.OrdinalIgnoreCase) != 0) txtNumber.Text = num;
-
+            catch (InvalidOperationException)
+            {
+                txtNumber.Text = "01";
+            }
         }
         #endregion
 
@@ -679,82 +677,5 @@ namespace Plan2Ext.Raumnummern
             {
             }
         }
-
-        //private void btnCalcArea_Click(object sender, EventArgs e)
-        //{
-
-        //}
-
-
-        //void txtTop_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-        //{
-        //    if (SelectAllOnFocus && !selectAllDone && txtTop.SelectionLength == 0)
-        //    {
-        //        selectAllDone = true;
-        //        txtTop.SelectAll();
-        //    }
-        //}
-
-        //void txtTop_GotFocus(object sender, System.EventArgs e)
-        //{
-        //    if (SelectAllOnFocus && MouseButtons == MouseButtons.None)
-        //    {
-        //        txtTop.SelectAll();
-        //        selectAllDone = true;
-        //    }
-        //}
-
-        //void txtTop_Leave(object sender, System.EventArgs e)
-        //{
-        //    selectAllDone = false;
-        //}
-
-        //void txtSeparator_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-        //{
-        //    if (SelectAllOnFocus && !selectAllDone && txtSeparator.SelectionLength == 0)
-        //    {
-        //        selectAllDone = true;
-        //        txtSeparator.SelectAll();
-        //    }
-        //}
-
-        //void txtSeparator_GotFocus(object sender, System.EventArgs e)
-        //{
-        //    if (SelectAllOnFocus && MouseButtons == MouseButtons.None)
-        //    {
-        //        txtSeparator.SelectAll();
-        //        selectAllDone = true;
-        //    }
-        //}
-
-        //void txtSeparator_Leave(object sender, System.EventArgs e)
-        //{
-        //    selectAllDone = false;
-        //}
-
-        //void txtNumber_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-        //{
-        //    if (SelectAllOnFocus && !selectAllDone && txtNumber.SelectionLength == 0)
-        //    {
-        //        selectAllDone = true;
-        //        txtNumber.SelectAll();
-        //    }
-        //}
-
-        //void txtNumber_GotFocus(object sender, System.EventArgs e)
-        //{
-        //    if (SelectAllOnFocus && MouseButtons == MouseButtons.None)
-        //    {
-        //        txtNumber.SelectAll();
-        //        selectAllDone = true;
-        //    }
-        //}
-
-        //void txtNumber_Leave(object sender, System.EventArgs e)
-        //{
-        //    selectAllDone = false;
-        //}
-
-
     }
 }

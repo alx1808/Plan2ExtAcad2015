@@ -74,20 +74,14 @@ namespace Plan2Ext.Raumnummern
 				Document doc = Application.DocumentManager.MdiActiveDocument;
 
 				using (DocumentLock m_doclock = doc.LockDocument())
-				{
-					var blockOids = new List<ObjectId>();
-					var engine = GetEngine();
+                {
+                    AddNumber(opts);
 
-					Plan2Ext.Globs.LayerOffRegex(new List<string> { "^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$", "^A_BE_HK" });
-					Plan2Ext.Globs.LayerOnAndThawRegex(new List<string> { "^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$" });
-
-					while (engine.AddNumber(blockOids)) { };
-
-					//if (opts.UseHiddenAttribute)
+                    //if (opts.UseHiddenAttribute)
 					//{
 					//    _Engine.DeleteNummerAttribute(blockOids);
 					//}
-				}
+                }
 			}
 			catch (System.Exception ex)
 			{
@@ -95,7 +89,23 @@ namespace Plan2Ext.Raumnummern
 			}
 		}
 
-		//[CommandMethod("Plan2RaumnummerRnOnOff")]
+        private void AddNumber(RnOptions opts)
+        {
+            var blockOids = new List<ObjectId>();
+            var engine = GetEngine();
+
+            Plan2Ext.Globs.LayerOffRegex(new List<string> {"^X", "^A_BM_", "^A_BE_TXT", "^A_BE_HÖHE$", "^A_BE_HK"});
+            Plan2Ext.Globs.LayerOnAndThawRegex(new List<string>
+                {"^" + opts.FlaechenGrenzeLayerName + "$", "^" + opts.AbzFlaechenGrenzeLayerName + "$"});
+
+            while (engine.AddNumber(blockOids))
+            {
+            }
+
+            ;
+        }
+
+        //[CommandMethod("Plan2RaumnummerRnOnOff")]
 		//static public void Plan2RaumnummerRnOnOff()
 		//{
 		//    try
@@ -463,7 +473,8 @@ namespace Plan2Ext.Raumnummern
 
 					PromptEntityResult per = ed.GetEntity("\nTopblock oder Pfeilblock wählen: ");
 					if (per.Status == PromptStatus.OK)
-					{
+                    {
+                        var topWasSet = false;
 						using (var tr = doc.TransactionManager.StartTransaction())
 						{
 							DBObject obj = tr.GetObject(per.ObjectId, OpenMode.ForRead);
@@ -477,7 +488,8 @@ namespace Plan2Ext.Raumnummern
 									if (attribs.TryGetValue(PFEILBLOCK_TOPNR_ATTNAME, out tops))
 									{
 										opts.SetTop(tops);
-									}
+                                        topWasSet = true;
+                                    }
 								}
 								else if (bref.Name == TOPBLOCKNAME)
 								{
@@ -485,11 +497,13 @@ namespace Plan2Ext.Raumnummern
 									if (attribs.TryGetValue(TOPBLOCK_TOPNR_ATTNAME, out tops))
 									{
 										opts.SetTop(tops);
-									}
+                                        topWasSet = true;
+                                    }
 								}
 							}
 							tr.Commit();
 						}
+                        if (topWasSet) AddNumber(opts);
 					}
 				}
 			}
