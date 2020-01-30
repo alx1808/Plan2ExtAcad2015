@@ -48,33 +48,36 @@ namespace Plan2Ext.Raumnummern
         //internal const string HIDDEN_NUMMER_ATT = "INFO";
         internal const string TOP_LAYER_PREFIX = "A_RA_TOP_";
 
-        private readonly Dictionary<string, int> _ColorIndexDict = new Dictionary<string, int>() {
-			{ "1", 141},
-			{ "2", 21},
-			{ "3", 72},
-			{ "4", 50},
-			{ "5", 24},
-			{ "6", 111},
-			{ "7", 11},
-			{ "8", 53},
-			{ "9", 101},
-			{ "0", 31},
-			{ "J", 141},
-			{ "I", 21},
-			{ "H", 72},
-			{ "G", 50},
-			{ "F", 24},
-			{ "E", 111},
-			{ "D", 11},
-			{ "C", 53},
-			{ "B", 101},
-			{ "A", 31},
-		};
+  //      private readonly Dictionary<string, int> _ColorIndexDict = new Dictionary<string, int>() {
+		//	{ "1", 141},
+		//	{ "2", 21},
+		//	{ "3", 72},
+		//	{ "4", 50},
+		//	{ "5", 24},
+		//	{ "6", 111},
+		//	{ "7", 11},
+		//	{ "8", 53},
+		//	{ "9", 101},
+		//	{ "0", 31},
+		//	{ "J", 141},
+		//	{ "I", 21},
+		//	{ "H", 72},
+		//	{ "G", 50},
+		//	{ "F", 24},
+		//	{ "E", 111},
+		//	{ "D", 11},
+		//	{ "C", 53},
+		//	{ "B", 101},
+		//	{ "A", 31},
+		//};
+
+
 
         #endregion
 
         #region Members
         private TransactionManager _TransMan;
+        private HatchColorServer _hatchColorServer;
         private ObjectId _CurrentBlock = ObjectId.Null;
         private ObjectId _LastBlock = ObjectId.Null;
         private Editor _Editor;
@@ -104,7 +107,8 @@ namespace Plan2Ext.Raumnummern
             _engineParameter = engineParameter;
             _RnOptions = null;
 
-            this._RnOptions = engineParameter.Options;
+            _hatchColorServer = new HatchColorServer();
+            _RnOptions = engineParameter.Options;
             Blockname = _RnOptions.Blockname;
             NrAttribname = _RnOptions.Attribname;
             HBlockname = _RnOptions.HBlockname;
@@ -118,14 +122,7 @@ namespace Plan2Ext.Raumnummern
             _TransMan = db.TransactionManager;
             _Editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
 
-            //if (fgRbStructs == null)
-            //    _FgRbStructs = AreaEngine.GetFgRbStructs(this._RnOptions.Blockname, this._RnOptions.FlaechenGrenzeLayerName, this._RnOptions.AbzFlaechenGrenzeLayerName, db);
-            //else
             _FgRbStructs = engineParameter.FgRbs;
-
-            //if (allRaumBlocks == null)
-            //    _AllRaumBlocks = SelectAllRaumblocks(Blockname);
-            //else
             _AllRaumBlocks = engineParameter.AllRaumBlocks;
         }
 
@@ -351,7 +348,7 @@ namespace Plan2Ext.Raumnummern
 
                     if (_RnOptions.AutoCorr)
                     {
-                        CalcBlocksPerTop();
+                        CalcBlocksPerTop(transaction);
                         AutoIncrementHigherNumbers(_RnOptions.Number, transaction);
                     }
 
@@ -367,10 +364,10 @@ namespace Plan2Ext.Raumnummern
                         if (_RnOptions.AutoCorr)
                         {
 
-                            CalcBlocksPerTop();
+                            CalcBlocksPerTop(transaction);
                             string t, g, n;
                             if (GetTopGeschRaumnr(completeNum, out t, out g, out n)) ;
-                            AutoCorrection(t,g, transaction);
+                            AutoCorrection(t, g, transaction);
 
                             // correction old top
                             if (!string.IsNullOrEmpty(oldCompleteNr))
@@ -532,7 +529,7 @@ namespace Plan2Ext.Raumnummern
                     }
 
                     // schraffur
-                    HatchIt(topStruct);
+                    HatchIt(topStruct, transaction);
                 }
                 transaction.Commit();
             }
@@ -675,7 +672,7 @@ namespace Plan2Ext.Raumnummern
                 foreach (var topStruct in topStructs)
                 {
                     SumM2(topStruct, transaction);
-                    HatchIt(topStruct);
+                    HatchIt(topStruct, transaction);
                 }
 
                 transaction.Commit();
@@ -699,7 +696,7 @@ namespace Plan2Ext.Raumnummern
             var fgrbs = _FgRbStructs.Values.Where(x => fgOids.Contains(x.FlaechenGrenze)).ToList();
 
             var topNr = RandomTopNr.NextTopNr; // TOP_PREFIX + "01";
-            using (Transaction myT = _TransMan.StartTransaction())
+            using (Transaction transaction = _TransMan.StartTransaction())
             {
 
                 var fgRbToRemove = new List<AreaEngine.FgRbStructure>();
@@ -720,10 +717,10 @@ namespace Plan2Ext.Raumnummern
                 var topStruct = new TopStructure() { TopNummer = topNr };
                 topStruct.FgRbs = fgrbs;
 
-                HatchIt(topStruct);
-                m2 = GetSumM2FromBlocks(topStruct, myT);
+                HatchIt(topStruct, transaction);
+                m2 = GetSumM2FromBlocks(topStruct, transaction);
 
-                myT.Commit();
+                transaction.Commit();
             }
 
             return true;
@@ -845,92 +842,92 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        internal bool SumTopsOld()
-        {
-            FehlerLinesOnOff(true);
-            DeleteAllFehlerLines();
-            CalcBlocksPerTop(); // berechnet _OidsPerTop
-            var rbsPerTopNr = _OidsPerTop; // keine raumblöcke ohne topname
-            var topBlocks = SelectAllTopBlocks();
-            var fgrbsPerRb = new Dictionary<ObjectId, Plan2Ext.AreaEngine.FgRbStructure>();
-            // FbRb struct enthält die von AreaEngine ermittelte Struktur der Zusammenhänge zwischen Raumblöcken, Flächengrenzen und Abzugsflächen
-            foreach (var fgrb in _FgRbStructs.Values)
-            {
-                if (fgrb.Raumbloecke.Count == 1)
-                {
-                    Plan2Ext.AreaEngine.FgRbStructure testFgRb = null;
-                    var rbOid = fgrb.Raumbloecke[0];
-                    if (fgrbsPerRb.TryGetValue(rbOid, out testFgRb))
-                    {
-                        InsertFehlerLineAt(rbOid, _RB_IN_MULTIPLE_ROOMS);
-                    }
-                    else
-                    {
-                        fgrbsPerRb.Add(rbOid, fgrb);
-                    }
-                }
-                else
-                {
-                    InsertFehlerLineAt(fgrb.FlaechenGrenze, _INVALID_NR_OF_RBS_IN_ROOM);
-                }
-            }
+        //internal bool SumTopsOld()
+        //{
+        //    FehlerLinesOnOff(true);
+        //    DeleteAllFehlerLines();
+        //    CalcBlocksPerTop(); // berechnet _OidsPerTop
+        //    var rbsPerTopNr = _OidsPerTop; // keine raumblöcke ohne topname
+        //    var topBlocks = SelectAllTopBlocks();
+        //    var fgrbsPerRb = new Dictionary<ObjectId, Plan2Ext.AreaEngine.FgRbStructure>();
+        //    // FbRb struct enthält die von AreaEngine ermittelte Struktur der Zusammenhänge zwischen Raumblöcken, Flächengrenzen und Abzugsflächen
+        //    foreach (var fgrb in _FgRbStructs.Values)
+        //    {
+        //        if (fgrb.Raumbloecke.Count == 1)
+        //        {
+        //            Plan2Ext.AreaEngine.FgRbStructure testFgRb = null;
+        //            var rbOid = fgrb.Raumbloecke[0];
+        //            if (fgrbsPerRb.TryGetValue(rbOid, out testFgRb))
+        //            {
+        //                InsertFehlerLineAt(rbOid, _RB_IN_MULTIPLE_ROOMS);
+        //            }
+        //            else
+        //            {
+        //                fgrbsPerRb.Add(rbOid, fgrb);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            InsertFehlerLineAt(fgrb.FlaechenGrenze, _INVALID_NR_OF_RBS_IN_ROOM);
+        //        }
+        //    }
 
-            var topStructs = new List<TopStructure>();
-            var fgRbUsed = new List<Plan2Ext.AreaEngine.FgRbStructure>();
-            using (Transaction myT = _TransMan.StartTransaction())
-            {
-                foreach (var topOid in topBlocks)
-                {
-                    // get topnr
-                    string topNr;
-                    if (!GetCompleteTopNrFromTopBlock(topOid, myT, out topNr)) continue;
-                    topNr = topNr.Replace(" ", ""); // topnr in raumblock hat keine leerzeichen
+        //    var topStructs = new List<TopStructure>();
+        //    var fgRbUsed = new List<Plan2Ext.AreaEngine.FgRbStructure>();
+        //    using (Transaction transaction = _TransMan.StartTransaction())
+        //    {
+        //        foreach (var topOid in topBlocks)
+        //        {
+        //            // get topnr
+        //            string topNr;
+        //            if (!GetCompleteTopNrFromTopBlock(topOid, transaction, out topNr)) continue;
+        //            topNr = topNr.Replace(" ", ""); // topnr in raumblock hat keine leerzeichen
 
-                    List<ObjectId> rbs = null;
-                    if (!rbsPerTopNr.TryGetValue(topNr, out rbs))
-                    {
-                        InsertFehlerLineAt(topOid, _TOP_HAS_NO_RBS);
-                        continue;
-                    }
+        //            List<ObjectId> rbs = null;
+        //            if (!rbsPerTopNr.TryGetValue(topNr, out rbs))
+        //            {
+        //                InsertFehlerLineAt(topOid, _TOP_HAS_NO_RBS);
+        //                continue;
+        //            }
 
-                    var topStruct = new TopStructure() { TopOid = topOid, TopNummer = topNr };
-                    foreach (var rbOid in rbs)
-                    {
-                        Plan2Ext.AreaEngine.FgRbStructure fgrb = null;
-                        if (!fgrbsPerRb.TryGetValue(rbOid, out fgrb))
-                        {
-                            InsertFehlerLineAt(rbOid, _RB_DOES_NOT_BELONG_TO_A_TOP);
-                            continue;
-                        }
-                        topStruct.FgRbs.Add(fgrb);
-                        fgRbUsed.Add(fgrb);
-                    }
+        //            var topStruct = new TopStructure() { TopOid = topOid, TopNummer = topNr };
+        //            foreach (var rbOid in rbs)
+        //            {
+        //                Plan2Ext.AreaEngine.FgRbStructure fgrb = null;
+        //                if (!fgrbsPerRb.TryGetValue(rbOid, out fgrb))
+        //                {
+        //                    InsertFehlerLineAt(rbOid, _RB_DOES_NOT_BELONG_TO_A_TOP);
+        //                    continue;
+        //                }
+        //                topStruct.FgRbs.Add(fgrb);
+        //                fgRbUsed.Add(fgrb);
+        //            }
 
-                    topStructs.Add(topStruct);
-                }
+        //            topStructs.Add(topStruct);
+        //        }
 
-                // mail gh 6.8.2017
-                //beim summieren  werden alle nicht zugeordneten raumpolylinien mit der fehlermeldung :  _raum gehört nicht zum top  markiert.
-                //Bitte fehlermeldung derzeit  nicht berücksichtigen da es eiegentlich immer vorkommt dass allgemeinräume  nicht  zugeordnet sind
-                //foreach (var fgrbStruct in _FgRbStructs.Values)
-                //{
-                //    if (!fgRbUsed.Contains(fgrbStruct))
-                //    {
-                //        InsertFehlerLineAt(fgrbStruct.FlaechenGrenze, _ROOM_DOESNT_BELONG_TO_A_TOP);
-                //    }
-                //}
+        //        // mail gh 6.8.2017
+        //        //beim summieren  werden alle nicht zugeordneten raumpolylinien mit der fehlermeldung :  _raum gehört nicht zum top  markiert.
+        //        //Bitte fehlermeldung derzeit  nicht berücksichtigen da es eiegentlich immer vorkommt dass allgemeinräume  nicht  zugeordnet sind
+        //        //foreach (var fgrbStruct in _FgRbStructs.Values)
+        //        //{
+        //        //    if (!fgRbUsed.Contains(fgrbStruct))
+        //        //    {
+        //        //        InsertFehlerLineAt(fgrbStruct.FlaechenGrenze, _ROOM_DOESNT_BELONG_TO_A_TOP);
+        //        //    }
+        //        //}
 
-                // summieren
-                foreach (var topStruct in topStructs)
-                {
-                    SumM2(topStruct, myT);
-                    HatchIt(topStruct);
-                }
+        //        // summieren
+        //        foreach (var topStruct in topStructs)
+        //        {
+        //            SumM2(topStruct, transaction);
+        //            HatchIt(topStruct, transaction);
+        //        }
 
-                myT.Commit();
-            }
-            return true;
-        }
+        //        transaction.Commit();
+        //    }
+        //    return true;
+        //}
 
         internal bool RemoveRaum()
         {
@@ -953,7 +950,7 @@ namespace Plan2Ext.Raumnummern
                 {
                     oldCompleteNr = GetBlockAttribute(NrAttribname, _CurrentBlock, transaction);
                     SetBlockAttrib(_CurrentBlock, NrAttribname, "", transaction);
-                    
+
                     //SetBlockAttrib(_CurrentBlock, HIDDEN_NUMMER_ATT, "");
 
                     //BlockReference br = _TransMan.GetObject(_CurrentBlock, OpenMode.ForRead) as BlockReference;
@@ -962,7 +959,7 @@ namespace Plan2Ext.Raumnummern
 
                 if (_RnOptions.AutoCorr)
                 {
-                    CalcBlocksPerTop();
+                    CalcBlocksPerTop(transaction);
                     try
                     {
                         // correction old top
@@ -1049,7 +1046,7 @@ namespace Plan2Ext.Raumnummern
 
         #region Topname Handling
 
-        private void CalcBlocksPerTop()
+        private void CalcBlocksPerTop(Transaction transaction)
         {
             // dzt nur mit Separator
             if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
@@ -1058,25 +1055,20 @@ namespace Plan2Ext.Raumnummern
 
             var rblocks = _AllRaumBlocks;
 
-            using (Transaction transaction = _TransMan.StartTransaction())
+            foreach (var oid in rblocks)
             {
-                foreach (var oid in rblocks)
+                string topName = GetTopNameFromRb(oid, transaction);
+                if (string.IsNullOrEmpty(topName)) continue;
+
+                //topNrIncPrefix.Remove(0, TOP_PREFIX.Length).Trim();
+
+                List<ObjectId> oids;
+                if (!_OidsPerTop.TryGetValue(topName, out oids))
                 {
-                    string topName = GetTopNameFromRb(oid, transaction);
-                    if (string.IsNullOrEmpty(topName)) continue;
-
-                    //topNrIncPrefix.Remove(0, TOP_PREFIX.Length).Trim();
-
-                    List<ObjectId> oids;
-                    if (!_OidsPerTop.TryGetValue(topName, out oids))
-                    {
-                        oids = new List<ObjectId>();
-                        _OidsPerTop.Add(topName, oids);
-                    }
-                    oids.Add(oid);
+                    oids = new List<ObjectId>();
+                    _OidsPerTop.Add(topName, oids);
                 }
-
-                transaction.Commit();
+                oids.Add(oid);
             }
         }
 
@@ -1376,13 +1368,13 @@ namespace Plan2Ext.Raumnummern
             return oid;
         }
 
-        private string GetHatchLayer()
-        {
-            var nrStr = _RnOptions.Top.Trim();
-            return GetHatchLayer(nrStr);
-        }
+        //private string GetHatchLayer()
+        //{
+        //    var nrStr = _RnOptions.Top.Trim();
+        //    return GetHatchLayerName(nrStr);
+        //}
 
-        private static string GetHatchLayer(string nrStr)
+        private static string GetHatchLayerName(string nrStr)
         {
             return string.Format(CultureInfo.InvariantCulture, TOP_LAYER_PREFIX + "{0}_F", nrStr);
         }
@@ -1404,27 +1396,27 @@ namespace Plan2Ext.Raumnummern
             return s;
         }
 
-        private int GetHatchColor()
-        {
-            var nrStr = _RnOptions.Top;
-            return GetHatchColor(nrStr);
-        }
+        //private int GetHatchColor()
+        //{
+        //    var nrStr = _RnOptions.Top;
+        //    return GetHatchColor(nrStr);
+        //}
 
-        private int GetHatchColor(string nrStr)
-        {
-            var cArr = nrStr.ToCharArray();
-            for (int i = cArr.Length - 1; i >= 0; i--)
-            {
-                var c = cArr[i].ToString().ToUpperInvariant();
-                int colorIndex;
-                if (_ColorIndexDict.TryGetValue(c, out colorIndex))
-                {
-                    return colorIndex;
-                }
-            }
-            log.WarnFormat(CultureInfo.CurrentCulture, "Keine Farbe gefunden für Top '{0}'!", nrStr);
-            return 7;
-        }
+        //private int GetHatchColor(string nrStr)
+        //{
+        //    var cArr = nrStr.ToCharArray();
+        //    for (int i = cArr.Length - 1; i >= 0; i--)
+        //    {
+        //        var c = cArr[i].ToString().ToUpperInvariant();
+        //        int colorIndex;
+        //        if (_ColorIndexDict.TryGetValue(c, out colorIndex))
+        //        {
+        //            return colorIndex;
+        //        }
+        //    }
+        //    log.WarnFormat(CultureInfo.CurrentCulture, "Keine Farbe gefunden für Top '{0}'!", nrStr);
+        //    return 7;
+        //}
 
         private void SumM2(TopStructure topStruct, Transaction transaction)
         {
@@ -1532,43 +1524,9 @@ namespace Plan2Ext.Raumnummern
 
         private void HatchItAndSetTopToFg(AreaEngine.FgRbStructure fgrb, Transaction transaction)
         {
-            //var topNr = _RnOptions.TopNr.Trim();
-            //var inner = fgrb.Inseln;
-            //inner.AddRange(fgrb.Abzugsflaechen);
-            //int color = GetHatchColor();
-            //string layer = GetHatchLayer();
-            //Plan2Ext.Globs.LayerOnAndThaw(layer);
-            //DeleteOldHatch(fgrb.FlaechenGrenze);
-            //var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, color, _TransMan);
-            //var ids = new ObjectIdCollection();
-            //ids.Add(oid);
-            //Plan2Ext.Globs.DrawOrderBottom(ids);
-            //var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle, oid.Handle));
-            //Plan2Ext.Globs.SetXrecord(fgrb.FlaechenGrenze, XREC_HATCH_OF_RAUM, rb);
-
             SetTopForFg(_RnOptions.Top, fgrb, transaction);
-            //var rb = new ResultBuffer(new TypedValue((int)DxfCode.Text, _RnOptions.Top));
-            //Plan2Ext.Globs.SetXrecord(fgrb.FlaechenGrenze, XREC_TOP_IN_FG, rb, transaction);
             HatchIt(fgrb, transaction);
         }
-
-        //private void HatchIt(AreaEngine.FgRbStructure fgrb)
-        //{
-        //    var topNr = GetTopNr(fgrb);
-        //    if (string.IsNullOrEmpty(topNr)) return;
-        //    var inner = fgrb.Inseln;
-        //    inner.AddRange(fgrb.Abzugsflaechen);
-        //    int color = GetHatchColor(topNr);
-        //    string layer = GetHatchLayer(topNr);
-        //    Plan2Ext.Globs.LayerOnAndThaw(layer);
-        //    DeleteOldHatch(fgrb.FlaechenGrenze);
-        //    var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, color, _TransMan);
-        //    var ids = new ObjectIdCollection();
-        //    ids.Add(oid);
-        //    Plan2Ext.Globs.DrawOrderBottom(ids);
-        //    var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle, oid.Handle));
-        //    Plan2Ext.Globs.SetXrecord(fgrb.FlaechenGrenze, XREC_HATCH_OF_RAUM, rb);
-        //}
 
         private void HatchMany(List<AreaEngine.FgRbStructure> otherFgRbs, Transaction transaction)
         {
@@ -1591,15 +1549,11 @@ namespace Plan2Ext.Raumnummern
             if (string.IsNullOrEmpty(topNr)) return ObjectId.Null;
             var inner = fgrb.Inseln;
             inner.AddRange(fgrb.Abzugsflaechen);
-            int colorIndex = GetHatchColor(topNr);
-            string layer = GetHatchLayer(topNr);
+            DeleteOldHatch(fgrb.FlaechenGrenze, transaction);
+            var layer = GetOrCreateHatchLayer(topNr, transaction);
             bool needsRegen;
             Plan2Ext.Globs.LayerOnAndThaw(layer, true, transaction, _AcAp.Application.DocumentManager.MdiActiveDocument.Database, out needsRegen);
-            DeleteOldHatch(fgrb.FlaechenGrenze, transaction);
-            var color = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByAci, (short)colorIndex);
-            Plan2Ext.Globs.VerifyLayerExists(layer, color);
-            LayerManager.SetLayerColor(layer, color);
-            var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, _TransMan);
+            var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, transaction);
             if (drawOrder)
             {
                 var ids = new ObjectIdCollection();
@@ -1612,20 +1566,19 @@ namespace Plan2Ext.Raumnummern
         }
 
 
-        private void HatchIt(TopStructure top)
+        /// <summary>
+        /// Create Hatch for comple Top e.g. multiple outer borders.
+        /// </summary>
+        /// <param name="top"></param>
+        /// <param name="transaction"></param>
+        private void HatchIt(TopStructure top, Transaction transaction)
         {
             if (top == null || top.FgRbs == null) return;
-            int colorIndex = GetHatchColor(top.TopNummer);
-            var color = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByAci, (short)colorIndex);
-            //_AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor();
-            //col.ColorIndex = (_AcIntCom.AcColor)color;
             string nrStr = (top.TopOid.IsNull) ? top.TopNummer : GetTopNr(top);
-            string layer = GetHatchLayer(nrStr);
-            Plan2Ext.Globs.VerifyLayerExists(layer, color);
-            LayerManager.SetLayerColor(layer, color);
-            Plan2Ext.Globs.LayerOnAndThaw(layer);
+            var layer = GetOrCreateHatchLayer(nrStr, transaction);
+            bool needsRegen;
+            Plan2Ext.Globs.LayerOnAndThaw(layer, true, transaction, _AcAp.Application.DocumentManager.MdiActiveDocument.Database, out needsRegen);
             var outerInner = new Dictionary<ObjectId, List<ObjectId>>();
-
             foreach (var fg in top.FgRbs)
             {
                 var inner = new List<ObjectId>();
@@ -1635,7 +1588,7 @@ namespace Plan2Ext.Raumnummern
                 outerInner.Add(fg.FlaechenGrenze, inner);
             }
 
-            var oid = Plan2Ext.Globs.HatchPoly(outerInner, layer, null, _TransMan);
+            var oid = Plan2Ext.Globs.HatchPoly(outerInner, layer, null, transaction);
             var ids = new ObjectIdCollection();
             ids.Add(oid);
             Plan2Ext.Globs.DrawOrderBottom(ids);
@@ -1644,6 +1597,21 @@ namespace Plan2Ext.Raumnummern
             {
                 Plan2Ext.Globs.SetXrecord(fg.FlaechenGrenze, XREC_HATCH_OF_RAUM, rb);
             }
+        }
+
+        private string GetOrCreateHatchLayer(string topNr, Transaction transaction)
+        {
+            string layer = GetHatchLayerName(topNr);
+            var db = _AcAp.Application.DocumentManager.MdiActiveDocument.Database;
+            if (!LayerManager.LayerExists(layer, transaction, db))
+            {
+                int colorIndex = _hatchColorServer.CurrentHatchColor;
+                var color = _AcCm.Color.FromColorIndex(_AcCm.ColorMethod.ByAci, (short)colorIndex);
+                LayerManager.VerifyLayerExists(layer, color, transaction, db);
+                _hatchColorServer.IncrementHatchColor();
+            }
+
+            return layer;
         }
 
         private string GetTopNr(TopStructure top)
@@ -1655,8 +1623,6 @@ namespace Plan2Ext.Raumnummern
         {
             foreach (var oid in list)
             {
-            oid:
-
                 if (!set.Contains(oid)) set.Add(oid);
             }
         }
@@ -2045,7 +2011,8 @@ namespace Plan2Ext.Raumnummern
             // dzt nur mit Separator
             if (string.IsNullOrEmpty(_RnOptions.Separator)) return;
 
-            List<ObjectId> oids = _OidsPerTop[topName];
+            List<ObjectId> oids;
+            if (!_OidsPerTop.TryGetValue(topName, out oids)) return;
             var oidsinfo = GetOidsinfos(transaction, oids, thegeschoss);
 
             var sorted = oidsinfo.OrderBy(x => x.Nr).ToArray();

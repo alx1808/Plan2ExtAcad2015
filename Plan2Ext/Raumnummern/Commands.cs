@@ -281,7 +281,7 @@ namespace Plan2Ext.Raumnummern
 
 				var blockLayer = "A_RA_NUMMER";
 
-				Plan2Ext.Globs.VerifyLayerExists(blockLayer, null);
+				LayerManager.VerifyLayerExists(blockLayer, null);
 				Plan2Ext.Globs.SetLayerCurrent(blockLayer);
 
 				if (!BlockManager.BlockExists(PFEILBLOCKNAME))

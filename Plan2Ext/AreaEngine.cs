@@ -263,23 +263,23 @@ namespace Plan2Ext
             private const int AcPatternType = 0;
             #endregion
 
-            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcDb.TransactionManager tm)
+            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcDb.Transaction transaction)
             {
-                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, null, tm);
+                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, null, transaction);
             }
 
-            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int colorIndex, _AcDb.TransactionManager tm)
-            {
-                _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
-                col.ColorIndex = (_AcIntCom.AcColor)colorIndex;
-                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, col, tm);
-            }
-            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int red, int green, int blue, _AcDb.TransactionManager tm)
-            {
-                _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
-                col.SetRGB(red, green, blue);
-                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, col, tm);
-            }
+            //public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int colorIndex, _AcDb.TransactionManager tm)
+            //{
+            //    _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
+            //    col.ColorIndex = (_AcIntCom.AcColor)colorIndex;
+            //    return Plan2Ext.Globs.HatchPoly(oid, inner, layer, col, tm);
+            //}
+            //public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int red, int green, int blue, _AcDb.TransactionManager tm)
+            //{
+            //    _AcIntCom.AcadAcCmColor col = new _AcIntCom.AcadAcCmColor(); // app.GetInterfaceObject(COLOROBJECTPROGID) as AcadAcCmColor;
+            //    col.SetRGB(red, green, blue);
+            //    return Plan2Ext.Globs.HatchPoly(oid, inner, layer, col, tm);
+            //}
         }
 
         internal static Dictionary<_AcDb.ObjectId, FgRbStructure> GetFgRbStructs(string rbName, string fgLayer, string afLayer, _AcDb.Database db)

@@ -12,6 +12,7 @@ using Bricscad.ApplicationServices;
 using Autodesk.AutoCAD.ApplicationServices.Core;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+// ReSharper disable CommentTypo
 #endif
 
 
@@ -180,6 +181,69 @@ namespace Plan2Ext
                 }
                 transaction.Commit();
             }
+        }
+
+        /// <summary>
+        /// Creates Layer with color col, if it doesn't exist yet. Returns true, if layer already existed otherwise false.
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <param name="col"></param>
+        /// <returns>True, if layer already existed otherwise false.</returns>
+        internal static bool VerifyLayerExists(string layerName, Color col)
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            bool hasLayer;
+            using (Transaction transaction = db.TransactionManager.StartTransaction())
+            {
+                hasLayer = VerifyLayerExists(layerName, col, transaction, db);
+                transaction.Commit();
+            }
+
+            return hasLayer;
+        }
+
+        internal static bool VerifyLayerExists(string layerName, Color col, Transaction transaction, Database db)
+        {
+            LayerTable lt = (LayerTable) transaction.GetObject(db.LayerTableId, OpenMode.ForRead);
+
+            SymbolUtilityServices.ValidateSymbolName(layerName, false);
+
+            if (lt.Has(layerName)) return true;
+
+            LayerTableRecord ltr = new LayerTableRecord {Name = layerName};
+            if (col != null)
+            {
+                ltr.Color = col;
+            }
+
+            lt.UpgradeOpen();
+            lt.Add(ltr);
+            transaction.AddNewlyCreatedDBObject(ltr, true);
+
+
+            return false;
+        }
+
+        internal static bool LayerExists(string layerName)
+        {
+            bool hasLayer;
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var transaction = db.TransactionManager.StartTransaction())
+            {
+                hasLayer = LayerExists(layerName, transaction, db);
+                transaction.Commit();
+            }
+
+            return hasLayer;
+        }
+
+        internal static bool LayerExists(string layerName, Transaction transaction, Database db)
+        {
+            var lt = (LayerTable) transaction.GetObject(db.LayerTableId, OpenMode.ForRead);
+            var hasLayer = lt.Has(layerName);
+            return hasLayer;
         }
     }
 }

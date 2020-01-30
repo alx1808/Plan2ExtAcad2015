@@ -178,6 +178,7 @@
     <Compile Include="Raumnummern\EngineParameter.cs" />
     <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\Globs.cs" />
+    <Compile Include="Raumnummern\HatchColorServer.cs" />
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
     <Compile Include="Raumnummern\RnControl.cs">
       <SubType>UserControl</SubType>

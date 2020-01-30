@@ -1835,49 +1835,6 @@ namespace Plan2Ext
             return ok;
         }
 
-        internal static bool LayerExists(string layerName)
-        {
-            bool hasLayer;
-            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-            _AcDb.Database db = doc.Database;
-            using (var transaction = db.TransactionManager.StartTransaction())
-            {
-                var lt = (_AcDb.LayerTable)transaction.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
-                hasLayer = lt.Has(layerName);
-                transaction.Commit();
-            }
-
-            return hasLayer;
-        }
-
-        internal static void VerifyLayerExists(string layerName, _AcCm.Color col)
-        {
-            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-            _AcDb.Database db = doc.Database;
-            _AcEd.Editor ed = doc.Editor;
-            using (_AcDb.Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                _AcDb.LayerTable lt = (_AcDb.LayerTable)tr.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
-
-                _AcDb.SymbolUtilityServices.ValidateSymbolName(layerName, false);
-
-                if (lt.Has(layerName)) return;
-
-                _AcDb.LayerTableRecord ltr = new _AcDb.LayerTableRecord();
-                ltr.Name = layerName;
-                if (col != null)
-                {
-                    ltr.Color = col;
-                }
-
-                lt.UpgradeOpen();
-                _AcDb.ObjectId ltId = lt.Add(ltr);
-                tr.AddNewlyCreatedDBObject(ltr, true);
-
-                tr.Commit();
-            }
-
-        }
         internal static _AcDb.Hatch CreateHatch(List<_AcDb.ObjectId> outerIds, List<_AcDb.ObjectId> innerIds, string layer, _AcDb.BlockTableRecord btr, _AcDb.Transaction transaction)
         {
             string patternName = "_SOLID";
@@ -1909,7 +1866,7 @@ namespace Plan2Ext
 
         internal static void HatchPoly(_AcDb.ObjectId oid, string layer, _AcCm.Color layerCol)
         {
-            VerifyLayerExists(layer, layerCol);
+            LayerManager.VerifyLayerExists(layer, layerCol);
 
             _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcDb.Database db = doc.Database;
@@ -1943,7 +1900,7 @@ namespace Plan2Ext
             }
         }
 
-        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId, List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
+        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId, List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.Transaction transaction)
         {
             string patternName = "_SOLID";
             bool bAssociativity = false;
@@ -1958,8 +1915,8 @@ namespace Plan2Ext
             {
                 var oid = kvp.Key;
                 var inner = kvp.Value;
-                _AcIntCom.AcadEntity oCopiedPoly = CopyPoly(oid, tm);
-                List<_AcIntCom.AcadEntity> innerPolys = inner.Select(x => CopyPoly(x, tm)).ToList();
+                _AcIntCom.AcadEntity oCopiedPoly = CopyPoly(oid, transaction);
+                List<_AcIntCom.AcadEntity> innerPolys = inner.Select(x => CopyPoly(x, transaction)).ToList();
                 polysToDelete.Add(oCopiedPoly);
                 polysToDelete.AddRange(innerPolys);
 
@@ -1995,7 +1952,7 @@ namespace Plan2Ext
             return new _AcDb.ObjectId((IntPtr)hatchObj.ObjectID);
         }
 
-        internal static _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.TransactionManager tm)
+        internal static _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.Transaction tm)
         {
             string patternName = "_SOLID";
             bool bAssociativity = false;
@@ -2038,9 +1995,9 @@ namespace Plan2Ext
             return new _AcDb.ObjectId((IntPtr)hatchObj.ObjectID);
         }
 
-        private static _AcIntCom.AcadEntity CopyPoly(_AcDb.ObjectId oid, _AcDb.TransactionManager tm)
+        private static _AcIntCom.AcadEntity CopyPoly(_AcDb.ObjectId oid, _AcDb.Transaction transaction)
         {
-            _AcIntCom.AcadEntity oPoly = Globs.ObjectIdToAcadEntity(oid, tm);
+            _AcIntCom.AcadEntity oPoly = Globs.ObjectIdToAcadEntity(oid, transaction);
             _AcIntCom.AcadEntity oCopiedPoly = null;
             if (oPoly is _AcIntCom.AcadPolyline)
             {
@@ -3048,6 +3005,12 @@ namespace Plan2Ext
         internal static _AcIntCom.AcadEntity ObjectIdToAcadEntity(_AcDb.ObjectId objectId, _AcDb.TransactionManager tm)
         {
             using (_AcDb.Entity ent = (_AcDb.Entity)tm.GetObject(objectId, _AcDb.OpenMode.ForRead, false))
+                return ent.AcadObject as _AcIntCom.AcadEntity;
+        }
+
+        internal static _AcIntCom.AcadEntity ObjectIdToAcadEntity(_AcDb.ObjectId objectId, _AcDb.Transaction transaction)
+        {
+            using (_AcDb.Entity ent = (_AcDb.Entity)transaction.GetObject(objectId, _AcDb.OpenMode.ForRead, false))
                 return ent.AcadObject as _AcIntCom.AcadEntity;
         }
 
