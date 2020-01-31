@@ -275,7 +275,7 @@ namespace Plan2Ext
                 _AcDb.Database db = doc.Database;
                 _AcEd.Editor ed = doc.Editor;
                 _AcDb.TransactionManager tm = db.TransactionManager;
-                using (_AcDb.Transaction myT = tm.StartTransaction())
+                using (_AcDb.Transaction transaction = tm.StartTransaction())
                 {
                     int attsNotFound = 0;
                     for (int i = 0; i < _FlaechenGrenzen.Count; i++)
@@ -329,15 +329,19 @@ namespace Plan2Ext
                         else if (rbAnz > 1)
                         {
                             log.WarnFormat("Mehr als ein Raumblock in Flächengrenze {0}!", elFG.Handle.ToString());
-                            FehlerLineOrHatchPoly(elFG, _InvalidNrRb, 255, 0, 0, tm, Globs.GetMiddlePoint(elFG));
+                            foreach (var objectId in ssRB)
+                            {
+                                FehlerLineOrHatchPoly(elFG, _InvalidNrRb, 255, 0, 0, tm, Globs.GetInsertPoint(objectId));
+                            }
+                            //FehlerLineOrHatchPoly(elFG, _InvalidNrRb, 255, 0, 0, tm, Globs.GetMiddlePoint(elFG));
                             if (!errorList.Contains(AktFlaecheErrorType.MoreThanOneRaumBlock)) errorList.Add(AktFlaecheErrorType.MoreThanOneRaumBlock);
                             fehlerMehrRb++;
                         }
                         else
                         {
                             bool Differs = false;
-                            var blockRef = myT.GetObject(ssRB[0], _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
-                            var attRefs = Globs.GetAttributEntities(blockRef, myT);
+                            var blockRef = transaction.GetObject(ssRB[0], _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+                            var attRefs = Globs.GetAttributEntities(blockRef, transaction);
                             bool m2AttFound = false;
                             foreach (var attRef in attRefs)
                             {
@@ -417,7 +421,7 @@ namespace Plan2Ext
                         if (!automated) _AcAp.Application.ShowAlertDialog(msg);
                     }
 
-                    myT.Commit();
+                    transaction.Commit();
                 }
             }
             finally

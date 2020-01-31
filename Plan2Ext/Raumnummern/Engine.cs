@@ -1557,8 +1557,10 @@ namespace Plan2Ext.Raumnummern
         {
             var topNr = GetTopNr(fgrb, transaction);
             if (string.IsNullOrEmpty(topNr)) return ObjectId.Null;
-            var inner = fgrb.Inseln;
-            inner.AddRange(fgrb.Abzugsflaechen);
+            var inner = new List<ObjectId>();
+            GetInnerPolysForHatchit(fgrb.FlaechenGrenze, fgrb.Inseln, fgrb.Abzugsflaechen, inner, transaction);
+            //var inner = fgrb.Inseln;
+            //inner.AddRange(fgrb.Abzugsflaechen);
             DeleteOldHatch(fgrb.FlaechenGrenze, transaction);
             var layer = GetOrCreateHatchLayer(topNr, transaction);
             bool needsRegen;
@@ -1592,8 +1594,9 @@ namespace Plan2Ext.Raumnummern
             foreach (var fg in top.FgRbs)
             {
                 var inner = new List<ObjectId>();
-                AddToSet(inner, fg.Inseln);
-                AddToSet(inner, fg.Abzugsflaechen);
+                GetInnerPolysForHatchit(fg.FlaechenGrenze, fg.Inseln, fg.Abzugsflaechen, inner, transaction);
+                //AddToSet(inner, fg.Inseln);
+                //AddToSet(inner, fg.Abzugsflaechen);
                 DeleteOldHatch(fg.FlaechenGrenze);
                 outerInner.Add(fg.FlaechenGrenze, inner);
             }
@@ -1612,6 +1615,119 @@ namespace Plan2Ext.Raumnummern
 
             return oid;
         }
+
+        private void GetInnerPolysForHatchit(ObjectId outerBoundary, List<ObjectId> innerboundaries, List<ObjectId> abzugsflaechen, List<ObjectId> inner, Transaction transaction)
+        {
+
+	        var allInner = new List<ObjectId>();
+			allInner.AddRange(innerboundaries);
+			allInner.AddRange(abzugsflaechen);
+			if (allInner.Count == 0) return;
+
+            var notErasedInnerBoundaries = allInner.Where(x => !x.IsErased);
+            
+            List<ObjectId> inseln2 = new List<ObjectId>();
+            foreach (var oid in notErasedInnerBoundaries)
+            {
+                if (!PolyInPoly(transaction, oid, outerBoundary))
+                {
+                    log.DebugFormat("Vermeintliche Abzugsfläche {0} ist nicht innerhalb der Flächengrenze", oid.Handle.ToString());
+                    continue;
+                }
+
+                inseln2.Add(oid);
+            }
+
+            List<ObjectId> inseln3 = new List<ObjectId>();
+            for (int i = 0; i < inseln2.Count; i++)
+            {
+                ObjectId oid = inseln2[i];
+                bool inOtherAf = false;
+                for (int j = 0; j < inseln2.Count; j++)
+                {
+                    ObjectId compOid = inseln2[j];
+                    if (i == j) continue;
+                    if (PolyInPoly(transaction, oid, compOid))
+                    {
+                        //log.DebugFormat("Abzugsfläche {0} ist innerhalb anderer Abzugsfläche {1}.", oid.Handle.ToString(), compOid.Handle.ToString());
+                        inOtherAf = true;
+                        break;
+                    }
+
+                }
+                if (!inOtherAf) inseln3.Add(oid);
+            }
+
+            inner.AddRange(inseln3);
+        }
+
+        private static bool PolyInPoly(Transaction transaction, ObjectId oid, ObjectId elFG)
+        {
+            using (DBObject pEntity = transaction.GetObject(oid, OpenMode.ForRead, false))
+            {
+                using (DBObject pElFG = transaction.GetObject(elFG, OpenMode.ForRead, false))
+                {
+
+                    if (pEntity is Polyline2d)
+                    {
+                        Polyline2d oldPolyline = (Polyline2d)pEntity;
+                        foreach (ObjectId Vertex2d in oldPolyline)
+                        {
+                            using (DBObject dbobj = transaction.GetObject(Vertex2d, OpenMode.ForRead, false))
+                            {
+                                Vertex2d vertex = dbobj as Vertex2d;
+
+                                if (vertex == null)
+                                {
+                                    string msg = string.Format(CultureInfo.CurrentCulture, "Polylinie {0} gibt falsches Objekt {1} als Vertex zurück.", oldPolyline.Handle.ToString(), dbobj.GetType().ToString());
+                                    throw new InvalidOperationException(string.Format(msg));
+                                }
+
+                                Point3d vertexPoint = oldPolyline.VertexPosition(vertex);
+                                if (!AreaEngine.InPoly(vertexPoint, (Entity)pElFG)) return false;
+
+                            }
+                        }
+                        return true;
+                    }
+                    else if (pEntity is Polyline3d)
+                    {
+                        Polyline3d poly3d = (Polyline3d)pEntity;
+                        foreach (ObjectId Vertex3d in poly3d)
+                        {
+                            using (DBObject dbobj = transaction.GetObject(Vertex3d, OpenMode.ForRead, false))
+                            {
+                                PolylineVertex3d vertex = dbobj as PolylineVertex3d;
+
+                                if (vertex == null)
+                                {
+                                    string msg = string.Format(CultureInfo.CurrentCulture, "3D-Polylinie {0} gibt falsches Objekt {1} als Vertex zurück.", poly3d.Handle.ToString(), dbobj.GetType().ToString());
+                                    throw new InvalidOperationException(string.Format(msg));
+                                }
+
+                                Point3d vertexPoint = vertex.Position;
+                                if (!AreaEngine.InPoly(vertexPoint, (Entity)pElFG)) return false;
+
+                            }
+                        }
+                        return true;
+                    }
+                    else if (pEntity is Polyline)
+                    {
+                        Polyline poly = pEntity as Polyline;
+                        for (int i = 0; i < poly.NumberOfVertices; i++)
+                        {
+                            Point3d vertexPoint = poly.GetPoint3dAt(i);
+                            if (!AreaEngine.InPoly(vertexPoint, (Entity)pElFG)) return false;
+
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
 
         private string GetOrCreateHatchLayer(string topNr, Transaction transaction)
         {
@@ -1740,6 +1856,8 @@ namespace Plan2Ext.Raumnummern
 
         private string GetBlockAttribute(string attName, ObjectId block, Transaction transaction)
         {
+			if (block == ObjectId.Null || block.IsErased) return string.Empty;
+
             BlockReference blockEnt = transaction.GetObject(block, OpenMode.ForRead) as BlockReference;
             if (blockEnt != null)
             {
@@ -2249,7 +2367,7 @@ namespace Plan2Ext.Raumnummern
         }
         private void InsertFehlerLineAt(ObjectId oid, string fehler)
         {
-            var position = GetInsertPoint(oid);
+            var position = Plan2Ext.Globs.GetInsertPoint(oid);
             if (position == null) return;
 
             List<Point3d> points = new List<Point3d>() { position.Value };
@@ -2281,33 +2399,33 @@ namespace Plan2Ext.Raumnummern
             }
         }
 
-        private Point3d? GetInsertPoint(ObjectId oid)
-        {
-            Point3d? position = null;
-            using (var trans = _TransMan.StartTransaction())
-            {
-                var obj = trans.GetObject(oid, OpenMode.ForRead);
-                var rb = obj as BlockReference;
-                if (rb != null)
-                {
-                    position = rb.Position;
-                }
-                else
-                {
-                    var poly = obj as Polyline;
-                    if (poly != null)
-                    {
-                        position = poly.GetPointAtDist(0.0);
-                    }
-                    else
-                    {
-                        log.WarnFormat(CultureInfo.CurrentCulture, "Kein Einfügepunkt für Element vom Typ '{0}'!", obj.GetType().Name);
-                    }
-                }
-                trans.Commit();
-            }
-            return position;
-        }
+        //private Point3d? GetInsertPoint(ObjectId oid)
+        //{
+        //    Point3d? position = null;
+        //    using (var trans = _TransMan.StartTransaction())
+        //    {
+        //        var obj = trans.GetObject(oid, OpenMode.ForRead);
+        //        var rb = obj as BlockReference;
+        //        if (rb != null)
+        //        {
+        //            position = rb.Position;
+        //        }
+        //        else
+        //        {
+        //            var poly = obj as Polyline;
+        //            if (poly != null)
+        //            {
+        //                position = poly.GetPointAtDist(0.0);
+        //            }
+        //            else
+        //            {
+        //                log.WarnFormat(CultureInfo.CurrentCulture, "Kein Einfügepunkt für Element vom Typ '{0}'!", obj.GetType().Name);
+        //            }
+        //        }
+        //        trans.Commit();
+        //    }
+        //    return position;
+        //}
         #endregion
     }
 }

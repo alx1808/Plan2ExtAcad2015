@@ -561,7 +561,7 @@ namespace Plan2Ext
             {
                 ent.UpgradeOpen();
                 if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) ent.CreateExtensionDictionary();
-                _AcDb.DBDictionary xDict = (_AcDb.DBDictionary) tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
+                _AcDb.DBDictionary xDict = (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForWrite);
                 _AcDb.Xrecord xRec = new _AcDb.Xrecord();
                 xRec.Data = resbuf;
                 xDict.SetAt(key, xRec);
@@ -593,10 +593,10 @@ namespace Plan2Ext
                 {
                     if (ent.ExtensionDictionary == default(_AcDb.ObjectId)) return null;
                     _AcDb.DBDictionary xDict =
-                        (_AcDb.DBDictionary) tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForRead, false);
+                        (_AcDb.DBDictionary)tr.GetObject(ent.ExtensionDictionary, _AcDb.OpenMode.ForRead, false);
                     var keyOid = xDict.GetAt(key);
                     if (keyOid.IsErased) return null;
-					xRec = (_AcDb.Xrecord) tr.GetObject(keyOid, _AcDb.OpenMode.ForRead, false);
+                    xRec = (_AcDb.Xrecord)tr.GetObject(keyOid, _AcDb.OpenMode.ForRead, false);
                     return xRec.Data;
                 }
                 catch
@@ -655,7 +655,7 @@ namespace Plan2Ext
             var ul = PolarPoints(left, Math.PI * 0.5 + ang, distance);
             var lr = PolarPoints(right, Math.PI * 1.5 + ang, distance);
             var ur = PolarPoints(right, Math.PI * 0.5 + ang, distance);
-            var wcsPoints = new [] {ll,ul,ur, lr};
+            var wcsPoints = new[] { ll, ul, ur, lr };
             return new _AcGe.Point3dCollection(wcsPoints.Select(TransWcsUcs).ToArray());
         }
 
@@ -1347,11 +1347,11 @@ namespace Plan2Ext
 
         private static void DrawOrderBottom(_AcDb.ObjectIdCollection ids, _AcDb.Database db, _AcDb.Transaction tr)
         {
-            _AcDb.BlockTable bt = (_AcDb.BlockTable) tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
+            _AcDb.BlockTable bt = (_AcDb.BlockTable)tr.GetObject(db.BlockTableId, _AcDb.OpenMode.ForRead);
             _AcDb.BlockTableRecord btr =
-                (_AcDb.BlockTableRecord) tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
+                (_AcDb.BlockTableRecord)tr.GetObject(bt[_AcDb.BlockTableRecord.ModelSpace], _AcDb.OpenMode.ForRead);
 
-            var dot = (_AcDb.DrawOrderTable) tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
+            var dot = (_AcDb.DrawOrderTable)tr.GetObject(btr.DrawOrderTableId, _AcDb.OpenMode.ForWrite);
             dot.MoveToBottom(ids);
         }
 
@@ -1962,7 +1962,7 @@ namespace Plan2Ext
 
             //' Create the non associative Hatch object in model space
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
-			var hatchObj = app.ActiveDocument.ModelSpace.AddHatch((int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined , patternName, bAssociativity, 0);
+            var hatchObj = app.ActiveDocument.ModelSpace.AddHatch((int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined, patternName, bAssociativity, 0);
             if (col != null)
                 hatchObj.TrueColor = col;
             _AcIntCom.AcadEntity[] outerLoop = new _AcIntCom.AcadEntity[] { oCopiedPoly };
@@ -2025,7 +2025,7 @@ namespace Plan2Ext
             Globs.CreateLayer(layerName);
             oCopiedPoly.Layer = layerName;
 
-		}
+        }
 
         internal static IEnumerable<_AcDb.ObjectId> GeneratePolylinesFromHatches(_AcDb.ObjectId[] hatches)
         {
@@ -2033,9 +2033,9 @@ namespace Plan2Ext
             foreach (var hatchOid in hatches)
             {
                 var lastOid = EditorHelper.Entlast();
-                Globs.CallCommand(new object[] {"_.hatchedit", hatchOid, "_B", "_P", "_N"});
-				//_AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Command("_.hatchedit", hatchOid, "_B", "_P", "_N");
-		var polylineObjectId = EditorHelper.Entlast();
+                Globs.CallCommand(new object[] { "_.hatchedit", hatchOid, "_B", "_P", "_N" });
+                //_AcAp.Application.DocumentManager.MdiActiveDocument.Editor.Command("_.hatchedit", hatchOid, "_B", "_P", "_N");
+                var polylineObjectId = EditorHelper.Entlast();
                 var newEntityCreated = (lastOid != polylineObjectId);
                 if (newEntityCreated)
                 {
@@ -2047,7 +2047,7 @@ namespace Plan2Ext
         }
 
 
-		internal static void AddFehlerBlock()
+        internal static void AddFehlerBlock()
         {
             if (BlockManager.BlockExists(FEHLERBLOCKNAME)) return;
 
@@ -2230,6 +2230,49 @@ namespace Plan2Ext
             }
 
             return ret;
+        }
+
+        /// <summary>
+        /// Get Insert Point from BlockReference  or Polyline
+        /// </summary>
+        /// <param name="oid"></param>
+        /// <returns></returns>
+        public static _AcGe.Point3d? GetInsertPoint(_AcDb.ObjectId oid)
+        {
+            _AcGe.Point3d? position = null;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                position = GetInsertPoint(oid, position, trans);
+                trans.Commit();
+            }
+            return position;
+        }
+
+        public static _AcGe.Point3d? GetInsertPoint(_AcDb.ObjectId oid, _AcGe.Point3d? position, _AcDb.Transaction trans)
+        {
+            var obj = trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+            var rb = obj as _AcDb.BlockReference;
+            if (rb != null)
+            {
+                position = rb.Position;
+            }
+            else
+            {
+                var poly = obj as _AcDb.Polyline;
+                if (poly != null)
+                {
+                    position = poly.GetPointAtDist(0.0);
+                }
+                else
+                {
+                    log.WarnFormat(CultureInfo.CurrentCulture, "Kein Einfügepunkt für Element vom Typ '{0}'!",
+                        obj.GetType().Name);
+                }
+            }
+
+            return position;
         }
 
         // doesn't work with acad12 and acad13 (no AreaProperties)

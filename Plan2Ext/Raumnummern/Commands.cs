@@ -232,11 +232,11 @@ namespace Plan2Ext.Raumnummern
 				using (DocumentLock m_doclock = doc.LockDocument())
 				{
 					// zuerst fläche rechnen
-					//Plan2Ext.Flaeche.Modify = true;
-					//Plan2Ext.Flaeche.AktFlaeche(
-					//    Application.DocumentManager.MdiActiveDocument,
-					//    opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
-					//    );
+                    //Plan2Ext.Flaeche.Modify = true;
+                    //Plan2Ext.Flaeche.AktFlaeche(
+                    //    Application.DocumentManager.MdiActiveDocument,
+                    //    opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
+                    //    );
 
 					Plan2Ext.Globs.LayerOnAndThawRegex(new List<string>
 					{
@@ -247,7 +247,7 @@ namespace Plan2Ext.Raumnummern
 					var engine = GetEngine();
 
 					// danach regions etc. bereinig
-					//Plan2Ext.Flaeche.BereinigRegions(automated: false);
+                    //Plan2Ext.Flaeche.BereinigRegions(automated: false);
 					//_Engine.BereinigFehlerlinien();
 
 					engine.SumTops();
