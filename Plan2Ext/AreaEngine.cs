@@ -63,7 +63,8 @@ namespace Plan2Ext
         #endregion
 
         #region Internal
-        internal bool SelectFgAndRb(List<_AcDb.ObjectId> flaechenGrenzen, List<_AcDb.ObjectId> raumBloecke, string fgLayer, string rbName, bool selectAll=false)
+        internal bool SelectFgAndRb(List<_AcDb.ObjectId> flaechenGrenzen, List<_AcDb.ObjectId> raumBloecke,
+	        string fgLayer, string rbName, bool selectAll = false)
         {
             flaechenGrenzen.Clear();
             raumBloecke.Clear();

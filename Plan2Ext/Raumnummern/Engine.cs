@@ -384,8 +384,7 @@ namespace Plan2Ext.Raumnummern
                         {
                             string geschoss, nr;
                             Globs.GetGeschossAndNr(newNr, out geschoss, out nr);
-                            int i = int.Parse(nr);
-                            i++;
+                            var i = int.Parse(nr);
                             List<ObjectId> oids;
                             if (_OidsPerTop.TryGetValue(_RnOptions.Top, out oids))
                             {
@@ -587,7 +586,20 @@ namespace Plan2Ext.Raumnummern
             if (fgOids.Count == 0 || rbOids.Count == 0) return true;
             var fgRbStructValues = _FgRbStructs.Values.Where(x => fgOids.Contains(x.FlaechenGrenze)).ToArray();
 
-            using (Transaction transaction = _TransMan.StartTransaction())
+			// flaeche rechnen
+            Plan2Ext.Flaeche.Modify = true;
+            Plan2Ext.Flaeche.AktFlaeche(
+	            _AcAp.Application.DocumentManager.MdiActiveDocument,
+	            _RnOptions.Blockname,
+	            _RnOptions.FlaechenAttributName,
+	            _RnOptions.UmfangAttributName,
+	            _RnOptions.FlaechenGrenzeLayerName,
+	            _RnOptions.AbzFlaechenGrenzeLayerName,
+	            fgRbStructValues
+            );
+            Plan2Ext.Flaeche.BereinigRegions(automated: false);
+
+			using (Transaction transaction = _TransMan.StartTransaction())
             {
                 var allTopNrs = new HashSet<string>();
 
