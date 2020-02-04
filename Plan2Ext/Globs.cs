@@ -73,7 +73,7 @@ namespace Plan2Ext
 			{"Hatch", "Schraffur"},
 			{"Line", "Linie"},
 			{"MText", "M-Text"},
-			{"MLine", "M-Linie"},
+			{"Mline", "M-Linie"},
 			{"Polyline", "Polylinie"},
 			{"Polyline2d", "2D-Polylinie"},
 			{"Polyline3d", "3D-Polylinie"},
@@ -86,6 +86,31 @@ namespace Plan2Ext
 			{"AttributeDefinition", "Attributdefinition"},
 			{"Wipeout", "Abdecken"},
 		};
+
+        // die deutsche Bezeichnung darf keine Leerzeichen haben, sonst kann sie nicht als Keyword verwendet werden.
+        internal static Dictionary<string, string> GermanNameForTypeNameForKeyword = new Dictionary<string, string>()
+        {
+            {"Arc", "BOgen"},
+            {"BlockReference", "BLockreferenz"},
+            {"Circle", "Kreis"},
+            {"DBPoint", "Punkt"},
+            {"DBText", "Text"},
+            {"Hatch", "Schraffur"},
+            {"Line", "Linie"},
+            {"MText", "M-Text"},
+            {"Mline", "M-Linie"},
+            {"Polyline", "Polylinie"},
+            {"Polyline2d", "2D-Polylinie"},
+            {"Polyline3d", "3D-Polylinie"},
+            {"RotatedDimension", "GedrehteBemaßung"},
+            {"AlignedDimension", "AusgerichteteBemaßung"},
+            {"MLeader", "MUltiführungslinie"},
+            {"RasterImage", "Pixelbild"},
+            {"LineAngularDimension2", "Winkelbemaßung"},
+            {"DiametricDimension", "DiametralBemaßung"},
+            {"AttributeDefinition", "ATtributdefinition"},
+            {"Wipeout", "ABdecken"},
+        };
 
 
         #endregion
@@ -109,7 +134,6 @@ namespace Plan2Ext
 
         internal static IEnumerable<Type> GetEntityTypesWithGermanName(string message)
         {
-            var tp = typeof(_AcDb.Arc);
             var ass = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Arc));
             var types = ass.GetTypes();
             var names = Globs.GermanNameForTypeName.Keys.Select(x => ".DatabaseServices." + x);
@@ -125,6 +149,27 @@ namespace Plan2Ext
             if (keyWord == null) return new Type[0];
 
             var ret = entityTypeItems.First(x => x.ToString().Equals(keyWord)).Type;
+            return new[] { ret };
+        }
+
+        internal static IEnumerable<Type> GetEntityTypesWithGermanKeyword(string message)
+        {
+            var tp = typeof(_AcDb.Arc);
+            var ass = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Arc));
+            var types = ass.GetTypes();
+            var names = Globs.GermanNameForTypeName.Keys.Select(x => ".DatabaseServices." + x);
+            var theTypes = types.Where(
+                x => names.Any(
+                    y => x.FullName != null &&
+                         x.FullName.EndsWith(y, StringComparison.InvariantCultureIgnoreCase)
+                )
+            ).ToArray();
+            var entityTypeItems = theTypes.Select(x => new EntityTypeItem(x)).ToArray();
+            var keyWords = entityTypeItems.Select(x => x.ToKeyword()).OrderBy(x => x).ToArray();
+            var keyWord = Globs.AskKeywordFromUser("Elementtypen: ", keyWords);
+            if (keyWord == null) return new Type[0];
+
+            var ret = entityTypeItems.First(x => x.ToKeyword().Equals(keyWord)).Type;
             return new[] { ret };
         }
 

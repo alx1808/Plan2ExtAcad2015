@@ -83,7 +83,8 @@ namespace Plan2Ext.Vorauswahl
                 List<WildcardAcad> blockNamesWildCards;
                 List<WildcardAcad> layerNamesWildCards;
                 List<Type> entityTypes;
-                if (!GetSelectionInfoViaCmdLine(out blockNamesWildCards, out layerNamesWildCards, out entityTypes)) return;
+                bool delete;
+                if (!GetSelectionInfoViaCmdLine(out blockNamesWildCards, out layerNamesWildCards, out entityTypes, out delete)) return;
 
                 // get also layers from blocks and turn layer on and thaw and unlock
                 var blockNames = Globs.GetAllBlockNames()
@@ -100,12 +101,35 @@ namespace Plan2Ext.Vorauswahl
                 oids.CopyTo(ids, 0);
                 var doc = Application.DocumentManager.MdiActiveDocument;
                 var editor = doc.Editor;
-                editor.SetImpliedSelection(ids);
-                editor.WriteMessage("\nAnzahl selektierter Elemente: " + oids.Count);
+                if (delete)
+                {
+                    DeleteObjects(ids);
+                    editor.WriteMessage("\nAnzahl gelöschter Elemente: " + oids.Count);
+                }
+                else
+                {
+                    editor.SetImpliedSelection(ids);
+                    editor.WriteMessage("\nAnzahl selektierter Elemente: " + oids.Count);
+                }
             }
             catch (Exception ex)
             {
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2VorauswahlSelect aufgetreten! {0}", ex.Message));
+            }
+        }
+
+        private static void DeleteObjects(_AcDb.ObjectId[] objectIds)
+        {
+            using (var transaction =
+                Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+            {
+                foreach (var objectId in objectIds)
+                {
+                    if (objectId.IsErased) continue;
+                    var obj = transaction.GetObject(objectId, _AcDb.OpenMode.ForWrite);
+                    obj.Erase(true);
+                }
+                transaction.Commit();
             }
         }
 
@@ -148,14 +172,16 @@ namespace Plan2Ext.Vorauswahl
         }
 
 
-        private static bool GetSelectionInfoViaCmdLine(out List<WildcardAcad> blockNamesWildCards, out List<WildcardAcad> layerNamesWildCards,
-            out List<Type> entityTypes)
+        private static bool GetSelectionInfoViaCmdLine(
+            out List<WildcardAcad> blockNamesWildCards,
+            out List<WildcardAcad> layerNamesWildCards,
+            out List<Type> entityTypes
+            )
         {
             blockNamesWildCards = new List<WildcardAcad>();
             layerNamesWildCards = new List<WildcardAcad>();
             entityTypes = new List<Type>();
-
-            var keywords = new[] {"Block", "Layer", "Elementtyp", "Fertig"};
+            var keywords = new[] { "Block", "Layer", "Elementtyp", "Fertig"};
             string keyWord;
             while (!"Fertig".Equals(keyWord = Globs.AskKeywordFromUser("Auswahl", keywords, 3)))
             {
@@ -173,6 +199,44 @@ namespace Plan2Ext.Vorauswahl
                         entityTypes.AddRange(Globs.GetEntityTypesWithGermanName("Elementtypen: "));
                         break;
                 }
+            }
+
+            return true;
+        }
+
+        private static bool GetSelectionInfoViaCmdLine(
+            out List<WildcardAcad> blockNamesWildCards,
+            out List<WildcardAcad> layerNamesWildCards,
+            out List<Type> entityTypes, 
+            out bool delete)
+        {
+            blockNamesWildCards = new List<WildcardAcad>();
+            layerNamesWildCards = new List<WildcardAcad>();
+            entityTypes = new List<Type>();
+            delete = false;
+            var keywords = new[] {"Block", "Layer", "Elementtyp", "Fertig", "lÖschen"};
+            string keyWord;
+            while (!"Fertig".Equals(keyWord = Globs.AskKeywordFromUser("Auswahl", keywords, 3)))
+            {
+                if (keyWord == null) return false;
+
+                switch (keyWord)
+                {
+                    case "Block":
+                        blockNamesWildCards.AddRange(Globs.GetWildcards("Blocknamen: ", true));
+                        break;
+                    case "Layer":
+                        layerNamesWildCards.AddRange(Globs.GetWildcards("Layernamen: ", true));
+                        break;
+                    case "Elementtyp":
+                        entityTypes.AddRange(Globs.GetEntityTypesWithGermanKeyword("Elementtypen: "));
+                        break;
+                    case "lÖschen":
+                        delete = true;
+                        break;
+                }
+
+                if (delete) break;
             }
 
             return true;
@@ -230,7 +294,7 @@ namespace Plan2Ext.Vorauswahl
                 var objectsToSelectFrom = GetSelectedObjects();
                 if (objectsToSelectFrom == null || objectsToSelectFrom.Length == 0)
                 {
-                    objectsToSelectFrom = GetAllSelectableObjectsInModelspace();
+                    objectsToSelectFrom = GetAllSelectableObjectsInCurrentSpace();
                 }
 
                 foreach (var oid in objectsToSelectFrom)
@@ -269,6 +333,40 @@ namespace Plan2Ext.Vorauswahl
             return oids;
         }
 
+        private static _AcDb.ObjectId[] GetAllSelectableObjectsInCurrentSpace()
+        {
+
+            var objectIds = new List<_AcDb.ObjectId>();
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var frozenLayerIds = new List<_AcDb.ObjectId>();
+                _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+                foreach (var ltrOid in layTb)
+                {
+                    _AcDb.LayerTableRecord ltr =
+                        (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+                    if (ltr.IsFrozen) frozenLayerIds.Add(ltrOid);
+                }
+
+                _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForRead);
+
+                foreach (_AcDb.ObjectId oid in btr)
+                {
+                    _AcDb.Entity ent = trans.GetObject(oid, _AcDb.OpenMode.ForRead) as _AcDb.Entity;
+                    if (ent == null) continue;
+                    if (frozenLayerIds.Contains(ent.LayerId)) continue;
+                    objectIds.Add(oid);
+                }
+
+                trans.Commit();
+            }
+
+            return objectIds.ToArray();
+        }
+
+        // ReSharper disable once UnusedMember.Local
         private static _AcDb.ObjectId[] GetAllSelectableObjectsInModelspace()
         {
 

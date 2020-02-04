@@ -104,6 +104,12 @@ namespace Plan2Ext
             return Globs.GermanNameForTypeName.TryGetValue(type.Name, out name) ? name : type.Name;
         }
 
+        public static string GetGermanKeyword(this Type type)
+        {
+            string name;
+            return Globs.GermanNameForTypeNameForKeyword.TryGetValue(type.Name, out name) ? name : type.Name;
+        }
+
         ///<summary>
         /// Projects the provided Point3d onto the specified coordinate system.
         ///</summary>

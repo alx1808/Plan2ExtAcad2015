@@ -20,5 +20,10 @@ namespace Plan2Ext
         {
             return Type.GetGermanName();
         }
+
+        public string ToKeyword()
+        {
+            return Type.GetGermanKeyword();
+        }
     }
 }
