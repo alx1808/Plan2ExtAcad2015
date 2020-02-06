@@ -14,7 +14,6 @@ using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
 using _AcIntCom = BricscadDb;
 using _AcInt = BricscadApp;
-using Bricscad.Windows;
 #elif ARX_APP
 using _AcAp = Autodesk.AutoCAD.ApplicationServices;
 using _AcCm = Autodesk.AutoCAD.Colors;
@@ -29,13 +28,13 @@ using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcIntCom = Autodesk.AutoCAD.Interop.Common;
 using _AcInt = Autodesk.AutoCAD.Interop;
+using Autodesk.AutoCAD.ApplicationServices.Core;
 #endif
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
-using Autodesk.AutoCAD.ApplicationServices.Core;
 using Plan2Ext.ObjectFilter;
 
 // ReSharper disable IdentifierTypo
@@ -62,7 +61,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Vorauswahl aufgetreten! {0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Vorauswahl aufgetreten! {0}", ex.Message));
             }
         }
 
@@ -70,9 +69,9 @@ namespace Plan2Ext.Vorauswahl
         /// <summary>
         /// Command-Line variant
         /// </summary>
-        [_AcTrx.CommandMethod("-Plan2Vorauswahl", _AcBrx.CommandFlags.Modal |
-                                                       _AcBrx.CommandFlags.UsePickSet |
-                                                       _AcBrx.CommandFlags.Redraw)
+        [_AcTrx.CommandMethod("-Plan2Vorauswahl", _AcTrx.CommandFlags.Modal |
+                                                       _AcTrx.CommandFlags.UsePickSet |
+                                                       _AcTrx.CommandFlags.Redraw)
 
         ]
         // ReSharper disable once UnusedMember.Global
@@ -99,7 +98,7 @@ namespace Plan2Ext.Vorauswahl
                 List<_AcDb.ObjectId> oids = Select(blockNamesWildCards, layerNamesWildCards, entityTypes);
                 _AcDb.ObjectId[] ids = new _AcDb.ObjectId[oids.Count];
                 oids.CopyTo(ids, 0);
-                var doc = Application.DocumentManager.MdiActiveDocument;
+                var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                 var editor = doc.Editor;
                 if (delete)
                 {
@@ -114,14 +113,14 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2VorauswahlSelect aufgetreten! {0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2VorauswahlSelect aufgetreten! {0}", ex.Message));
             }
         }
 
         private static void DeleteObjects(_AcDb.ObjectId[] objectIds)
         {
             using (var transaction =
-                Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
+                _AcAp.Application.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction())
             {
                 foreach (var objectId in objectIds)
                 {
@@ -137,13 +136,13 @@ namespace Plan2Ext.Vorauswahl
         /// <summary>
         /// Command-Line variant
         /// </summary>
-        [_AcTrx.CommandMethod("-Plan2XrefVorauswahl", _AcBrx.CommandFlags.Modal | _AcBrx.CommandFlags.Redraw)]
+        [_AcTrx.CommandMethod("-Plan2XrefVorauswahl", _AcTrx.CommandFlags.Modal | _AcTrx.CommandFlags.Redraw)]
         // ReSharper disable once UnusedMember.Global
         public static void Plan2XrefVorauswahCl()
         {
             try
             {
-                var doc = Application.DocumentManager.MdiActiveDocument;
+                var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                 var db = doc.Database;
 
                 List<WildcardAcad> blockNamesWildCards;
@@ -167,7 +166,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2XrefVorauswahl aufgetreten! {0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in -Plan2XrefVorauswahl aufgetreten! {0}", ex.Message));
             }
         }
 
@@ -242,9 +241,9 @@ namespace Plan2Ext.Vorauswahl
             return true;
         }
 
-        [_AcTrx.CommandMethod("Plan2VorauswahlSelect", _AcBrx.CommandFlags.Modal |
-                                                       _AcBrx.CommandFlags.UsePickSet |
-                                                       _AcBrx.CommandFlags.Redraw)
+        [_AcTrx.CommandMethod("Plan2VorauswahlSelect", _AcTrx.CommandFlags.Modal |
+                                                       _AcTrx.CommandFlags.UsePickSet |
+                                                       _AcTrx.CommandFlags.Redraw)
 
         ]
         // ReSharper disable once UnusedMember.Global
@@ -265,7 +264,7 @@ namespace Plan2Ext.Vorauswahl
                     Globs.LayerOnAndThaw(lay, unlock: true);
                 }
 
-                var doc = Application.DocumentManager.MdiActiveDocument;
+                var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                 var editor = doc.Editor;
 
                 var blockNamesWildCards = blockNames.Select(x => new WildcardAcad(x)).ToList();
@@ -279,7 +278,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Vorauswahl aufgetreten! {0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Vorauswahl aufgetreten! {0}", ex.Message));
             }
         }
 
@@ -287,7 +286,7 @@ namespace Plan2Ext.Vorauswahl
         {
             var oids = new List<_AcDb.ObjectId>();
             if (blockNamesWildCards.Count == 0 && layerNamesWildCards.Count == 0 && entityTypes.Count == 0) return oids;
-            var doc = Application.DocumentManager.MdiActiveDocument;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
             {
@@ -337,7 +336,7 @@ namespace Plan2Ext.Vorauswahl
         {
 
             var objectIds = new List<_AcDb.ObjectId>();
-            var doc = Application.DocumentManager.MdiActiveDocument;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
             {
@@ -371,7 +370,7 @@ namespace Plan2Ext.Vorauswahl
         {
 
             var objectIds = new List<_AcDb.ObjectId>();
-            var doc = Application.DocumentManager.MdiActiveDocument;
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (var trans = db.TransactionManager.StartTransaction())
             {
@@ -403,7 +402,7 @@ namespace Plan2Ext.Vorauswahl
 
         private static _AcDb.ObjectId[] GetSelectedObjects()
         {
-            _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             _AcEd.Editor editor = doc.Editor;
             var selectionSet = editor.SelectImplied().Value;
             if (selectionSet == null) return null;
@@ -442,7 +441,7 @@ namespace Plan2Ext.Vorauswahl
             {
                 if (!OpenPalette()) return;
 
-                _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+                _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                 using (doc.LockDocument())
                 {
                     _AcEd.Editor ed = doc.Editor;
@@ -456,7 +455,7 @@ namespace Plan2Ext.Vorauswahl
                         var blockNamesInList = Palette.BlocknamesInList();
                         var options = new _AcEd.PromptEntityOptions("\nBlock wählen <Return für beenden>: ");
                         options.SetRejectMessage("\nGewähltes Element ist kein Block.");
-                        options.AddAllowedClass(typeof(_AcDb.BlockReference), exactMatch: true);
+                        options.AddAllowedClass(typeof(_AcDb.BlockReference), true);
                         var per = ed.GetEntity(options);
                         var selBlockRefs = new List<_AcDb.BlockReference>();
                         while (per.Status == _AcEd.PromptStatus.OK)
@@ -482,7 +481,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2VorauswahlSelBlocknamen aufgetreten! {0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2VorauswahlSelBlocknamen aufgetreten! {0}", ex.Message));
             }
         }
 
@@ -494,7 +493,7 @@ namespace Plan2Ext.Vorauswahl
             {
                 if (!OpenPalette()) return;
 
-                _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+                _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
                 using (doc.LockDocument())
                 {
                     _AcEd.Editor ed = doc.Editor;
@@ -535,7 +534,7 @@ namespace Plan2Ext.Vorauswahl
             }
             catch (Exception ex)
             {
-                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2VorauswahlSelLayer aufgetreten! {0}", ex.Message));
+                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2VorauswahlSelLayer aufgetreten! {0}", ex.Message));
             }
         }
 
@@ -549,7 +548,7 @@ namespace Plan2Ext.Vorauswahl
             bool wasOpen = Palette.Show();
             if (!wasOpen) return false;
 
-            _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+            _AcAp.Document doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return false;
             Log.DebugFormat("Dokumentname: {0}.", doc.Name);
 

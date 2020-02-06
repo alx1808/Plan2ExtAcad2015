@@ -1,11 +1,18 @@
-﻿using System.Collections.Generic;
+﻿// ReSharper disable StringLiteralTypo
+// ReSharper disable IdentifierTypo
+#if BRX_APP
+using Bricscad.ApplicationServices;
+using Teigha.DatabaseServices;
+using Teigha.Runtime;
+using Bricscad.EditorInput;
+#elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
-// ReSharper disable StringLiteralTypo
-// ReSharper disable IdentifierTypo
+#endif
+using System.Collections.Generic;
 
 namespace Plan2Ext
 {

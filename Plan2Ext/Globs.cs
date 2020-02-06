@@ -85,6 +85,10 @@ namespace Plan2Ext
 			{"DiametricDimension", "DiametralBemaßung"},
 			{"AttributeDefinition", "Attributdefinition"},
 			{"Wipeout", "Abdecken"},
+            {"Viewport", "Ansichtsfenster"},
+            {"RadialDimension", "Radialbemaßung"},
+            {"ArcDimension", "Bogenlängenbemaßung"},
+            {"Point3AngularDimension", "3-Punkt-Winkelbemaßung"},
 		};
 
         // die deutsche Bezeichnung darf keine Leerzeichen haben, sonst kann sie nicht als Keyword verwendet werden.
@@ -110,6 +114,10 @@ namespace Plan2Ext
             {"DiametricDimension", "DiametralBemaßung"},
             {"AttributeDefinition", "ATtributdefinition"},
             {"Wipeout", "ABdecken"},
+            {"Viewport", "ANsichtsfenster"},
+            {"RadialDimension", "RADialbemaßung"},
+            {"ArcDimension", "LÄngenbemaßungBogen"},
+            {"Point3AngularDimension", "3-Punkt-Winkelbemaßung"},
         };
 
 
@@ -154,7 +162,6 @@ namespace Plan2Ext
 
         internal static IEnumerable<Type> GetEntityTypesWithGermanKeyword(string message)
         {
-            var tp = typeof(_AcDb.Arc);
             var ass = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Arc));
             var types = ass.GetTypes();
             var names = Globs.GermanNameForTypeName.Keys.Select(x => ".DatabaseServices." + x);
@@ -166,12 +173,33 @@ namespace Plan2Ext
             ).ToArray();
             var entityTypeItems = theTypes.Select(x => new EntityTypeItem(x)).ToArray();
             var keyWords = entityTypeItems.Select(x => x.ToKeyword()).OrderBy(x => x).ToArray();
-            var keyWord = Globs.AskKeywordFromUser("Elementtypen: ", keyWords);
+            var keyWord = Globs.AskKeywordFromUser("Elementtypen: ", keyWords, -1, true);
             if (keyWord == null) return new Type[0];
+            _AcAp.Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage("\n" + keyWord);
 
-            var ret = entityTypeItems.First(x => x.ToKeyword().Equals(keyWord)).Type;
+			Type ret;
+            var etiOrNull = entityTypeItems.FirstOrDefault(x => x.ToKeyword().Equals(keyWord));
+            if (etiOrNull != null)
+            {
+                ret = etiOrNull.Type;
+            }
+            else
+            {
+                ret = GetAllEntityTypes()
+                    .FirstOrDefault(x => x.Name.Equals(keyWord, StringComparison.InvariantCultureIgnoreCase));
+                if (ret == null) return new Type[0];
+            }
+
             return new[] { ret };
         }
+
+        // ReSharper disable once UnusedMember.Local
+        private static IEnumerable<Type> GetAllEntityTypes()
+        {
+            var assembly = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Entity));
+            return assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(_AcDb.Entity))).OrderBy(x => x.Name);
+        }
+
 
         internal static IEnumerable<WildcardAcad> GetWildcards(string message, bool allowSpaces = false)
         {

@@ -201,7 +201,16 @@
     </Compile>
     <Compile Include="Tuer\TuerOptionsPalette.cs" />
     <Compile Include="UndoHandler.cs" />
+    <Compile Include="Vorauswahl\Commands.cs" />
+    <Compile Include="Vorauswahl\VorauswahlControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Vorauswahl\VorauswahlControl.Designer.cs">
+      <DependentUpon>VorauswahlControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Vorauswahl\VorauswahlPalette.cs" />
     <Compile Include="WildcardAcad.cs" />
+    <Compile Include="XrefManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CalcArea\CalcAreaControl.resx">
@@ -230,6 +239,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Tuer\TuerOptionsControl.resx">
       <DependentUpon>TuerOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Vorauswahl\VorauswahlControl.resx">
+      <DependentUpon>VorauswahlControl.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

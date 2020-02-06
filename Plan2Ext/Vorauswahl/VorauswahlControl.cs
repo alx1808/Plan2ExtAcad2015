@@ -1,6 +1,7 @@
 ﻿// ReSharper disable CommentTypo
 #if BRX_APP
 using _AcAp = Bricscad.ApplicationServices;
+using Application = Bricscad.ApplicationServices.Application;
 //using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
 using _AcDb = Teigha.DatabaseServices;
@@ -28,13 +29,14 @@ using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
 using _AcIntCom = Autodesk.AutoCAD.Interop.Common;
 using _AcInt = Autodesk.AutoCAD.Interop;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 #endif
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+
 // ReSharper disable StringLiteralTypo
 
 // ReSharper disable IdentifierTypo
@@ -52,7 +54,7 @@ namespace Plan2Ext.Vorauswahl
         {
             cmbEntityTypes.Items.Clear();
             var entityTypeItems = new List<EntityTypeItem>();
-            foreach (var entityType in GetAllEntityTypesInModelSpace())
+            foreach (var entityType in GetAllEntityTypesInCurrentSpace())
             {
                 entityTypeItems.Add(new EntityTypeItem(entityType));
                 
@@ -96,12 +98,38 @@ namespace Plan2Ext.Vorauswahl
             return entityTypes;
         }
 
-        // ReSharper disable once UnusedMember.Local
-        private IEnumerable<Type> GetAllEntityTypes()
+        private IEnumerable<Type> GetAllEntityTypesInCurrentSpace()
         {
-            var assembly = System.Reflection.Assembly.GetAssembly(typeof(_AcDb.Entity));
-            return assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(_AcDb.Entity))).OrderBy(x => x.Name);
+	        var entityTypes = new HashSet<Type>();
+	        _AcAp.Document doc = Application.DocumentManager.MdiActiveDocument;
+	        _AcDb.Database db = doc.Database;
+	        using (var trans = db.TransactionManager.StartTransaction())
+	        {
+		        var frozenLayerIds = new List<_AcDb.ObjectId>();
+		        _AcDb.LayerTable layTb = (_AcDb.LayerTable)trans.GetObject(db.LayerTableId, _AcDb.OpenMode.ForRead);
+		        foreach (var ltrOid in layTb)
+		        {
+			        _AcDb.LayerTableRecord ltr = (_AcDb.LayerTableRecord)trans.GetObject(ltrOid, _AcDb.OpenMode.ForRead);
+			        if (ltr.IsFrozen) frozenLayerIds.Add(ltrOid);
+		        }
+
+		        _AcDb.BlockTableRecord btr = (_AcDb.BlockTableRecord)trans.GetObject(db.CurrentSpaceId, _AcDb.OpenMode.ForRead);
+
+		        // Iterate through it, dumping objects
+		        foreach (_AcDb.ObjectId oid in btr)
+		        {
+			        var dbObject = trans.GetObject(oid, _AcDb.OpenMode.ForRead);
+			        var ent = dbObject as _AcDb.Entity;
+			        if (ent == null) continue;
+			        if (frozenLayerIds.Contains(ent.LayerId)) continue;
+			        entityTypes.Add(dbObject.GetType());
+		        }
+		        trans.Commit();
+	        }
+
+	        return entityTypes;
         }
+
 
         private bool _selBlocknamenShield;
         private void btnSelBlocknamen_Click(object sender, EventArgs e)
