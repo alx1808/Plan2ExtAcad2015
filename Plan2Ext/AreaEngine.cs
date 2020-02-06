@@ -264,9 +264,9 @@ namespace Plan2Ext
             private const int AcPatternType = 0;
             #endregion
 
-            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcDb.Transaction transaction)
+            public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcDb.Transaction transaction, string patternName)
             {
-                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, null, transaction);
+                return Plan2Ext.Globs.HatchPoly(oid, inner, layer, null, transaction, patternName);
             }
 
             //public _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, int colorIndex, _AcDb.TransactionManager tm)

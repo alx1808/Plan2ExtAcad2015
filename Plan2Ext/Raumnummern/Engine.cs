@@ -44,6 +44,7 @@ namespace Plan2Ext.Raumnummern
         private const string DIST_RB_TO_FB_KONFIG = "alx_V:ino_rb_rb2fbDist";
         private const string XREC_HATCH_OF_RAUM = "Plan2RoomHatch";
         private const string XREC_TOP_IN_FG = "Plan2TopInFg";
+        private const string NEBENFLAECHE_KENNUNG = "-N-";
 
         //internal const string HIDDEN_NUMMER_ATT = "INFO";
         internal const string TOP_LAYER_PREFIX = "A_RA_TOP_";
@@ -1396,7 +1397,8 @@ namespace Plan2Ext.Raumnummern
 
         private static string GetHatchLayerName(string nrStr)
         {
-            return string.Format(CultureInfo.InvariantCulture, TOP_LAYER_PREFIX + "{0}_F", nrStr);
+	        var withoutNebenflaecheKennung = nrStr.Replace(NEBENFLAECHE_KENNUNG, "");
+            return string.Format(CultureInfo.InvariantCulture, TOP_LAYER_PREFIX + "{0}_F", withoutNebenflaecheKennung);
         }
 
         private static string GetDigitsFromTopPart(string nrStr)
@@ -1577,7 +1579,7 @@ namespace Plan2Ext.Raumnummern
             var layer = GetOrCreateHatchLayer(topNr, transaction);
             bool needsRegen;
             Plan2Ext.Globs.LayerOnAndThaw(layer, true, transaction, _AcAp.Application.DocumentManager.MdiActiveDocument.Database, out needsRegen);
-            var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, transaction);
+            var oid = fgrb.HatchPoly(fgrb.FlaechenGrenze, inner, layer, transaction, GetPatternName(topNr));
             if (drawOrder)
             {
                 var ids = new ObjectIdCollection();
@@ -1587,6 +1589,11 @@ namespace Plan2Ext.Raumnummern
             var rb = new ResultBuffer(new TypedValue((int)DxfCode.Handle, oid.Handle));
             Plan2Ext.Globs.SetXrecord(fgrb.FlaechenGrenze, XREC_HATCH_OF_RAUM, rb, transaction);
             return oid;
+        }
+
+        private string GetPatternName(string topNr)
+        {
+	        return topNr.Contains(NEBENFLAECHE_KENNUNG) ? "ANSI31" : "_SOLID";
         }
 
 
@@ -1613,7 +1620,7 @@ namespace Plan2Ext.Raumnummern
                 outerInner.Add(fg.FlaechenGrenze, inner);
             }
 
-            var oid = Plan2Ext.Globs.HatchPoly(outerInner, layer, null, transaction);
+            var oid = Plan2Ext.Globs.HatchPoly(outerInner, layer, null, transaction, GetPatternName(nrStr));
             if (drawOrder)
             {
                 var ids = new ObjectIdCollection {oid};

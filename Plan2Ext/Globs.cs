@@ -1973,14 +1973,14 @@ namespace Plan2Ext
             }
         }
 
-        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId, List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.Transaction transaction)
+        internal static _AcDb.ObjectId HatchPoly(Dictionary<_AcDb.ObjectId, List<_AcDb.ObjectId>> outerInner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.Transaction transaction, string patternName = "_SOLID")
         {
-            string patternName = "_SOLID";
             bool bAssociativity = false;
 
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
             var hatchObj = app.ActiveDocument.ModelSpace.AddHatch((int)_AcIntCom.AcPatternType.acHatchPatternTypePreDefined, patternName, bAssociativity, 0);
             if (col != null) hatchObj.TrueColor = col;
+            hatchObj.PatternScale = 1.0;
 
             //var outerInnerEnts = new Dictionary<_AcIntCom.AcadEntity, List<_AcIntCom.AcadEntity>>();
             var polysToDelete = new List<_AcIntCom.AcadEntity>();
@@ -2025,13 +2025,13 @@ namespace Plan2Ext
             return new _AcDb.ObjectId((IntPtr)hatchObj.ObjectID);
         }
 
-        internal static _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.Transaction tm)
+        internal static _AcDb.ObjectId HatchPoly(_AcDb.ObjectId oid, List<_AcDb.ObjectId> inner, string layer, _AcIntCom.AcadAcCmColor col, _AcDb.Transaction transaction, string patternName = "_SOLID")
         {
-            string patternName = "_SOLID";
+            //string patternName = "_SOLID";
             bool bAssociativity = false;
 
-            _AcIntCom.AcadEntity oCopiedPoly = CopyPoly(oid, tm);
-            List<_AcIntCom.AcadEntity> innerPolys = inner.Select(x => CopyPoly(x, tm)).ToList();
+            _AcIntCom.AcadEntity oCopiedPoly = CopyPoly(oid, transaction);
+            List<_AcIntCom.AcadEntity> innerPolys = inner.Select(x => CopyPoly(x, transaction)).ToList();
 
             //' Create the non associative Hatch object in model space
             _AcInt.AcadApplication app = (_AcInt.AcadApplication)_AcAp.Application.AcadApplication;
