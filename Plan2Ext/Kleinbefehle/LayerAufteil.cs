@@ -662,11 +662,10 @@ namespace Plan2Ext.Kleinbefehle
                         log.WarnFormat("Linientyp '{0}' existiert nicht und wird daher Layer '{1}' nicht zugeordnet!", _NewLineType, _NewLayer);
                     }
                     ltRec.Color = _ColorO;
+                    ltRec.IsPlottable = _IsPlottable;
                     _Tr.AddNewlyCreatedDBObject(ltRec, true);
                 }
             }
-
-
         }
     }
 }
