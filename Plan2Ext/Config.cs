@@ -1,11 +1,13 @@
 ﻿// ReSharper disable CommentTypo
 // ReSharper disable StringLiteralTypo
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using Plan2Ext.Configuration;
 
 #if BRX_APP
+using Bricscad.ApplicationServices;
 using _AcAp = Bricscad.ApplicationServices;
 //using _AcBr = Teigha.BoundaryRepresentation;
 using _AcCm = Teigha.Colors;
@@ -19,7 +21,7 @@ using _AcBrx = Bricscad.Runtime;
 using _AcTrx = Teigha.Runtime;
 using _AcWnd = Bricscad.Windows;
 #elif ARX_APP
-using _AcAp = Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.ApplicationServices;
 using _AcBr = Autodesk.AutoCAD.BoundaryRepresentation;
 using _AcCm = Autodesk.AutoCAD.Colors;
 using _AcDb = Autodesk.AutoCAD.DatabaseServices;
@@ -31,9 +33,7 @@ using _AcPl = Autodesk.AutoCAD.PlottingServices;
 using _AcBrx = Autodesk.AutoCAD.Runtime;
 using _AcTrx = Autodesk.AutoCAD.Runtime;
 using _AcWnd = Autodesk.AutoCAD.Windows;
-using Autodesk.AutoCAD.ApplicationServices.Core;
-
-
+// ReSharper disable AccessToStaticMemberViaDerivedType
 #endif
 
 
@@ -47,7 +47,7 @@ namespace Plan2Ext
         #endregion
 
         #region Member Variables
-        private static string _FileName = "";
+        private static string _fileName = "";
         #endregion
 
         [_AcTrx.LispFunction("NetSetPlan2Config")]
@@ -68,7 +68,7 @@ namespace Plan2Ext
 
                 using (SetConfigForm frm = new SetConfigForm(current, existingConfigs))
                 {
-                    System.Windows.Forms.DialogResult res = _AcAp.Application.ShowModalDialog(frm);
+                    System.Windows.Forms.DialogResult res = Application.ShowModalDialog(frm);
                     if (res == System.Windows.Forms.DialogResult.Cancel)
                     {
                         return null;
@@ -82,7 +82,8 @@ namespace Plan2Ext
             }
             catch (System.Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2Config aufgetreten!\n{0}", ex.Message));
+				Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2Config aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -109,7 +110,7 @@ namespace Plan2Ext
                     return null;
                 }
 
-                var editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+                var editor = Application.DocumentManager.MdiActiveDocument.Editor;
                 editor.WriteMessage("\nExistierende Konfigurationen:");
                 foreach (var existingConfig in existingConfigs)
                 {
@@ -135,7 +136,8 @@ namespace Plan2Ext
             }
             catch (System.Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2ConfigCl aufgetreten!\n{0}", ex.Message));
+	            Log.Error(ex.Message, ex);
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in NetSetPlan2ConfigCl aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -169,15 +171,15 @@ namespace Plan2Ext
 
                 GetArgs(rb);
 
-                using (ConfigForm frm = new ConfigForm(_FileName))
+                using (ConfigForm frm = new ConfigForm(_fileName))
                 {
-                    _AcAp.Application.ShowModalDialog(frm);
+                    Application.ShowModalDialog(frm);
                 }
 
             }
             catch (System.Exception ex)
             {
-                _AcAp.Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in ConfigPlan2 aufgetreten!\n{0}", ex.Message));
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in ConfigPlan2 aufgetreten!\n{0}", ex.Message));
 
             }
             return null;
@@ -186,7 +188,7 @@ namespace Plan2Ext
         private static void GetArgs(_AcDb.ResultBuffer rb)
         {
             _AcDb.TypedValue[] values = rb.AsArray();
-            _FileName = values[0].Value.ToString();
+            _fileName = values[0].Value.ToString();
         }
     }
 }
