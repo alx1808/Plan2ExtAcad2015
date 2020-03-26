@@ -1608,8 +1608,7 @@ namespace Plan2Ext
 			_DiffersLayer = values[11].Value.ToString();
 			_LooseBlockLayer = values[12].Value.ToString();
 			_M2Bez = values[13].Value.ToString();
-			if (values[14].Value == null) _Modify = false;
-			else _Modify = true;
+			_Modify = values[14].TypeCode == (short) _AcBrx.LispDataType.T_atom;
 
 			log.DebugFormat(CultureInfo.InvariantCulture, "Raumblock: {0}", _RaumblockName);
 			log.DebugFormat(CultureInfo.InvariantCulture, "Area-Attrib: {0}", _FlAttrib);
