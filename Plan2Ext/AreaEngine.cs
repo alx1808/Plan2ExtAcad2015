@@ -299,49 +299,93 @@ namespace Plan2Ext
                 // Open the blocktable, get the modelspace
                 GetAllFgsAbzsAndRbs(rbName, fgLayer, afLayer, db, tr, fgs, azf, rbs);
 
-                foreach (var fg in fgs)
-                {
-                    var fgRbStruct = new FgRbStructureInTrans() { FlaechenGrenze = fg };
-                    // get inner polylines and rbs to ignore
-                    foreach (var inner in fgs)
-                    {
-                        if (PolyInPoly(tr, inner, fg))
-                        {
-                            fgRbStruct.Inseln.Add(inner);
-                        }
-                    }
-                    foreach (var inner in azf)
-                    {
-                        if (PolyInPoly(tr, inner, fg))
-                        {
-                            fgRbStruct.Abzugsflaechen.Add(inner);
-                        }
-                    }
-                    structs.Add(fg.Id, fgRbStruct);
-                }
-
-                foreach (var rb in rbs)
-                {
-                    bool added = false;
-                    foreach (var stru in structs.Values)
-                    {
-                        if (RecAddRbToFg(rb, stru, structs))
-                        {
-                            added = true;
-                            break;
-                        }
-                    }
-                    if (!added)
-                    {
-                        OrphanRaumblocks.Add(rb.Id);
-                    }
-                }
+                CreateStructs(tr, fgs, azf, rbs, structs);
                 fgRbStructure = AsFgRbStructs(structs);
 
 				tr.Commit();
             }
 
             return fgRbStructure;
+        }
+
+        internal static Dictionary<_AcDb.ObjectId, FgRbStructure> GetFgRbStructs(IEnumerable<_AcDb.ObjectId> fgOids, IEnumerable<_AcDb.ObjectId> afOids, IEnumerable<_AcDb.ObjectId> rbOids, _AcDb.Database db)
+        {
+            Dictionary<_AcDb.ObjectId, FgRbStructure> fgRbStructure = null;
+            NrOfOverlaps = 0;
+            OrphanRaumblocks.Clear();
+
+            var structs = new Dictionary<_AcDb.ObjectId, FgRbStructureInTrans>();
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var fgs = new List<_AcDb.Entity>();
+                var azf = new List<_AcDb.Entity>();
+                var rbs = new List<_AcDb.Entity>();
+
+                foreach (var oid in fgOids)
+                {
+                    fgs.Add((_AcDb.Entity) tr.GetObject(oid, _AcDb.OpenMode.ForRead));
+                }
+                foreach (var oid in afOids)
+                {
+                    azf.Add((_AcDb.Entity)tr.GetObject(oid, _AcDb.OpenMode.ForRead));
+                }
+                foreach (var oid in rbOids)
+                {
+                    rbs.Add((_AcDb.Entity)tr.GetObject(oid, _AcDb.OpenMode.ForRead));
+                }
+
+
+                CreateStructs(tr, fgs, azf, rbs, structs);
+
+                fgRbStructure = AsFgRbStructs(structs);
+
+                tr.Commit();
+            }
+
+            return fgRbStructure;
+        }
+        private static void CreateStructs(_AcDb.Transaction tr, List<_AcDb.Entity> fgs, List<_AcDb.Entity> azf, List<_AcDb.Entity> rbs, Dictionary<_AcDb.ObjectId, FgRbStructureInTrans> structs)
+        {
+            foreach (var fg in fgs)
+            {
+                var fgRbStruct = new FgRbStructureInTrans() {FlaechenGrenze = fg};
+                // get inner polylines and rbs to ignore
+                foreach (var inner in fgs)
+                {
+                    if (PolyInPoly(tr, inner, fg))
+                    {
+                        fgRbStruct.Inseln.Add(inner);
+                    }
+                }
+
+                foreach (var inner in azf)
+                {
+                    if (PolyInPoly(tr, inner, fg))
+                    {
+                        fgRbStruct.Abzugsflaechen.Add(inner);
+                    }
+                }
+
+                structs.Add(fg.Id, fgRbStruct);
+            }
+
+            foreach (var rb in rbs)
+            {
+                bool added = false;
+                foreach (var stru in structs.Values)
+                {
+                    if (RecAddRbToFg(rb, stru, structs))
+                    {
+                        added = true;
+                        break;
+                    }
+                }
+
+                if (!added)
+                {
+                    OrphanRaumblocks.Add(rb.Id);
+                }
+            }
         }
 
         private static Dictionary<_AcDb.ObjectId, FgRbStructure> AsFgRbStructs(Dictionary<_AcDb.ObjectId, FgRbStructureInTrans> fgRbStructsInTrans)

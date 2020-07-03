@@ -181,6 +181,7 @@
     <Compile Include="GenerateOeffBoundaries\Commands.cs" />
     <Compile Include="GenerateOeffBoundaries\ConfigurationHandler.cs" />
     <Compile Include="GenerateOeffBoundaries\EntitySearcher.cs" />
+    <Compile Include="GroupHelper.cs" />
     <Compile Include="HoehenPruefung\Commands.cs" />
     <Compile Include="HoehenPruefung\Engine.cs" />
     <Compile Include="HoehenPruefung\Globs.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="Kleinbefehle\LayerAufteil.cs" />
     <Compile Include="Kleinbefehle\Layers.cs" />
     <Compile Include="Kleinbefehle\NonPlottableLayerFreezeOff.cs" />
+    <Compile Include="Kleinbefehle\RaumGruppierung.cs" />
     <Compile Include="Kleinbefehle\ReplaceInLayoutNames.cs" />
     <Compile Include="Kleinbefehle\Schraff2Solid.cs" />
     <Compile Include="Kleinbefehle\SpecialXrefLayer.cs" />
