@@ -23,47 +23,84 @@ namespace Plan2Ext.Kleinbefehle
             try
             {
 
-                // todo: ask gruppieren/prüfen
+                // ask gruppieren/prüfen
+                var keywords = new[] { "Gruppieren", "Prüfen" };
+                var keyword = Globs.AskKeywordFromUser("", keywords, 1);
+                if (keyword == null) return;
+                var nurPruefen = keyword.Equals(keywords[1]);
 
+                // Fehlerlines 
                 var groupHelper = new GroupHelper();
-                var invalidNrRbErrorLayerName = GetErrorLayerNames(out var noFgErrorLayerName);
+                GetErrorLayerNames(out var noFgErrorLayerName, out var invalidNrRbErrorLayerName);
+                if (nurPruefen)
+                {
+                    Globs.DeleteFehlerLines(invalidNrRbErrorLayerName);
+                    Globs.DeleteFehlerLines(noFgErrorLayerName);
+                }
 
-                // todo: delete fehlerlines
-
-                // todo: get layer and blockname and blocklayer
+                // Get layer and blockname and blocklayer
                 if (!GetFgLayerAndBlockName(out var fgLayer, out var raumblockName, doc)) return;
-
 
                 var fgOids = new List<ObjectId>();
                 var raumBlockOids = new List<ObjectId>();
-
                 var areaEngine = new AreaEngine();
                 if (!areaEngine.SelectFgAndRb(fgOids, raumBlockOids, fgLayer, raumblockName))
                     return;
                 var fgRbStructs = AreaEngine.GetFgRbStructs(fgOids, new ObjectId[0], raumBlockOids, doc.Database);
                 var orphans = AreaEngine.OrphanRaumblocks;
 
+                var fgWithoutRb = 0;
+                var fgMultipleRb = 0;
+                var nrGroups = 0;
+
+
                 foreach (var fgOid in fgOids)
                 {
                     var info = fgRbStructs[fgOid];
                     var rbCnt = info.Raumbloecke.Count;
-                    if (rbCnt != 1)
+                    if (nurPruefen)
                     {
-                        // ReSharper disable once PossibleInvalidOperationException
-                        FehlerLine(invalidNrRbErrorLayerName, 255, 0, 0, Globs.GetMiddlePoint(fgOid).Value);
+                        if (rbCnt <= 0)
+                        {
+                            fgWithoutRb++;
+                            // ReSharper disable once PossibleInvalidOperationException
+                            FehlerLine(invalidNrRbErrorLayerName, 255, 0, 0, Globs.GetMiddlePoint(fgOid).Value);
+                        }
+                        else if (rbCnt > 1)
+                        {
+                            fgMultipleRb++;
+                            // ReSharper disable once PossibleInvalidOperationException
+                            FehlerLine(invalidNrRbErrorLayerName, 255, 0, 0, Globs.GetMiddlePoint(fgOid).Value);
+
+                        }
                     }
                     else
                     {
-                        // group
-                        groupHelper.AddToGroup(new[] {info.FlaechenGrenze, info.Raumbloecke[0]},
-                            info.Raumbloecke[0].Handle.ToString(), doc, true);
+                        // Gruppieren
+                        if (rbCnt == 1)
+                        {
+                            groupHelper.AddToGroup(new[] { info.FlaechenGrenze, info.Raumbloecke[0] },
+                                info.Raumbloecke[0].Handle.ToString(), doc, true);
+                            nrGroups++;
+
+                        }
                     }
                 }
 
-                foreach (var orphan in orphans)
+
+                if (nurPruefen)
                 {
-                    // ReSharper disable once PossibleInvalidOperationException
-                    FehlerLine(noFgErrorLayerName, 0, 0, 255, Globs.GetInsertPoint(orphan).Value);
+                    foreach (var orphan in orphans)
+                    {
+                        // ReSharper disable once PossibleInvalidOperationException
+                        FehlerLine(noFgErrorLayerName, 0, 0, 255, Globs.GetInsertPoint(orphan).Value);
+                    }
+                    var msg = $"Räume ohne Raumblock: {fgWithoutRb}\nRäume mit mehr als einem Raumblock: {fgMultipleRb}\nRaumblöcke ohne entsprechende Flächengrenze: {orphans.Count}";
+                    MessageBox.Show(msg, "Gruppierung");
+                }
+                else
+                {
+                    MessageBox.Show($"Anzahl erzeugter Gruppen: {nrGroups}.", "Gruppierung");
                 }
             }
             catch (Exception ex)
@@ -143,12 +180,11 @@ namespace Plan2Ext.Kleinbefehle
             return false;
         }
 
-        private static string GetErrorLayerNames(out string noFgErrorLayerName)
+        private static void GetErrorLayerNames(out string noFgErrorLayerName, out string invalidNrRbErrorLayerName)
         {
-            if (!GetFromConfig(out var invalidNrRbErrorLayerName, "alx_V:ino_InvalidNrRbLayer"))
+            if (!GetFromConfig(out invalidNrRbErrorLayerName, "alx_V:ino_InvalidNrRbLayer"))
                 invalidNrRbErrorLayerName = "UngültigeRaumblockAnzahl ";
             noFgErrorLayerName = "KeineFlaechengrenze";
-            return invalidNrRbErrorLayerName;
         }
 
         private static void FehlerLine(string layer, int red, int green, int blue, Point3d label)
