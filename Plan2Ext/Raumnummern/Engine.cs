@@ -567,6 +567,7 @@ namespace Plan2Ext.Raumnummern
                 );
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -1966,6 +1967,33 @@ namespace Plan2Ext.Raumnummern
             {
                 return ss.GetObjectIds().ToList();
             }
+        }
+
+        internal static IEnumerable<ObjectId> SelectRaumblocks(RnOptions rnOptions, _AcAp.Document doc)
+        {
+            var rbOids = new List<ObjectId>();
+            var ed = doc.Editor;
+            SelectionFilter filter = new SelectionFilter(new TypedValue[] {
+                new TypedValue((int)DxfCode.Operator,"<AND" ),
+                new TypedValue((int)DxfCode.Start,"INSERT" ),
+                new TypedValue((int)DxfCode.BlockName, rnOptions.Blockname),
+                new TypedValue((int)DxfCode.Operator,"AND>" ),
+            });
+            var options = new PromptSelectionOptions {MessageForAdding = "Raumblöcke wählen: "};
+            var res = ed.GetSelection(options, filter);
+            if (res.Status != PromptStatus.OK) return rbOids;
+
+            using (var ss = res.Value)
+            {
+                var oids = ss.GetObjectIds().ToList();
+                using (var transaction = doc.TransactionManager.StartTransaction())
+                {
+                    rbOids.AddRange(oids.Where(oid => !oid.IsErased));
+                    transaction.Commit();
+                }
+            }
+
+            return rbOids;
         }
 
         private void SelectFgsandRbsAndTops(List<ObjectId> fgOids, List<ObjectId> rbOids,

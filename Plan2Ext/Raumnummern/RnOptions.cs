@@ -94,6 +94,14 @@ namespace Plan2Ext.Raumnummern
             {
                 this.HBlockname = "?";
             }
+            try
+            {
+                this.ZimmerAttributeName = TheConfiguration.GetValueString("alx_V:ino_rb_zimmer_bez");
+            }
+            catch (Exception)
+            {
+                this.ZimmerAttributeName = "?";
+            }
         }
 
         private string _Top = "01";
@@ -193,5 +201,7 @@ namespace Plan2Ext.Raumnummern
                 _Number = num.PadLeft(_Number.Length, '0');
             }
         }
+
+        public string ZimmerAttributeName { get; set; }
     }
 }

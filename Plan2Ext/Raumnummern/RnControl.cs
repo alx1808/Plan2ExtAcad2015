@@ -673,8 +673,9 @@ namespace Plan2Ext.Raumnummern
             {
                 grpManually.Visible = chkShowSettings.Checked;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
+                // ignored
             }
         }
     }

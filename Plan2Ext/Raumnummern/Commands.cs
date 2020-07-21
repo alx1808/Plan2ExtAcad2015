@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Plan2Ext.Raumnummern.ExcelExport;
 
 // ReSharper disable IdentifierTypo
 
@@ -46,20 +47,6 @@ namespace Plan2Ext.Raumnummern
 		internal const string PFEILBLOCK_TOPNR_ATTNAME = "TOP";
 		internal const string TOPBLOCK_M2_ATTNAME = "M2";
 
-		//[LispFunction("alx_F:ino_RaumnummernGetTopNr")]
-		//public static string LispRaumnummernGetTopNr(ResultBuffer rb)
-		//{
-		//    if (!OpenRnPalette()) return "";
-		//    else return Globs.TheRnOptions.TopNr;
-		//}
-
-		//[LispFunction("alx_F:ino_RaumnummernIncrementTopNr")]
-		//public static void LispRaumnummernIncrementTopNr(ResultBuffer rb)
-		//{
-		//    if (!OpenRnPalette()) return;
-		//    IncrementTopNr();
-		//}
-
 		private Dictionary<ObjectId, AreaEngine.FgRbStructure> _fgRbStructs = new Dictionary<ObjectId, AreaEngine.FgRbStructure>();
 		private List<ObjectId> _allRaumBlocks = new List<ObjectId>();
 
@@ -76,11 +63,6 @@ namespace Plan2Ext.Raumnummern
 				using (DocumentLock m_doclock = doc.LockDocument())
                 {
                     AddNumber(opts);
-
-                    //if (opts.UseHiddenAttribute)
-					//{
-					//    _Engine.DeleteNummerAttribute(blockOids);
-					//}
                 }
 			}
 			catch (System.Exception ex)
@@ -104,36 +86,6 @@ namespace Plan2Ext.Raumnummern
 
             ;
         }
-
-        //[CommandMethod("Plan2RaumnummerRnOnOff")]
-		//static public void Plan2RaumnummerRnOnOff()
-		//{
-		//    try
-		//    {
-		//        if (!OpenRnPalette()) return;
-
-		//        var opts = Globs.TheRnOptions;
-		//        Document doc = Application.DocumentManager.MdiActiveDocument;
-
-		//        using (DocumentLock m_doclock = doc.LockDocument())
-		//        {
-		//            Engine _Engine = new Engine(opts);
-		//            var blockOids = _Engine.AllRaumBlocks;
-		//            if (opts.UseHiddenAttribute)
-		//            {
-		//                _Engine.DeleteNummerAttribute(blockOids);
-		//            }
-		//            else
-		//            {
-		//                _Engine.CopyAttribute(blockOids, Engine.HIDDEN_NUMMER_ATT, opts.Attribname);
-		//            }
-		//        }
-		//    }
-		//    catch (System.Exception ex)
-		//    {
-		//        Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2RaumnummerRnOnOff aufgetreten! {0}", ex.Message));
-		//    }
-		//}
 
 		[LispFunction("CalcAreaNet")]
 		public double CalcAreaNet(ResultBuffer rb)
@@ -231,13 +183,6 @@ namespace Plan2Ext.Raumnummern
 
 				using (DocumentLock m_doclock = doc.LockDocument())
 				{
-					// zuerst fläche rechnen
-     //               Plan2Ext.Flaeche.Modify = true;
-					//Plan2Ext.Flaeche.AktFlaeche(
-					//	Application.DocumentManager.MdiActiveDocument,
-					//	opts.Blockname, opts.FlaechenAttributName, opts.UmfangAttributName, opts.FlaechenGrenzeLayerName, opts.AbzFlaechenGrenzeLayerName, selectAll: true
-					//	);
-
 					Plan2Ext.Globs.LayerOnAndThawRegex(new List<string>
 					{
 						"^" + opts.FlaechenGrenzeLayerName + "$",
@@ -245,10 +190,6 @@ namespace Plan2Ext.Raumnummern
 					});
 
 					var engine = GetEngine();
-
-					// danach regions etc. bereinig
-                    //Plan2Ext.Flaeche.BereinigRegions(automated: false);
-					//_Engine.BereinigFehlerlinien();
 
 					engine.SumTops();
 				}
@@ -267,7 +208,13 @@ namespace Plan2Ext.Raumnummern
 
 #if !OLDER_THAN_2015
 		[CommandMethod("Plan2RaumnummernInsertTop")]
-		async public void Plan2RaumnummernInsertTop()
+#if BRX_APP
+		public void Plan2RaumnummernInsertTop()
+
+#else
+        async public void Plan2RaumnummernInsertTop()
+
+#endif
 		{
 			var oldAttReq = Application.GetSystemVariable("ATTREQ");
 			var curLayer = Application.GetSystemVariable("CLAYER").ToString();
@@ -426,13 +373,6 @@ namespace Plan2Ext.Raumnummern
 		}
 
 #endif
-
-		//private static void IncrementTopNr()
-		//{
-		//    var topNr = Globs.TheRnOptions.TopNr;
-		//    var newTopNr = IncrementNumberInString(topNr);
-		//    Globs.TheRnOptions.SetTopNr(newTopNr);
-		//}
 
 		private static string IncrementNumberInString(string s)
 		{
@@ -1005,5 +945,26 @@ namespace Plan2Ext.Raumnummern
 				_allRaumBlocks = Engine.SelectAllRaumblocks(opts.Blockname);
 			}
 		}
+
+        [CommandMethod("Plan2RaumnummernExcelExport")]
+        public void Plan2RaumnummernExcelExport()
+        {
+            try
+            {
+                var opts = Globs.TheRnOptions ?? new RnOptions();
+                var doc = Application.DocumentManager.MdiActiveDocument;
+
+                using (doc.LockDocument())
+                {
+                    var rbOids = Engine.SelectRaumblocks(opts, doc);
+					var model = new ExcelExportModel(rbOids, opts, doc);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
+            }
+        }
+
 	}
 }

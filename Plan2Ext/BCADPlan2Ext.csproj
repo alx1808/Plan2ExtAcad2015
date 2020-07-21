@@ -176,6 +176,8 @@
     <Compile Include="Raumnummern\Commands.cs" />
     <Compile Include="Raumnummern\Engine.cs" />
     <Compile Include="Raumnummern\EngineParameter.cs" />
+    <Compile Include="Raumnummern\ExcelExport\BlockInfo.cs" />
+    <Compile Include="Raumnummern\ExcelExport\ExcelExportModel.cs" />
     <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\Globs.cs" />
     <Compile Include="Raumnummern\HatchColorServer.cs" />
@@ -300,5 +302,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
