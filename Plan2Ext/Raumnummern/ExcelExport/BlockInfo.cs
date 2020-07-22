@@ -1,51 +1,93 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using Teigha.Geometry;
 #if BRX_APP
-using Bricscad.ApplicationServices;
 using Teigha.DatabaseServices;
-using Bricscad.EditorInput;
-using Bricscad.Runtime;
-using Teigha.Runtime;
-using Bricscad.Internal;
-
 #elif ARX_APP
-using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Internal;
 #endif
 
 namespace Plan2Ext.Raumnummern.ExcelExport
 {
     internal class BlockInfo
     {
-        public BlockInfo(string geschoss, string topnr, string zimmer, string area, string separator)
+        private static readonly string[] FehlerLineLayers = new string[]
         {
-            Geschoss = geschoss;
-            Top = ToTop(topnr, separator);
-            Topnr = topnr;
-            Zimmer = zimmer;
-            Area = ToArea(area);
+            "_Ungültige_Topnummer",
+            "_Ungültiger_Flächenwert",
+            "_Fehlendes_Attribut"
+        };
+
+        public static void DeleteFehlerlines()
+        {
+            foreach (var layer in FehlerLineLayers)
+            {
+                Plan2Ext.Globs.DeleteFehlerLines(layer);
+            }
         }
 
-        private string ToTop(string topnr, string separator)
+        public BlockInfo(string geschoss, BlockReference blockReference, Transaction transaction, RnOptions rnOptions)
+        {
+            var insertPoint = blockReference.Position;
+            var attributes = GetAttributes(blockReference, transaction);
+            if (attributes.TryGetValue(rnOptions.Attribname.ToUpper(), out var topNr) &&
+                attributes.TryGetValue(rnOptions.ZimmerAttributeName.ToUpper(), out var zimmer) &&
+                attributes.TryGetValue(rnOptions.FlaechenAttributName.ToUpper(), out var area))
+            {
+                Topnr = topNr;
+                Zimmer = zimmer;
+                Geschoss = geschoss;
+                if (!ToTop(topNr, rnOptions.Separator))
+                {
+                    Plan2Ext.Globs.InsertFehlerLines(new List<Point3d>() { insertPoint }, FehlerLineLayers[0]);
+                    return;
+                }
+
+                if (!ToArea(area))
+                {
+                    Plan2Ext.Globs.InsertFehlerLines(new List<Point3d>() { insertPoint }, FehlerLineLayers[1]);
+                    return;
+                }
+
+                Ok = true;
+            }
+            else
+            {
+                Plan2Ext.Globs.InsertFehlerLines(new List<Point3d>() {insertPoint}, FehlerLineLayers[2]);
+            }
+        }
+
+        private static Dictionary<string, string> GetAttributes(BlockReference blockRef, Transaction transaction)
+        {
+            var valuePerTag = new Dictionary<string, string>();
+
+            foreach (ObjectId attId in blockRef.AttributeCollection)
+            {
+                if (attId.IsErased) continue;
+                var anyAttRef = transaction.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                if (anyAttRef != null)
+                {
+                    valuePerTag[anyAttRef.Tag.ToUpper()] = anyAttRef.TextString;
+                }
+            }
+
+            return valuePerTag;
+        }
+
+        private bool ToTop(string topnr, string separator)
         {
             var index = topnr.LastIndexOf(separator, StringComparison.CurrentCultureIgnoreCase);
             
             if (index < 0)
             {
-                throw new InvalidOperationException($"\"{topnr}\" ist keine gültige Topnummer.");
+                return false;
             }
-            return topnr.Remove(index);
+            Top = topnr.Remove(index);
+            return true;
         }
 
-        private double ToArea(string areaOrig)
+        private bool ToArea(string areaOrig)
         {
             var area = areaOrig;
             try
@@ -57,20 +99,22 @@ namespace Plan2Ext.Raumnummern.ExcelExport
                 }
 
                 area = area.Trim();
-                area.Replace(',', '.');
-                return double.Parse(area, NumberStyles.Any, CultureInfo.InvariantCulture);
+                var replace = area.Replace(',', '.');
+                Area = double.Parse(replace, NumberStyles.Any, CultureInfo.InvariantCulture);
+                return true;
 
             }
-            catch (System.Exception e)
+            catch (Exception)
             {
-                throw new InvalidOperationException($"Konnte Fläche {areaOrig} in Raum {Topnr} nicht als Zahl interpretieren.");
+                return false;
             }
         }
 
-        public string Geschoss { get; set; }
-        public string Top { get; set; }
-        public string Topnr { get; set; }
-        public string Zimmer { get; set; }
-        public double Area { get; set; }
+        public string Geschoss { get; private set; }
+        public string Top { get; private set; }
+        public string Topnr { get; private set; }
+        public string Zimmer { get; private set; }
+        public double Area { get; private set; }
+        public bool Ok { get; private set; }
     }
 }

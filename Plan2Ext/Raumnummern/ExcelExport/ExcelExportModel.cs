@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-
 #if BRX_APP
 using Bricscad.ApplicationServices;
 using Teigha.DatabaseServices;
-using Bricscad.EditorInput;
-using Bricscad.Runtime;
-using Bricscad.Internal;
 
 #elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Internal;
 #endif
 
 
@@ -28,8 +20,8 @@ namespace Plan2Ext.Raumnummern.ExcelExport
 
     internal class ExcelExportModel : IExcelExportModel
     {
-        public List<BlockInfo> BlockInfos { get; private set; }
-        public string ProjectName { get; set; }
+        public List<BlockInfo> BlockInfos { get; }
+        public string ProjectName { get; }
 
         public ExcelExportModel(string projectName)
         {
@@ -45,15 +37,12 @@ namespace Plan2Ext.Raumnummern.ExcelExport
                 {
                     foreach (var objectId in rbIds)
                     {
-                        var blockReference = (BlockReference) transaction.GetObject(objectId, OpenMode.ForRead);
-                        var attributes = GetAttributes(blockReference, transaction);
-                        if (attributes.TryGetValue(rnOptions.Attribname.ToUpper(), out var topNr) && attributes.TryGetValue(rnOptions.ZimmerAttributeName.ToUpper(), out var zimmer) && attributes.TryGetValue(rnOptions.FlaechenAttributName.ToUpper(), out var area))
-                        {
-                            BlockInfos.Add(new BlockInfo(geschoss, topNr, zimmer, area, rnOptions.Separator));
-                        }
+                        var blockReference = (BlockReference)transaction.GetObject(objectId, OpenMode.ForRead);
+                        var blockInfo = new BlockInfo(geschoss, blockReference, transaction, rnOptions);
+                        if (blockInfo.Ok) BlockInfos.Add(blockInfo);
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     transaction.Abort();
                     throw;
@@ -63,21 +52,5 @@ namespace Plan2Ext.Raumnummern.ExcelExport
             }
         }
 
-        private static Dictionary<string, string> GetAttributes(BlockReference blockRef, Transaction transaction)
-        {
-            var valuePerTag = new Dictionary<string, string>();
-
-                foreach (ObjectId attId in blockRef.AttributeCollection)
-                {
-                    if (attId.IsErased) continue;
-                    var anyAttRef = transaction.GetObject(attId, OpenMode.ForRead) as AttributeReference;
-                    if (anyAttRef != null)
-                    {
-                        valuePerTag[anyAttRef.Tag.ToUpper()] = anyAttRef.TextString;
-                    }
-                }
-            
-            return valuePerTag;
-        }
     }
 }

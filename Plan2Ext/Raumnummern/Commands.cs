@@ -942,7 +942,9 @@ namespace Plan2Ext.Raumnummern
 			}
 		}
 
-        [CommandMethod("alxx")]
+        private static string ProjektName = "";
+
+        [CommandMethod("Plan2RaumnummernExcelExport")]
         public void Plan2RaumnummernExcelExport()
         {
             try
@@ -954,15 +956,30 @@ namespace Plan2Ext.Raumnummern
                 {
                     var geschossNameHelper = (IGeschossnameHelper)new GeschossnameHelper();
 
-                    var geschossKeywords = geschossNameHelper.GetKeywords().ToArray();
-                    var model = new ExcelExportModel("HANUSCHPLATZ 1");
+					BlockInfo.DeleteFehlerlines();
+
+                    if (GetProjectName(doc)) return;
+
+                    var readyKey = "Fertig";
+                    var geschossKeywordsList = geschossNameHelper.GetKeywords().ToList();
+					geschossKeywordsList.Add(readyKey);
+                    var geschossKeywords = geschossKeywordsList.ToArray();
+
+					var model = new ExcelExportModel(ProjektName);
 
                     string geschossKurz;
-                    while ((geschossKurz = Plan2Ext.Globs.AskKeywordFromUser("", geschossKeywords, 1)) != null)
+                    do
                     {
+                        geschossKurz =
+                            Plan2Ext.Globs.AskKeywordFromUser("", geschossKeywords, geschossKeywords.Length - 1);
+                        if (geschossKurz == null) return;
+                        if (geschossKurz.Equals(readyKey)) continue;
                         var rbOids = Engine.SelectRaumblocks(opts, doc);
                         model.Add(geschossKurz, rbOids, opts, doc);
-					}
+
+                    } while (!geschossKurz.Equals(readyKey));
+
+					if (model.BlockInfos.Count <= 0) return;
 
 					var exporter = new ExcelExporter();
 					exporter.Export(model, geschossNameHelper, doc);
@@ -973,5 +990,17 @@ namespace Plan2Ext.Raumnummern
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
             }
         }
-	}
+
+        private static bool GetProjectName(Document doc)
+        {
+            var pso = new PromptStringOptions("Projektname: ")
+            {
+                AllowSpaces = true, DefaultValue = ProjektName, UseDefaultValue = true
+            };
+            var res = doc.Editor.GetString(pso);
+            if (res.Status != PromptStatus.OK) return true;
+            ProjektName = res.StringResult;
+            return false;
+        }
+    }
 }

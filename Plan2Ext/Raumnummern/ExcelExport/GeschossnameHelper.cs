@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Plan2Ext.Raumnummern.ExcelExport
 {
@@ -16,8 +12,8 @@ namespace Plan2Ext.Raumnummern.ExcelExport
     {
         private Dictionary<string, string> _langPerKurz = new Dictionary<string, string>()
         {
-            { "KG", "KELLERGESCHOSS" },
-            { "EG", "ERDGESCHOSS" },
+            { "Kg", "KELLERGESCHOSS" },
+            { "Eg", "ERDGESCHOSS" },
             { "1.OG", "1.OBERGESCHOSS" },
             { "2.OG", "2.OBERGESCHOSS" },
             { "3.OG", "3.OBERGESCHOSS" },
@@ -27,7 +23,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
             { "7.OG", "7.OBERGESCHOSS" },
             { "8.OG", "8.OBERGESCHOSS" },
             { "9.OG", "9.OBERGESCHOSS" },
-            { "DG", "DACHGESCHOSS" },
+            { "Dg", "DACHGESCHOSS" },
         };
 
         public string Langbez(string kurzbez)

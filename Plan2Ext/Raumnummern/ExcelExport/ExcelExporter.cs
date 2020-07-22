@@ -11,19 +11,15 @@ using Bricscad.ApplicationServices;
 
 #elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Internal;
 #endif
 
 namespace Plan2Ext.Raumnummern.ExcelExport
 {
     internal class ExcelExporter
     {
-        public static readonly string TemplateFileName = "aufstellung_template.xlsx";
-        public static readonly string StylesWorksheetName = "Styles";
-        public static readonly string TopWorksheeetName = "Top";
+        private static readonly string TemplateFileName = "aufstellung_template.xlsx";
+        private static readonly string StylesWorksheetName = "Styles";
+        private static readonly string TopWorksheeetName = "Top";
 
         private const int TOP_NAME_FORMAT_ROW_INDEX = 7;
         private const int TOP_NAME_FORMAT_COL_INDEX = 1;
@@ -35,7 +31,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
 
         public void Export(IExcelExportModel model, IGeschossnameHelper geschossnameHelper, Document doc)
         {
-
+            var projekt = model.ProjectName;
             var app = new Excel.Application();
             try
             {
@@ -53,15 +49,18 @@ namespace Plan2Ext.Raumnummern.ExcelExport
 
                 var geschosse = model.BlockInfos.GroupBy(x => x.Geschoss);
 
+                var sheetIndex = 1;
                 foreach (var geschoss in geschosse)
                 {
-                    var projekt = model.ProjectName;
                     var geschossKurz = geschoss.Key;
                     var geschossLang = geschossnameHelper.Langbez(geschossKurz);
 
                     topTemplateSheet.Copy(sheet);
-                    var targetSheet = GetWorksheet(workBook, 1);
-                    targetSheet.Name = geschossKurz;
+                    var targetSheet = GetWorksheet(workBook, sheetIndex);
+                    sheetIndex++;
+                    targetSheet.Name = geschossKurz.ToUpper();
+
+                    //var nrOfSheets = workBook.Worksheets.Count;
 
                     var matrix = new ExcelMatrix(1, 7);
                     matrix.Add(2, 1, projekt);
@@ -149,7 +148,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
             var cell2Bez = Helper.GetCellBez0(rowIndex2, colIndex2);
             var range1 = sourceSheet.Range[cell1Bez, cell2Bez];
 
-            Excel.Range range2 = null;
+            Excel.Range range2;
             if (targetRowIndex1 == -1)
             {
                 range2 = targetSheet.Range[cell1Bez, cell2Bez];
