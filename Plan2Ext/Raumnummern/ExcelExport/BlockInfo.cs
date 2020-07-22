@@ -25,8 +25,9 @@ namespace Plan2Ext.Raumnummern.ExcelExport
 {
     internal class BlockInfo
     {
-        public BlockInfo(string topnr, string zimmer, string area, string separator)
+        public BlockInfo(string geschoss, string topnr, string zimmer, string area, string separator)
         {
+            Geschoss = geschoss;
             Top = ToTop(topnr, separator);
             Topnr = topnr;
             Zimmer = zimmer;
@@ -66,6 +67,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
             }
         }
 
+        public string Geschoss { get; set; }
         public string Top { get; set; }
         public string Topnr { get; set; }
         public string Zimmer { get; set; }

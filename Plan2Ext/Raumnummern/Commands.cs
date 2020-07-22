@@ -893,10 +893,6 @@ namespace Plan2Ext.Raumnummern
 			{
 				Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
 			}
-			finally
-			{
-				//Free();
-			}
 			return false;
 		}
 
@@ -946,7 +942,7 @@ namespace Plan2Ext.Raumnummern
 			}
 		}
 
-        [CommandMethod("Plan2RaumnummernExcelExport")]
+        [CommandMethod("alxx")]
         public void Plan2RaumnummernExcelExport()
         {
             try
@@ -956,8 +952,20 @@ namespace Plan2Ext.Raumnummern
 
                 using (doc.LockDocument())
                 {
-                    var rbOids = Engine.SelectRaumblocks(opts, doc);
-					var model = new ExcelExportModel(rbOids, opts, doc);
+                    var geschossNameHelper = (IGeschossnameHelper)new GeschossnameHelper();
+
+                    var geschossKeywords = geschossNameHelper.GetKeywords().ToArray();
+                    var model = new ExcelExportModel("HANUSCHPLATZ 1");
+
+                    string geschossKurz;
+                    while ((geschossKurz = Plan2Ext.Globs.AskKeywordFromUser("", geschossKeywords, 1)) != null)
+                    {
+                        var rbOids = Engine.SelectRaumblocks(opts, doc);
+                        model.Add(geschossKurz, rbOids, opts, doc);
+					}
+
+					var exporter = new ExcelExporter();
+					exporter.Export(model, geschossNameHelper, doc);
                 }
             }
             catch (System.Exception ex)
@@ -965,6 +973,5 @@ namespace Plan2Ext.Raumnummern
                 Application.ShowAlertDialog(string.Format(CultureInfo.CurrentCulture, "Fehler in Plan2Raumnummern aufgetreten! {0}", ex.Message));
             }
         }
-
 	}
 }

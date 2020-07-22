@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Exception = Teigha.Runtime.Exception;
+
 #if BRX_APP
 using Bricscad.ApplicationServices;
 using Teigha.DatabaseServices;
@@ -20,13 +20,25 @@ using Autodesk.AutoCAD.Internal;
 
 namespace Plan2Ext.Raumnummern.ExcelExport
 {
-    internal class ExcelExportModel
+    internal interface IExcelExportModel
     {
-        private List<BlockInfo> _blockInfos;
+        List<BlockInfo> BlockInfos { get; }
+        string ProjectName { get; }
+    }
 
-        public ExcelExportModel(IEnumerable<ObjectId> rbIds, RnOptions rnOptions, Document doc)
+    internal class ExcelExportModel : IExcelExportModel
+    {
+        public List<BlockInfo> BlockInfos { get; private set; }
+        public string ProjectName { get; set; }
+
+        public ExcelExportModel(string projectName)
         {
-            _blockInfos = new List<BlockInfo>();
+            ProjectName = projectName;
+            BlockInfos = new List<BlockInfo>();
+        }
+
+        public void Add(string geschoss, IEnumerable<ObjectId> rbIds, RnOptions rnOptions, Document doc)
+        {
             using (var transaction = doc.TransactionManager.StartTransaction())
             {
                 try
@@ -35,10 +47,9 @@ namespace Plan2Ext.Raumnummern.ExcelExport
                     {
                         var blockReference = (BlockReference) transaction.GetObject(objectId, OpenMode.ForRead);
                         var attributes = GetAttributes(blockReference, transaction);
-                        string topNr, zimmer, area;
-                        if (attributes.TryGetValue(rnOptions.Attribname.ToUpper(), out topNr) && attributes.TryGetValue(rnOptions.ZimmerAttributeName.ToUpper(), out zimmer) && attributes.TryGetValue(rnOptions.FlaechenAttributName.ToUpper(), out area))
+                        if (attributes.TryGetValue(rnOptions.Attribname.ToUpper(), out var topNr) && attributes.TryGetValue(rnOptions.ZimmerAttributeName.ToUpper(), out var zimmer) && attributes.TryGetValue(rnOptions.FlaechenAttributName.ToUpper(), out var area))
                         {
-                            _blockInfos.Add(new BlockInfo(topNr, zimmer, area, rnOptions.Separator));
+                            BlockInfos.Add(new BlockInfo(geschoss, topNr, zimmer, area, rnOptions.Separator));
                         }
                     }
                 }
@@ -52,7 +63,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
             }
         }
 
-        public static Dictionary<string, string> GetAttributes(BlockReference blockRef, Transaction transaction)
+        private static Dictionary<string, string> GetAttributes(BlockReference blockRef, Transaction transaction)
         {
             var valuePerTag = new Dictionary<string, string>();
 
