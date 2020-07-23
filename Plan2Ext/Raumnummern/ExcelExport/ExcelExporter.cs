@@ -43,6 +43,8 @@ namespace Plan2Ext.Raumnummern.ExcelExport
                 var templateWorkbook = app.Workbooks.Open(template, Missing.Value, true);
                 var stylesSheet = GetWorksheet(templateWorkbook, StylesWorksheetName);
                 var topTemplateSheet = GetWorksheet(templateWorkbook, TopWorksheeetName);
+                var topComparer = new TopComparer();
+                var topNrComparer = new TopNrComparer();
 
                 var workBook = app.Workbooks.Add(Missing.Value);
                 var sheet = workBook.ActiveSheet;
@@ -63,7 +65,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
                     //var nrOfSheets = workBook.Worksheets.Count;
 
                     var matrix = new ExcelMatrix(1, 7);
-                    matrix.Add(2, 1, projekt);
+                    matrix.Add(2, 1, "Flächenaufstellung " + projekt);
                     CopyCells(stylesSheet, targetSheet, 2, 1, 2, MAX_COL_INDEX, copyColumnWidth: true);
                     matrix.Add(4, 1, geschossLang);
                     matrix.Add(4, 7, "m2");
@@ -71,7 +73,8 @@ namespace Plan2Ext.Raumnummern.ExcelExport
 
                     var currentIndex = 7;
                     var formulars = new List<Formular>();
-                    var tops = geschoss.GroupBy(x => x.Top);
+                    var orderedTops = geschoss.OrderBy(x => x.Top, topComparer);
+                    var tops = orderedTops.GroupBy(x => x.Top);
                     foreach (var top in tops)
                     {
                         var topName = top.Key;
@@ -80,7 +83,7 @@ namespace Plan2Ext.Raumnummern.ExcelExport
                         currentIndex++;
 
                         var firstSumRowIndex = currentIndex;
-                        var raueme = top.ToArray();
+                        var raueme = top.OrderBy(x => x.Topnr, topNrComparer).ToArray();
                         var unterlinePos = raueme.Length - 1;
                         for (var i = 0; i < raueme.Length; i++)
                         {

@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.779
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BCADPlan2Ext", "Plan2Ext\BCADPlan2Ext.csproj", "{FA91B593-8240-40BC-B5FB-3F9FA225AD71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BCADPlan2Ext.Tests", "BCADPlan2Ext.Tests\BCADPlan2Ext.Tests.csproj", "{5E97698D-0E6B-4A85-924B-B6D409B47469}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{FA91B593-8240-40BC-B5FB-3F9FA225AD71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA91B593-8240-40BC-B5FB-3F9FA225AD71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA91B593-8240-40BC-B5FB-3F9FA225AD71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E97698D-0E6B-4A85-924B-B6D409B47469}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E97698D-0E6B-4A85-924B-B6D409B47469}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E97698D-0E6B-4A85-924B-B6D409B47469}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E97698D-0E6B-4A85-924B-B6D409B47469}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

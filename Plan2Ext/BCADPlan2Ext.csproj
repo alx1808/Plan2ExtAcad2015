@@ -183,6 +183,8 @@
     <Compile Include="Excelx\ExcelMatrix.cs" />
     <Compile Include="Raumnummern\ExcelExport\Formular.cs" />
     <Compile Include="Raumnummern\ExcelExport\GeschossnameHelper.cs" />
+    <Compile Include="Raumnummern\ExcelExport\TopComparer.cs" />
+    <Compile Include="Raumnummern\ExcelExport\TopNrComparer.cs" />
     <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\Globs.cs" />
     <Compile Include="Raumnummern\HatchColorServer.cs" />
