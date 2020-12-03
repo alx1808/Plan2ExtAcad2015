@@ -956,7 +956,7 @@ namespace Plan2Ext.Raumnummern
                 {
                     var geschossNameHelper = (IGeschossnameHelper)new GeschossnameHelper();
 
-					BlockInfo.DeleteFehlerlines();
+					Plan2Ext.Raumnummern.ExcelExport.BlockInfo.DeleteFehlerlines();
 
                     if (GetProjectName(doc)) return;
 

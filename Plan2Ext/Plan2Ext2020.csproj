@@ -166,6 +166,8 @@
     <Compile Include="EditorHelper.cs" />
     <Compile Include="EntityTypeItem.cs" />
     <Compile Include="ETransmit\Commands.cs" />
+    <Compile Include="Excelx\ExcelMatrix.cs" />
+    <Compile Include="Excelx\Helper.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Fenster\Examiner.cs" />
@@ -297,6 +299,13 @@
     <Compile Include="RaumHoePruefung\MyExtensions.cs" />
     <Compile Include="RaumHoePruefung\HoePrOptions.cs" />
     <Compile Include="Raumnummern\EngineParameter.cs" />
+    <Compile Include="Raumnummern\ExcelExport\BlockInfo.cs" />
+    <Compile Include="Raumnummern\ExcelExport\ExcelExporter.cs" />
+    <Compile Include="Raumnummern\ExcelExport\ExcelExportModel.cs" />
+    <Compile Include="Raumnummern\ExcelExport\Formular.cs" />
+    <Compile Include="Raumnummern\ExcelExport\GeschossnameHelper.cs" />
+    <Compile Include="Raumnummern\ExcelExport\TopComparer.cs" />
+    <Compile Include="Raumnummern\ExcelExport\TopNrComparer.cs" />
     <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\HatchColorServer.cs" />
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
