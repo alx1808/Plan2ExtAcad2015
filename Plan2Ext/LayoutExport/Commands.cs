@@ -60,13 +60,13 @@ namespace Plan2Ext.LayoutExport
                     BlockManager.CreateBakFile(CurrentExportDwg);
 
                     // Export Wipeout and Blockreference entities inside first view to external dwg and delete entities.
-                    if (!SaveAndDeleteNonExportableEntities()) return;
+                    var anythingExported = SaveAndDeleteNonExportableEntities();
 
                     // Export layout to <dwgprefix><layoutname>.dwg
                     await ExportLayout();
 
                     // Import saved entities to exported layout
-                    ImportSavedEntitiesToExportedLayout();
+                    if (anythingExported) ImportSavedEntitiesToExportedLayout();
 
                     // export drawing correction: Draworder correction, Purge blocks, Plotsettings, layer name correction
                     ExportDrawingCorrection();
@@ -77,9 +77,9 @@ namespace Plan2Ext.LayoutExport
                     acDoc.EndUndoMark();
                     await Globs.CallCommandAsync("_.U");
 
-                    WriteHatchPolyBreiteScript();
-
                 }
+
+                WriteHatchPolyBreiteScript();
             }
             catch (System.Exception ex)
             {
@@ -428,7 +428,7 @@ namespace Plan2Ext.LayoutExport
 		private static bool SaveAndDeleteNonExportableEntities()
         {
             var objectIds = SelectNonExportableEntities();
-            if (objectIds == null) return false;
+            if (objectIds == null || objectIds.Count == 0) return false;
 
             GetCurrentOutDwg();
 
