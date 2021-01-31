@@ -81,13 +81,32 @@ namespace Plan2Ext.BlockTrans
                             var oid = blockTable[blockInfo.OldBlockName];
                             _AcDb.BlockTableRecord blockTableRecord = (_AcDb.BlockTableRecord)trans.GetObject(oid, _AcDb.OpenMode.ForWrite);
 
+
+                            bool newBlockAlreadyExists = false;
                             if (string.Compare(blockInfo.OldBlockName, blockInfo.NewBlockName, StringComparison.OrdinalIgnoreCase) != 0)
                             {
-                                blockTableRecord.Name = blockInfo.NewBlockName;
+                                if (blockTable.Has(blockInfo.NewBlockName))
+                                {
+                                    newBlockAlreadyExists = true;
+                                    // new block already exists -> replace references
+                                    foreach (_AcDb.ObjectId oidOld in blockTableRecord.GetBlockReferenceIds(true, true))
+                                    {
+                                        var newBlockTableId = blockTable[blockInfo.NewBlockName];
+                                        var br = (_AcDb.BlockReference)trans.GetObject(oidOld, _AcDb.OpenMode.ForWrite);
+                                        br.BlockTableRecord = newBlockTableId;
+                                    }
+                                }
+                                else
+                                { 
+                                    blockTableRecord.Name = blockInfo.NewBlockName;
+                                }
                             }
-
-                            blockTableRecord.Explodable = blockInfo.Explodable2;
-                            blockTableRecord.Units = blockInfo.Units2;
+                            if (!newBlockAlreadyExists)
+                            { 
+                                // only first time
+                                blockTableRecord.Explodable = blockInfo.Explodable2;
+                                blockTableRecord.Units = blockInfo.Units2;
+                            }
                         }
                         trans.Commit();
                     }
