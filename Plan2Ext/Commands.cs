@@ -84,30 +84,74 @@ namespace Plan2Ext
 			}
 		}
 
-		//[_AcTrx.CommandMethod("Alx")]
-		//public static void Alx()
-		//{
-		//	var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
-		//	var db = doc.Database;
-		//	var editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
-		//	var result = editor.GetEntity("\nDimension");
-		//	if (result.Status != _AcEd.PromptStatus.OK) return;
-		//	using (var trans = db.TransactionManager.StartTransaction())
-		//	{
-		//		var d = trans.GetObject(result.ObjectId, _AcDb.OpenMode.ForRead) as _AcDb.Dimension;
-		//		if (d != null)
-		//		{
-		//			d.UpgradeOpen();
-					
-		//			//d.UsingDefaultTextPosition = !d.UsingDefaultTextPosition;
-		//			//editor.WriteMessage($"\nUsingDefaultTextPosition set to {d.UsingDefaultTextPosition}");
-		//			trans.Commit();
-		//		}
-		//	}
+        [_AcTrx.CommandMethod("Alx")]
+        public static void Alx()
+        {
+            var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var editor = _AcAp.Application.DocumentManager.MdiActiveDocument.Editor;
+			var newPosition = true;
+			var nextPos = default(_AcGe.Point3d);
+            var result = editor.GetEntity("\nBlockref: ");
+            if (result.Status != _AcEd.PromptStatus.OK) return;
+            using (var trans = db.TransactionManager.StartTransaction())
+            {
+                var d = trans.GetObject(result.ObjectId, _AcDb.OpenMode.ForRead) as _AcDb.BlockReference;
+				var btr = (_AcDb.BlockTableRecord)trans.GetObject(d.BlockTableRecord, _AcDb.OpenMode.ForWrite);
+                if (d != null)
+                {
+					var mat = d.BlockTransform.Inverse();
+					foreach (_AcDb.ObjectId attId in d.AttributeCollection)
+                    {
+						var attRef = (_AcDb.AttributeReference)trans.GetObject(attId, _AcDb.OpenMode.ForRead);
+						var pos = attRef.Position;
+						var al = attRef.AlignmentPoint;
+						var rot = attRef.Rotation;
+						var tag = attRef.Tag;
+						var c = attRef.IsConstant;
+						var vis = attRef.Visible;
+						
 
-		//}
+						
 
-		/*
+						var attDef = new _AcDb.AttributeDefinition();
+						attDef.SetDatabaseDefaults(btr.Database);
+						attDef.Tag = tag;
+						attDef.Prompt = tag;
+						attDef.Constant = c;
+						attDef.Visible = vis;
+						attDef.Invisible = !vis;
+						attDef.Layer = attRef.Layer;
+						attDef.Height = attRef.Height;
+						attDef.WidthFactor = attRef.WidthFactor;
+						attDef.TextStyleId = attRef.TextStyleId;
+
+						if (newPosition)
+                        {
+							attDef.Position = nextPos;
+							attDef.Rotation = 0;
+							nextPos = new _AcGe.Point3d(nextPos.X, nextPos.Y - (attDef.Height * 1.1), nextPos.Z);
+                        }
+						else
+                        {
+							attDef.Position = pos;
+							//attDef.AlignmentPoint = al;
+							attDef.Rotation = rot;
+							attDef.TransformBy(mat);
+						}
+						btr.AppendEntity(attDef);
+						trans.AddNewlyCreatedDBObject(attDef, true);
+
+
+                    }
+
+                    trans.Commit();
+                }
+            }
+
+        }
+
+        /*
         //[_AcTrx.CommandMethod("Alx")]
         public static void Alx()
         {
@@ -163,7 +207,7 @@ namespace Plan2Ext
 	        inCommand = false;
         }
         */
-		public static void ImportDrawing(string drawingPath)
+        public static void ImportDrawing(string drawingPath)
 		{
 			var doc = _AcAp.Application.DocumentManager.MdiActiveDocument;
 			var db = doc.Database;
