@@ -243,7 +243,7 @@ namespace Plan2Ext
 						false);
 					trans.Commit();
 				}
-				catch (System.Exception ex)
+				catch (System.Exception)
 				{
 				}
 			}
