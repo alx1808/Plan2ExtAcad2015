@@ -1803,7 +1803,7 @@ namespace Plan2Ext
 				return true;
 
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				ed.WriteMessage("Aufruf: (Plan2RemoveHyperLinks el)");
 			}
@@ -1856,7 +1856,7 @@ namespace Plan2Ext
 				return true;
 
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				ed.WriteMessage("Aufruf: (Plan2RemoveHyperLinks el)");
 			}
