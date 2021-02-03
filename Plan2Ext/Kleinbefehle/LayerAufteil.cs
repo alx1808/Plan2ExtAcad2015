@@ -210,7 +210,6 @@ namespace Plan2Ext.Kleinbefehle
                                 //newLayerName += "_" + col.ColorNameForDisplay;
                                 //layerColor = Plan2Ext.Globs.GetLayerColor(ent.Layer);
                                 continue;
-                                break;
                             case Autodesk.AutoCAD.Colors.ColorMethod.ByPen:
                             case Autodesk.AutoCAD.Colors.ColorMethod.Foreground:
                             case Autodesk.AutoCAD.Colors.ColorMethod.LayerFrozen:
