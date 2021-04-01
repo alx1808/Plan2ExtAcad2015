@@ -230,6 +230,7 @@
     <Compile Include="Kleinbefehle\ReplaceInLayoutNames.cs" />
     <Compile Include="Kleinbefehle\Schraff2Solid.cs" />
     <Compile Include="Kleinbefehle\SpecialXrefLayer.cs" />
+    <Compile Include="Kleinbefehle\WriteSdr.cs" />
     <Compile Include="LayerFilters\Commands.cs" />
     <Compile Include="LayerKontrolle\Commands.cs" />
     <Compile Include="LayerKontrolle\LayerKontrolleControl.cs">
