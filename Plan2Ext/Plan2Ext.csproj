@@ -82,6 +82,9 @@
     <Compile Include="AlgebraicArea.cs" />
     <Compile Include="BlockHandler.cs" />
     <Compile Include="DocumentData.cs" />
+    <Compile Include="Excelx\ExcelMatrix.cs" />
+    <Compile Include="Excelx\Helper.cs" />
+    <Compile Include="Kleinbefehle\WriteSdr.cs" />
     <Compile Include="LispHelper.cs" />
     <Compile Include="Plan2Application.cs" />
     <Compile Include="AreaEngine.cs" />
@@ -298,6 +301,13 @@
     <Compile Include="RaumHoePruefung\MyExtensions.cs" />
     <Compile Include="RaumHoePruefung\HoePrOptions.cs" />
     <Compile Include="Raumnummern\EngineParameter.cs" />
+    <Compile Include="Raumnummern\ExcelExport\BlockInfo.cs" />
+    <Compile Include="Raumnummern\ExcelExport\ExcelExporter.cs" />
+    <Compile Include="Raumnummern\ExcelExport\ExcelExportModel.cs" />
+    <Compile Include="Raumnummern\ExcelExport\Formular.cs" />
+    <Compile Include="Raumnummern\ExcelExport\GeschossnameHelper.cs" />
+    <Compile Include="Raumnummern\ExcelExport\TopComparer.cs" />
+    <Compile Include="Raumnummern\ExcelExport\TopNrComparer.cs" />
     <Compile Include="Raumnummern\FgRbsPerTopNr.cs" />
     <Compile Include="Raumnummern\HatchColorServer.cs" />
     <Compile Include="Raumnummern\ISumRaumnummernHelper.cs" />
