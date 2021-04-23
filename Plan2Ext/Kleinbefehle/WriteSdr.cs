@@ -1,6 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+#if BRX_APP
+using Bricscad.ApplicationServices;
+using Bricscad.EditorInput;
+using Bricscad.Windows;
+using Teigha.Runtime;
+using Teigha.DatabaseServices;
+#elif ARX_APP
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -8,7 +15,7 @@ using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
-
+#endif
 namespace Plan2Ext.Kleinbefehle
 {
     // ReSharper disable once UnusedMember.Global
@@ -158,7 +165,7 @@ namespace Plan2Ext.Kleinbefehle
         private string GetSdrFileName()
         {
             var saveFileDialog = new SaveFileDialog("Ziel-Zeichnung", "", "sdr", "SDR-Datei",
-                SaveFileDialog.SaveFileDialogFlags.NoFtpSites);
+                (SaveFileDialog.SaveFileDialogFlags)0);
             var dialogResult = saveFileDialog.ShowDialog();
             return dialogResult != System.Windows.Forms.DialogResult.OK
                 ? null
